@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+    "name": "Idlescape Marketplace Tracker",
+    "version": "1.0",
+    "description": "Automatically tracks prices of items on the Idlescape Marketplace",
+    "background": {
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://idlescape.com/game"
+            ],
+            "js": [
+                "marketplace_tracker.js"
+            ],
+            "css": [
+                "custom_classes.css"
+            ]
+        }
+    ],
+    "permissions": [
+        "storage"
+    ], 
+    "browser_action": {
+        "default_icon": "icons/stonks.png",
+        "default_popup": "popup/view.html"
+    }
+}

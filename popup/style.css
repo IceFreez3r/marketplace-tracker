@@ -1,0 +1,29 @@
+body {
+    width: 300px;
+}
+
+.icon {
+    height: 1rem;
+    width: 1rem;
+}
+
+.table-container {
+    text-align: center;
+}
+
+#update-table {
+    margin: auto;
+}
+
+.action{
+    cursor: pointer;
+}
+
+.entry {
+    display: none;
+}
+
+#no-items {
+    display: none;
+    text-align: center;
+}
