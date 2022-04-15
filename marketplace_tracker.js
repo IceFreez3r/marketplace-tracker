@@ -7,10 +7,7 @@ function getOffer(currentItem) {
         if (offers.length == 0) {
             return;
         }
-        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate());
-        document.getElementById("marketplace-favorite-button").addEventListener('click', function(){
-            
-        });
+        favoriteButton(currentItem)
         let offer = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
@@ -34,6 +31,19 @@ function getOffer(currentItem) {
     }
     catch (err) {
         console.log('Error: ' + err);
+    }
+}
+
+function favoriteButton(currentItem){
+    if(document.getElementById("marketplace-refresh-button").nextSibling==document.getElementById("marketplace-item-list-searchbar")){
+        //above: refresh doesn't add buttons, next line: favoriteTemplate input should be variable from currentItem; favoriteTemplate(currentItem.fav_type)
+        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(false));
+        document.getElementById("marketplace-favorite-button").addEventListener('click', function(){
+            sendMessage({
+                type: 'favorite',
+                item: currentItem
+            })
+        });
     }
 }
 
@@ -70,8 +80,13 @@ function priceHoverListener(maxPrice) {
     }
 }
 
-function favoriteTemplate(){
-    return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> Favorite</button>`
+function favoriteTemplate(favorite_type){
+    if(favorite_type==true){
+        return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> Favorite</button>`
+    }else{
+        //picture doesn't load
+        return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> <img src="/icons/favorite_not.png" alt="not_favorite"> no fav</button>`
+    }
 }
 
 function priceTooltipTemplate(maxPrice, price, amount) {

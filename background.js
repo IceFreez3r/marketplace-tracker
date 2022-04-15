@@ -7,6 +7,9 @@ function handleMessage(request, sender, sendResponse) {
         handleOffer(request.data.item, request.data.price);
         sendResponse(analyzeItem(request.data.item));
     }
+    if (request.data.type == "favorite") {
+        //something needs to happen here
+    }
 }
 
 function handleClose() {
