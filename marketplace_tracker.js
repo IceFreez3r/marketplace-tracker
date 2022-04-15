@@ -7,6 +7,10 @@ function getOffer(currentItem) {
         if (offers.length == 0) {
             return;
         }
+        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate());
+        document.getElementById("marketplace-favorite-button").addEventListener('click', function(){
+            
+        });
         let offer = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
@@ -64,6 +68,10 @@ function priceHoverListener(maxPrice) {
         let tooltip = priceTooltipTemplate(maxPrice, price, amount);
         priceCell.insertAdjacentHTML('beforeend', tooltip);
     }
+}
+
+function favoriteTemplate(){
+    return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> Favorite</button>`
 }
 
 function priceTooltipTemplate(maxPrice, price, amount) {
