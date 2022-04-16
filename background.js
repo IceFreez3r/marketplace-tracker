@@ -3,12 +3,47 @@ function handleMessage(request, sender, sendResponse) {
     if (request.data.type == "close") {
         handleClose();
     }
-    if (request.data.type == "shop-offer") {
+    else if(request.data.type == "shop-offer") {
         handleOffer(request.data.item, request.data.price);
         sendResponse(analyzeItem(request.data.item));
     }
-    if (request.data.type == "favorite") {
+    else if (request.data.type == "get-favorite") {
         //something needs to happen here
+        console.log("handle favorite request");
+        return isFavorite(request.data.item);
+    }
+    else if (request.data.type == "toggle-favorite") {
+        console.log("toggle favorite");
+        return browser.storage.local.get('favorites').then(function (result) {
+            if (result.favorites) {
+                let favorites = JSON.parse(result.favorites);
+                if (favorites.indexOf(request.data.item) > -1) {
+                    favorites.pop(request.data.item);
+                } else {
+                    favorites.push(request.data.item);
+                }
+                browser.storage.local.set({
+                    favorites: JSON.stringify(favorites)
+                });
+                return {
+                    success: true,
+                    isFavorite: favorites.indexOf(request.data.item) > -1
+                }
+            } else {
+                let favorites = [];
+                favorites.push(request.data.item);
+                browser.storage.local.set({
+                    favorites: JSON.stringify(favorites)
+                });
+                return {
+                    success: true,
+                    isFavorite: true
+                }
+            }
+        });
+    }
+    else {
+        console.log("alles schaise");
     }
 }
 
@@ -24,6 +59,23 @@ function handleOffer(item, price) {
     itemList[item][timestamp] = price;
     console.log(itemList);
     storeItemList();
+}
+
+function isFavorite(item){
+    return browser.storage.local.get('favorites').then(function (result) {
+        if (result.favorites) {
+            let favorites = JSON.parse(result.favorites);
+            return {
+                type: "is-favorite",
+                isFavorite: favorites.indexOf(item) > -1
+            }
+        } else {
+            return {
+                type: "is-favorite",
+                isFavorite: false
+            };
+        }
+    });
 }
 
 function storeItemList() {

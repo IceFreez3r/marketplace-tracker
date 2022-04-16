@@ -18,3 +18,5 @@ Tabelle
         rechts neben Enchantmentsuche
             whiteList / blackList Button
             Favoriten Button
+                kleinere Buttons
+                Infotext entfernen

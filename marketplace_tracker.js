@@ -7,7 +7,7 @@ function getOffer(currentItem) {
         if (offers.length == 0) {
             return;
         }
-        favoriteButton(currentItem)
+        favoriteButton(currentItem);
         let offer = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
@@ -36,13 +36,25 @@ function getOffer(currentItem) {
 
 function favoriteButton(currentItem){
     if(document.getElementById("marketplace-refresh-button").nextSibling==document.getElementById("marketplace-item-list-searchbar")){
-        //above: refresh doesn't add buttons, next line: favoriteTemplate input should be variable from currentItem; favoriteTemplate(currentItem.fav_type)
-        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(false));
-        document.getElementById("marketplace-favorite-button").addEventListener('click', function(){
-            sendMessage({
-                type: 'favorite',
-                item: currentItem
-            })
+        //above: refresh doesn't add buttons
+        sendMessage({
+            type: 'get-favorite',
+            item: currentItem
+        }).then(response => {
+            console.log(response);
+            document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(response.isFavorite));
+            let favoriteButton = document.getElementById("marketplace-favorite-button")
+            favoriteButton.addEventListener('click', function(){
+                sendMessage({
+                    type: 'toggle-favorite',
+                    item: currentItem
+                }).then(response => {
+                    console.log(response.success);
+                    console.log(response.isFavorite);
+                    favoriteButton.classList.replace(response.isFavorite ? 'fill-none' : 'fill-yellow', response.isFavorite ? 'fill-yellow' : 'fill-none');
+                    favoriteButton.getElementsByTagName('span')[0].classList.toggle('invisible');
+                });
+            });
         });
     }
 }
@@ -80,13 +92,17 @@ function priceHoverListener(maxPrice) {
     }
 }
 
-function favoriteTemplate(favorite_type){
-    if(favorite_type==true){
-        return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> Favorite</button>`
-    }else{
-        //picture doesn't load
-        return `<button id="marketplace-favorite-button" class="marketplace-refresh-button"> <img src="/icons/favorite_not.png" alt="not_favorite"> no fav</button>`
-    }
+function favoriteTemplate(isFavorite){
+    let fill = isFavorite ? 'fill-yellow' : 'fill-none';
+    let invisible = isFavorite ? 'invisible' : '';
+    return `
+<button id="marketplace-favorite-button" class="marketplace-refresh-button ${fill}"> 
+    <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" stroke="yellow" stroke-width="30px" x="0px" y="0px" width="24px" heigth="24px" viewBox="-15 -10 366 366" style="enable-background:new 0 0 329.942 329.942;" xml:space="preserve">
+        <path id="XMLID_16_" d="M329.208,126.666c-1.765-5.431-6.459-9.389-12.109-10.209l-95.822-13.922l-42.854-86.837  c-2.527-5.12-7.742-8.362-13.451-8.362c-5.71,0-10.925,3.242-13.451,8.362l-42.851,86.836l-95.825,13.922  c-5.65,0.821-10.345,4.779-12.109,10.209c-1.764,5.431-0.293,11.392,3.796,15.377l69.339,67.582L57.496,305.07  c-0.965,5.628,1.348,11.315,5.967,14.671c2.613,1.899,5.708,2.865,8.818,2.865c2.387,0,4.784-0.569,6.979-1.723l85.711-45.059  l85.71,45.059c2.208,1.161,4.626,1.714,7.021,1.723c8.275-0.012,14.979-6.723,14.979-15c0-1.152-0.13-2.275-0.376-3.352  l-16.233-94.629l69.339-67.583C329.501,138.057,330.972,132.096,329.208,126.666z">
+    </svg>
+    <span class=${invisible}> not</span> 
+    FAV
+</button>`
 }
 
 function priceTooltipTemplate(maxPrice, price, amount) {
