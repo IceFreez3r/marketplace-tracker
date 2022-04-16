@@ -11,8 +11,9 @@ function getOffer(currentItem) {
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
         }
-        let offerPrice = offer.childNodes[3].innerText
-        offerPrice = parseInt(offerPrice.replace(/\./g, ''));
+        let priceCell = offer.childNodes[3]
+        priceCell.insertAdjacentHTML('beforeend', spinnerTemplate());
+        let offerPrice = parseInt(priceCell.innerText.replace(/\./g, ''));
         sendMessage({
             type: 'shop-offer',
             item: currentItem,
@@ -21,6 +22,7 @@ function getOffer(currentItem) {
             if (response.type == 'item-analysis') {
                 markOffers(response.maxPrice);
                 priceHoverListener(response.maxPrice);
+                document.getElementById('process-offer-indicator').classList.replace('loading', 'loaded');
             } else {
                 console.log('Unknown response: ' + response);
             }
@@ -116,6 +118,19 @@ function priceTooltipTemplate(maxPrice, price, amount) {
             </span>
         </div>
     </div>
+</div>
+`
+}
+
+function spinnerTemplate(size = "30px") {
+    return `
+<div id="process-offer-indicator" class="loading">
+    <svg class="spinner" width="${size}" height="${size}" viewBox="0 0 35 35"">
+        <circle class="path" fill="none" stroke-width="5" stroke-linecap="round" cx="15" cy="15" r="11"></circle>
+    </svg>
+    <svg class="check" width="${size}" height="${size}" viewBox="0 0 24 24">
+        <path d="M4.1 12.7L9 17.6 20.3 6.3" fill="none" />
+    </svg>
 </div>
 `
 }
