@@ -7,6 +7,9 @@ function getOffer(currentItem) {
         if (offers.length == 0) {
             return;
         }
+        if (offers[0].classList.contains('marketplace-my-auctions-table')) {
+            return;
+        }
         let offer = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
@@ -16,7 +19,8 @@ function getOffer(currentItem) {
         sendMessage({
             type: 'shop-offer',
             item: currentItem,
-            price: offerPrice
+            price: offerPrice,
+            analyze: true
         }).then(response => {
             if (response.type == 'item-analysis') {
                 markOffers(response.maxPrice);
@@ -26,10 +30,41 @@ function getOffer(currentItem) {
             }
         });
         refreshEventListener();
-        scanOffer = false;
+        searchPrize = false;
     }
     catch (err) {
-        console.log('Error: ' + err);
+        console.log(err);
+    }
+}
+
+function getSellPrice() {
+    if (currentItem == undefined) {
+        return;
+    }
+    try {
+        let sellDialog = document.getElementsByClassName('sell-item-dialog');
+        if (sellDialog.length == 0) {
+            return;
+        }
+        let price;
+        let priceTick = setInterval(() => {
+            price = document.getElementById('lowest-price').childNodes[1].textContent;
+            if (price != undefined) {
+                price = parseInt(price.replace(/\./g, ''));
+                console.log(pr)
+                sendMessage({
+                    type: 'shop-offer',
+                    item: currentItem,
+                    price: price,
+                    analyze: false
+                });
+                clearInterval(priceTick);
+            }
+        }, 50);
+        refreshEventListener();
+        searchPrize = false;
+    } catch (err) {
+        console.log(err);
     }
 }
 
@@ -40,17 +75,42 @@ function sendMessage(message){
     });
 }
 
-function marketplaceEntryEventListener(item) {
+function currentItemEventListener(item) {
     item.addEventListener('click', function () {
-        currentItem = this.firstChild.firstChild.alt;
-        scanOffer = true;
+        currentItem = convertItemName(this.firstChild.firstChild.src);
+        searchPrize = true;
     });
+}
+
+// example:
+// "/images/mining/stygian_ore.png" -> "Stygian Ore"
+function convertItemName(itemName) {
+    itemName = itemName.substring(itemName.lastIndexOf('/') + 1, itemName.lastIndexOf('.'));
+    itemName = itemName.replace("2h_sword", "Greatsword");
+    itemName = itemName.replace("rune_", "runite_");
+    itemName = itemName.replace("runite_slate", " rune_slate");
+    // remove trailing meta data
+    itemName = itemName.replace(/_icon/i, '');
+    itemName = itemName.replace(/_V\d/, '');
+    itemName = itemName.replace(/_\d/, '');
+    // remove leading meta data
+    itemName = itemName.replace("hatcontest_", '');
+    // replace "_" with " "
+    itemName = itemName.replace(/_/g, ' ');
+    // first letter in each word to uppercase
+    itemName = itemName.replace(/\w\S*/g, function (txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+    // "the" and "of" to lowercase
+    itemName = itemName.replace("The ", "the ");
+    itemName = itemName.replace("Of ", "of ");
+    return itemName;
 }
 
 function refreshEventListener() {
     let refresh = document.getElementById('marketplace-refresh-button');
     refresh.addEventListener('click', function () {
-        scanOffer = true;
+        searchPrize = true;
     });
 }
 
@@ -131,15 +191,38 @@ function scanMarketList() {
         if (items.length == 0) {
             return;
         }
-        let item = items[0].firstChild.firstChild;
-        marketplaceEntryEventListener(item);
-        while (item.nextElementSibling != null) {
-            item = item.nextElementSibling;
-            marketplaceEntryEventListener(item);
+        // Don't scan the sell container, this is done by scanSellList()
+        if (items[0].firstChild.className == "marketplace-sell-container") {
+            return;
         }
+        items = items[0].firstChild;
+        scanList(items);
     } catch (err) {
-        console.log('Error: ' + err);
+        console.log(err);
     }
+}
+
+function scanSellList() {
+    try {
+        let items = document.getElementsByClassName('marketplace-sell-items');
+        if (items.length == 0) {
+            return;
+        }
+        items = items[0];
+        scanList(items);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+function scanList(items) {
+    if (items.classList.contains('event-listener-added')) {
+        return;
+    }
+    items.childNodes.forEach(function (item) {
+        currentItemEventListener(item);
+    });
+    items.classList.add('event-listener-added'); 
 }
 
 function markOffers(maxPrice) {
@@ -166,7 +249,7 @@ function markOffers(maxPrice) {
             }
         }
     } catch (err) {
-        console.log('Error: ' + err);
+        console.log(err);
     }
 }
 
@@ -177,10 +260,12 @@ window.addEventListener('beforeunload', function () {
 });
 
 let currentItem;
-let scanOffer = false;
+let searchPrize = false;
 let tick = setInterval(() => {
     scanMarketList();
-    if (scanOffer) {
+    scanSellList();
+    if (searchPrize) {
         getOffer(currentItem);
+        getSellPrice();
     }
 }, 1000);

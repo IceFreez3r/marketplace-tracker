@@ -1,11 +1,15 @@
 function handleMessage(request, sender, sendResponse) {
     request.data = JSON.parse(request.data);
-    if (request.data.type == "close") {
-        handleClose();
-    }
-    if (request.data.type == "shop-offer") {
-        handleOffer(request.data.item, request.data.price);
-        sendResponse(analyzeItem(request.data.item));
+    switch (request.data.type) {
+        case "close":
+            handleClose();
+            break;
+        case "shop-offer":
+            handleOffer(request.data.item, request.data.price);
+            if (request.data.analyze) {
+                sendResponse(analyzeItem(request.data.item));
+            }
+            break;
     }
 }
 
