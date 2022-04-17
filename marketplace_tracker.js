@@ -53,7 +53,6 @@ function getSellPrice() {
             price = document.getElementById('lowest-price').childNodes[1].textContent;
             if (price != undefined) {
                 price = parseInt(price.replace(/\./g, ''));
-                console.log(pr)
                 sendMessage({
                     type: 'shop-offer',
                     item: currentItem,
