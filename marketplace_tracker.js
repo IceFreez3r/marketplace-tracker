@@ -51,7 +51,7 @@ function getSellPrice() {
         let price;
         let priceTick = setInterval(() => {
             price = document.getElementById('lowest-price').childNodes[1].textContent;
-            if (price != undefined) {
+            if (price) {
                 price = parseInt(price.replace(/\./g, ''));
                 sendMessage({
                     type: 'shop-offer',
