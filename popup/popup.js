@@ -1,26 +1,35 @@
 function listItemsNeedingUpdate() {
-    itemListLastUpdate = sortByLastUpdate(filteredItemList());
-    let entries = document.getElementsByClassName("entry");
-    for (let i = 0; i < 3; i++) {
-        let entry = entries[i];
-        if (itemListLastUpdate.length > i) {
-            entry.style.display = "table-row";
-            entry.getElementsByClassName('name')[0].textContent = itemListLastUpdate[i].item;
-            entry.getElementsByClassName('price')[0].textContent = formatPrice(itemListLastUpdate[i].price);
-            entry.getElementsByClassName('last-update')[0].textContent = timeSince(itemListLastUpdate[i].lastUpdate);
-            
-            entry.getElementsByClassName('black-list')[0].onclick = function(){
-                addToBlackList(itemListLastUpdate[i].item);
-            }
-            entry.getElementsByClassName('favorite')[0].onclick = function(){
-                addToFavorites(itemListLastUpdate[i].item);
+    let itemListLastUpdate = sortByLastUpdate(filteredItemList());
+    let table_values = document.getElementById("update-table-values");
+    removeAllChildren(table_values);
+    if (itemListLastUpdate.length == 0) {
+        document.getElementById('no-items').style.display = 'block';
+    } else {
+        document.getElementById('no-items').style.display = 'none';
+        for (let i = 0; i < 5; i++) {
+            if (itemListLastUpdate.length > i) {
+                let entryHTML = entryTemplate();
+                table_values.insertAdjacentHTML('beforeend', entryHTML);
+                let entry = table_values.lastChild;
+                entry.getElementsByClassName('name')[0].textContent = itemListLastUpdate[i].item;
+                entry.getElementsByClassName('price')[0].textContent = formatPrice(itemListLastUpdate[i].price);
+                entry.getElementsByClassName('last-update')[0].textContent = timeSince(itemListLastUpdate[i].lastUpdate);
+                
+                entry.getElementsByClassName('favorite')[0].onclick = function() {
+                    toggleFavorite(itemListLastUpdate[i].item);
+                }
+                if (useBlackList) {
+                    entry.getElementsByClassName('black-list')[0].onclick = function() {
+                        addToBlackList(itemListLastUpdate[i].item);
+                    }
+                } else {
+                    entry.getElementsByClassName('white-list')[0].onclick = function() {
+                        removeFromWhiteList(itemListLastUpdate[i].item);
+                    }
+                }
             }
         }
     }
-    if (itemListLastUpdate.length == 0) {
-        document.getElementById('no-items').style.display = 'block';
-    }
-
 }
 
 function filteredItemList() {
@@ -40,11 +49,14 @@ function filteredItemList() {
 }
 
 function addToBlackList(item) {
-    if (item in blackList) {
+    if (blackList.indexOf(item) != -1) {
         return;
     }
-    if (item in whiteList) {
-        delete whiteList[item];
+    if (whiteList.indexOf(item) != -1) {
+        whiteList.splice(whiteList.indexOf(item), 1);
+        browser.storage.local.set({
+            whiteList: JSON.stringify(whiteList)
+        });
     }
     blackList.push(item);
     browser.storage.local.set({
@@ -53,22 +65,22 @@ function addToBlackList(item) {
     listItemsNeedingUpdate();
 }
 
-function addToWhiteList(item) {
-    if (item in whiteList) {
-        return;
+function removeFromWhiteList(item) {
+    if (whiteList.indexOf(item) != -1) {
+        whiteList.splice(whiteList.indexOf(item), 1);
+        browser.storage.local.set({
+            whiteList: JSON.stringify(whiteList)
+        });
+        listItemsNeedingUpdate();
     }
-    if (item in blackList) {
-        delete blackList[item];
-    }
-    whiteList.push(item);
-    browser.storage.local.set({
-        whiteList: JSON.stringify(whiteList)
-    });
-    listItemsNeedingUpdate();
 }
 
-function addToFavorites(item) {
-    favorites.push(item);
+function toggleFavorite(item) {
+    if (favorites.indexOf(item) == -1) {
+        favorites.push(item);
+    } else {
+        favorites.splice(favorites.indexOf(item), 1);
+    }
     browser.storage.local.set({
         favorites: JSON.stringify(favorites)
     });
@@ -93,9 +105,6 @@ function formatPrice(price) {
 function sortByLastUpdate(itemList){
     let tmp = {};
     for (let item in itemList) {
-        if (item in blackList) {
-            continue;
-        }
         let lastUpdate = 0;
         for (let timestamp in itemList[item]) {
             if (timestamp > lastUpdate) {
@@ -139,20 +148,63 @@ function loadFromStorage(obj, objName) {
     });
 }
 
-function load() {
+async function loadData() {
     // load storage
-    Promise.all([
+    const values = await Promise.all([
         loadFromStorage(itemList, 'itemList'),
         loadFromStorage(blackList, 'blackList'),
         loadFromStorage(whiteList, 'whiteList'),
-        loadFromStorage(favorites, 'favorites')
-    ]).then(function (values) {
-        itemList = values[0];
-        blackList = values[1];
-        whiteList = values[2];
-        favorites = values[3];
+        loadFromStorage(favorites, 'favorites'),
+        loadFromStorage(useBlackList, 'useBlackList')
+    ]);
+    itemList = values[0];
+    blackList = values[1];
+    whiteList = values[2];
+    favorites = values[3];
+    useBlackList = values[4];
+}
+
+function exportButton() {
+    let exportButton = document.getElementById('export');
+    exportButton.addEventListener('click', function () {
+        exportButton.innerHTML = "Exporting...";
+        setTimeout(function () {
+            exportButton.innerHTML = "Just kidding, click me again!";
+        }, 3000);
+    });
+}
+
+function toggle() {
+    const toggle = document.getElementsByClassName('toggle-input')[0];
+    toggle.checked = useBlackList;
+
+    toggle.addEventListener('change', function () {
+        useBlackList = toggle.checked;
+        browser.storage.local.set({
+            useBlackList: useBlackList
+        });
         listItemsNeedingUpdate();
     });
+}
+
+function entryTemplate() {
+    let listColor = useBlackList ? 'black' : 'white';
+    return `
+<tr class="entry">
+    <td class="name"></td>
+    <td class="price"></td>
+    <td class="last-update"></td>
+    <td class="actions">
+        <img class="action icon favorite" src="../icons/favorite.png" alt="favorite" />
+        <img class="action icon ${listColor}-list" src="../icons/${listColor}List.png" alt="${listColor}list" />
+    </td>
+</tr>`;
+}
+
+function removeAllChildren(element) {
+    while (element.firstChild) {
+        element.removeChild(element.lastChild);
+    }
 }
 
 let itemList = {};
@@ -161,11 +213,9 @@ let whiteList = [];
 let favorites = [];
 let useBlackList = true;
 
-let exportButton = document.getElementById('export');
-exportButton.addEventListener('click', function () {
-    exportButton.innerHTML = "Exporting...";
-    setTimeout(function () {
-        exportButton.innerHTML = "Just kidding, click me again!";
-    }, 3000);
+exportButton();
+loadData().then(function () {
+    whiteList = ["Black Opal"]; // For testing purposes
+    listItemsNeedingUpdate();
+    toggle();
 });
-load();
