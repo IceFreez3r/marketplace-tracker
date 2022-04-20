@@ -8,13 +8,13 @@ function listItemsNeedingUpdate() {
         document.getElementById('no-items').style.display = 'none';
         for (let i = 0; i < 5; i++) {
             if (itemListLastUpdate.length > i) {
-                let entryHTML = entryTemplate();
+                let entryHTML = entryTemplate(
+                    itemListLastUpdate[i].item, 
+                    formatPrice(itemListLastUpdate[i].price), 
+                    timeSince(itemListLastUpdate[i].lastUpdate)
+                    );
                 table_values.insertAdjacentHTML('beforeend', entryHTML);
                 let entry = table_values.lastChild;
-                entry.getElementsByClassName('name')[0].textContent = itemListLastUpdate[i].item;
-                entry.getElementsByClassName('price')[0].textContent = formatPrice(itemListLastUpdate[i].price);
-                entry.getElementsByClassName('last-update')[0].textContent = timeSince(itemListLastUpdate[i].lastUpdate);
-                
                 entry.getElementsByClassName('favorite')[0].onclick = function() {
                     toggleFavorite(itemListLastUpdate[i].item);
                 }
@@ -187,13 +187,13 @@ function toggle() {
     });
 }
 
-function entryTemplate() {
+function entryTemplate(item, price, lastUpdate) {
     let listColor = useBlackList ? 'black' : 'white';
     return `
 <tr class="entry">
-    <td class="name"></td>
-    <td class="price"></td>
-    <td class="last-update"></td>
+    <td class="name">${item}</td>
+    <td class="price">${price}</td>
+    <td class="last-update">${lastUpdate}</td>
     <td class="actions">
         <img class="action icon favorite" src="../icons/favorite.png" alt="favorite" />
         <img class="action icon ${listColor}-list" src="../icons/${listColor}List.png" alt="${listColor}list" />
