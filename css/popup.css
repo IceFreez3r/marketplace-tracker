@@ -1,5 +1,7 @@
+@import "toggle.css";
+
 body {
-    width: 300px;
+    width: 350px;
 }
 
 .icon {
@@ -9,18 +11,15 @@ body {
 
 .table-container {
     text-align: center;
+    clear: both;
 }
 
 #update-table {
-    margin: auto;
+    width: 100%
 }
 
 .action{
     cursor: pointer;
-}
-
-.entry {
-    display: none;
 }
 
 #no-items {

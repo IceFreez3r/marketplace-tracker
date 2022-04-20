@@ -1,3 +1,6 @@
+@import "checkmark.css";
+@import "spinner.css";
+
 .marketplace-offer-low {
     background-image: linear-gradient(270deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%);
 }
@@ -68,99 +71,4 @@
 
 .text-red {
     color: rgb(128, 0, 0);
-}
-
-/* Spinner */
-
-.loaded .spinner {
-    display: none;
-}
-
-.spinner {
-    -webkit-animation: rotator 1.4s linear infinite;
-    animation: rotator 1.4s linear infinite;
-    stroke: green;
-}
-
-@-webkit-keyframes rotator {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(270deg);
-    }
-}
-
-@keyframes rotator {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(270deg);
-    }
-}
-
-.path {
-    stroke-dasharray: 187;
-    stroke-dashoffset: 0;
-    transform-origin: center;
-    -webkit-animation: dash 1.4s ease-in-out infinite, colors 5.6s ease-in-out infinite;
-    animation: dash 1.4s ease-in-out infinite, colors 5.6s ease-in-out infinite;
-}
-
-@-webkit-keyframes dash {
-    0% {
-        stroke-dashoffset: 187;
-    }
-
-    50% {
-        stroke-dashoffset: 46.75;
-        transform: rotate(135deg);
-    }
-
-    100% {
-        stroke-dashoffset: 187;
-        transform: rotate(450deg);
-    }
-}
-
-@keyframes dash {
-    0% {
-        stroke-dashoffset: 187;
-    }
-
-    50% {
-        stroke-dashoffset: 46.75;
-        transform: rotate(135deg);
-    }
-
-    100% {
-        stroke-dashoffset: 187;
-        transform: rotate(450deg);
-    }
-}
-
-/* Checkmark */
-
-.loading .check {
-    display: none;
-}
-
-.check path {
-    fill: none;
-    stroke: green;
-    stroke-width: 4;
-    stroke-dasharray: 23;
-    stroke-dashoffset: 23;
-    animation: draw 1s linear forwards;
-    stroke-linecap: round;
-    stroke-linejoin: round
-}
-
-@keyframes draw {
-    to {
-        stroke-dashoffset: 0
-    }
 }
