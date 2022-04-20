@@ -1,5 +1,5 @@
-function getOffer(currentItem) {
-    if (currentItem == undefined) {
+function getOffer(currentItemId, currentItemName) {
+    if (currentItemId == undefined) {
         return;
     }
     try {
@@ -19,7 +19,8 @@ function getOffer(currentItem) {
         let offerPrice = parseInt(priceCell.innerText.replace(/\./g, ''));
         sendMessage({
             type: 'shop-offer',
-            item: currentItem,
+            itemId: currentItemId,
+            itemName: currentItemName,
             price: offerPrice,
             analyze: true
         }).then(response => {
@@ -40,7 +41,7 @@ function getOffer(currentItem) {
 }
 
 function getSellPrice() {
-    if (currentItem == undefined) {
+    if (currentItemId == undefined) {
         return;
     }
     try {
@@ -55,7 +56,7 @@ function getSellPrice() {
                 price = parseInt(price.replace(/\./g, ''));
                 sendMessage({
                     type: 'shop-offer',
-                    item: currentItem,
+                    itemId: currentItemId,
                     price: price,
                     analyze: false
                 });
@@ -76,35 +77,19 @@ function sendMessage(message){
     });
 }
 
-function currentItemEventListener(item) {
-    item.addEventListener('click', function () {
-        currentItem = convertItemName(this.firstChild.firstChild.src);
+function currentItemEventListener(itemNode) {
+    itemNode.addEventListener('click', function () {
+        currentItemId = convertItemId(this.firstChild.firstChild.src);
+        currentItemName = this.firstChild.firstChild.alt;
         searchPrize = true;
     });
 }
 
 // example:
 // "/images/mining/stygian_ore.png" -> "Stygian Ore"
-function convertItemName(itemName) {
+function convertItemId(itemName) {
     itemName = itemName.substring(itemName.lastIndexOf('/') + 1, itemName.lastIndexOf('.'));
-    itemName = itemName.replace("2h_sword", "Greatsword");
-    itemName = itemName.replace("rune_", "runite_");
-    itemName = itemName.replace("runite_slate", " rune_slate");
-    // remove trailing meta data
-    itemName = itemName.replace(/_icon/i, '');
-    itemName = itemName.replace(/_V\d/, '');
-    itemName = itemName.replace(/_\d/, '');
-    // remove leading meta data
-    itemName = itemName.replace("hatcontest_", '');
-    // replace "_" with " "
-    itemName = itemName.replace(/_/g, ' ');
-    // first letter in each word to uppercase
-    itemName = itemName.replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-    // "the" and "of" to lowercase
-    itemName = itemName.replace("The ", "the ");
-    itemName = itemName.replace("Of ", "of ");
+    itemName = itemName.replace(/-/g, '_');
     return itemName;
 }
 
@@ -233,8 +218,8 @@ function scanList(items) {
     if (items.classList.contains('event-listener-added')) {
         return;
     }
-    items.childNodes.forEach(function (item) {
-        currentItemEventListener(item);
+    items.childNodes.forEach(function (itemNode) {
+        currentItemEventListener(itemNode);
     });
     items.classList.add('event-listener-added'); 
 }
@@ -273,13 +258,14 @@ window.addEventListener('beforeunload', function () {
     });
 });
 
-let currentItem;
+let currentItemId;
+let currentItemName;
 let searchPrize = false;
 let tick = setInterval(() => {
     scanMarketList();
     scanSellList();
     if (searchPrize) {
-        getOffer(currentItem);
+        getOffer(currentItemId, currentItemName);
         getSellPrice();
     }
 }, 1000);

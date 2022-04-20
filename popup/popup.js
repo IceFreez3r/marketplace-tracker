@@ -8,11 +8,9 @@ function listItemsNeedingUpdate() {
         document.getElementById('no-items').style.display = 'none';
         for (let i = 0; i < 5; i++) {
             if (itemListLastUpdate.length > i) {
-                let entryHTML = entryTemplate(
-                    itemListLastUpdate[i].item, 
-                    formatPrice(itemListLastUpdate[i].price), 
-                    timeSince(itemListLastUpdate[i].lastUpdate)
-                    );
+                let entryHTML = entryTemplate(itemListLastUpdate[i].itemName, 
+                                                formatPrice(itemListLastUpdate[i].price), 
+                                                timeSince(itemListLastUpdate[i].lastUpdate));
                 table_values.insertAdjacentHTML('beforeend', entryHTML);
                 let entry = table_values.lastChild;
                 entry.getElementsByClassName('favorite')[0].onclick = function() {
@@ -34,40 +32,42 @@ function listItemsNeedingUpdate() {
 
 function filteredItemList() {
     let tmp = {};
-    for (let item in itemList) {
-        if (useBlackList) {
-            if (blackList.indexOf(item) == -1) {
-                tmp[item] = itemList[item];
-            }
-        } else {
-            if (whiteList.indexOf(item) != -1) {
-                tmp[item] = itemList[item];
+    for (let itemId in itemList) {
+        if (itemList[itemId]["name"] != undefined) {
+            if (useBlackList) {
+                if (blackList.indexOf(itemId) == -1) {
+                    tmp[itemId] = itemList[itemId];
+                }
+            } else {
+                if (whiteList.indexOf(itemId) != -1) {
+                    tmp[itemId] = itemList[itemId];
+                }
             }
         }
     }
     return tmp;
 }
 
-function addToBlackList(item) {
-    if (blackList.indexOf(item) != -1) {
+function addToBlackList(itemId) {
+    if (blackList.indexOf(itemId) != -1) {
         return;
     }
-    if (whiteList.indexOf(item) != -1) {
-        whiteList.splice(whiteList.indexOf(item), 1);
+    if (whiteList.indexOf(itemId) != -1) {
+        whiteList.splice(whiteList.indexOf(itemId), 1);
         browser.storage.local.set({
             whiteList: JSON.stringify(whiteList)
         });
     }
-    blackList.push(item);
+    blackList.push(itemId);
     browser.storage.local.set({
         blackList: JSON.stringify(blackList)
     });
     listItemsNeedingUpdate();
 }
 
-function removeFromWhiteList(item) {
-    if (whiteList.indexOf(item) != -1) {
-        whiteList.splice(whiteList.indexOf(item), 1);
+function removeFromWhiteList(itemId) {
+    if (whiteList.indexOf(itemId) != -1) {
+        whiteList.splice(whiteList.indexOf(itemId), 1);
         browser.storage.local.set({
             whiteList: JSON.stringify(whiteList)
         });
@@ -75,11 +75,11 @@ function removeFromWhiteList(item) {
     }
 }
 
-function toggleFavorite(item) {
-    if (favorites.indexOf(item) == -1) {
-        favorites.push(item);
+function toggleFavorite(itemId) {
+    if (favorites.indexOf(itemId) == -1) {
+        favorites.push(itemId);
     } else {
-        favorites.splice(favorites.indexOf(item), 1);
+        favorites.splice(favorites.indexOf(itemId), 1);
     }
     browser.storage.local.set({
         favorites: JSON.stringify(favorites)
@@ -104,9 +104,9 @@ function formatPrice(price) {
 
 function sortByLastUpdate(itemList){
     let tmp = {};
-    for (let item in itemList) {
+    for (let itemId in itemList) {
         let lastUpdate = 0;
-        for (let timestamp in itemList[item]) {
+        for (let timestamp in itemList[itemId]["prices"]) {
             if (timestamp > lastUpdate) {
                 lastUpdate = timestamp;
             }
@@ -114,15 +114,18 @@ function sortByLastUpdate(itemList){
         if (tmp[lastUpdate] == undefined) {
             tmp[lastUpdate] = {};
         }
-        tmp[lastUpdate][item] = itemList[item][lastUpdate];
+        tmp[lastUpdate][itemId] = {};
+        tmp[lastUpdate][itemId]["name"] = itemList[itemId]["name"];
+        tmp[lastUpdate][itemId]["prices"] = itemList[itemId]["prices"][lastUpdate];
     }
     sortObj(tmp);
     itemListLastUpdate = [];
     for (let timestamp in tmp) {
-        for (let item in tmp[timestamp]) {
+        for (let itemId in tmp[timestamp]) {
             itemListLastUpdate.push({
-                item: item,
-                price: tmp[timestamp][item],
+                itemId: itemId,
+                itemName: tmp[timestamp][itemId]["name"],
+                price: tmp[timestamp][itemId]["prices"],
                 lastUpdate: timestamp
             });
         }
