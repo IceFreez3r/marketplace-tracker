@@ -8,12 +8,19 @@ function handleMessage(request, sender, sendResponse) {
         sendResponse(analyzeItem(request.data.item));
     }
     else if (request.data.type == "get-favorite") {
-        //something needs to happen here
         console.log("handle favorite request");
         return isFavorite(request.data.item);
     }
+    else if (request.data.type == "get-favorites-list") {
+        return browser.storage.local.get('favorites').then(function(result){
+            if (result.favorites) {
+                return JSON.parse(result.favorites);
+            } else {
+                return [];
+            }
+        });
+    }
     else if (request.data.type == "toggle-favorite") {
-        console.log("toggle favorite");
         return browser.storage.local.get('favorites').then(function (result) {
             if (result.favorites) {
                 let favorites = JSON.parse(result.favorites);

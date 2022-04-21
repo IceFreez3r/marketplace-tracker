@@ -164,18 +164,35 @@ function formatNumber(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function getFavoriteList () {
+    return sendMessage({
+        type: 'get-favorites-list',
+    });
+}
+
+function highlightFavorite (itemNode, favorites) {
+    let item = itemNode.firstChild.firstChild.alt;
+    if (favorites.indexOf(item) > -1) {
+        itemNode.firstChild.classList.add("highlight");
+    }
+}
+
 function scanMarketList() {
     try {
         let items = document.getElementsByClassName('marketplace-content');
         if (items.length == 0) {
             return;
         }
-        let item = items[0].firstChild.firstChild;
-        marketplaceEntryEventListener(item);
-        while (item.nextElementSibling != null) {
-            item = item.nextElementSibling;
+        getFavoriteList().then(favoritesList => {
+            let item = items[0].firstChild.firstChild;
             marketplaceEntryEventListener(item);
-        }
+            highlightFavorite(item, favoritesList);
+            while (item.nextElementSibling != null) {
+                item = item.nextElementSibling;
+                marketplaceEntryEventListener(item);
+                highlightFavorite(item, favoritesList);
+            }
+        });
     } catch (err) {
         console.log('Error: ' + err);
     }
