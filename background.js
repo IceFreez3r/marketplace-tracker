@@ -5,9 +5,13 @@ function handleMessage(request, sender, sendResponse) {
             handleClose();
             break;
         case "shop-offer":
-            handleOffer(request.data.item, request.data.price);
+            if (request.data.itemName) {
+                handleOffer(request.data.itemId, request.data.price, request.data.itemName);
+            } else {
+                handleOffer(request.data.itemId, request.data.price);
+            }
             if (request.data.analyze) {
-                sendResponse(analyzeItem(request.data.item));
+                sendResponse(analyzeItem(request.data.itemId));
             }
             break;
     }
@@ -17,18 +21,22 @@ function handleClose() {
     console.log("Close");
 }
 
-function handleOffer(item, price) {
+function handleOffer(itemId, price, itemName = undefined) {
     let timestamp = Math.floor(Date.now() / 1000 / 60 / 60);
-    if (itemList[item] == undefined) {
-        itemList[item] = {};
+    if (itemList[itemId] == undefined) {
+        itemList[itemId] = {};
+        itemList[itemId]["prices"] = {};
     }
-    itemList[item][timestamp] = price;
-    console.log(itemList);
+    if (itemName != undefined && itemList[itemId]["name"] == undefined) {
+        itemList[itemId]["name"] = itemName;
+    }
+    itemList[itemId]["prices"][timestamp] = price;
     storeItemList();
 }
 
 function storeItemList() {
     itemList = sortObj(itemList);
+    console.log(itemList);
     browser.storage.local.set({
         itemList: JSON.stringify(itemList)
     });
@@ -41,11 +49,11 @@ function sortObj(obj) {
     }, {});
 }
 
-function analyzeItem(item) {
+function analyzeItem(itemId) {
     let minPrice = Number.MAX_SAFE_INTEGER;
     let maxPrice = 0;
-    for (let timestamp in itemList[item]) {
-        let price = itemList[item][timestamp];
+    for (let timestamp in itemList[itemId]["prices"]) {
+        let price = itemList[itemId]["prices"][timestamp];
         if (price > maxPrice) {
             maxPrice = price;
         }
