@@ -236,6 +236,30 @@ function highlightFavorite (itemNode, favorites) {
     }
 }
 
+function highlightFavoriteSell() {
+    getFavoriteList().then(favoritesList => {
+        let items = document.getElementsByClassName('marketplace-sell-items');
+        let item = items[0].firstChild;
+        highlightFavorite(item, favoritesList);
+        while (item.nextElementSibling != null) {
+            item = item.nextElementSibling;
+            highlightFavorite(item, favoritesList);
+        }
+    });
+}
+
+function highlightFavoriteBuy() {
+    getFavoriteList().then(favoritesList => {
+        let items = document.getElementsByClassName('marketplace-content');
+        let item = items[0].firstChild.firstChild;
+        highlightFavorite(item, favoritesList);
+        while (item.nextElementSibling != null) {
+            item = item.nextElementSibling;
+            highlightFavorite(item, favoritesList);
+        }
+    });
+}
+
 function scanMarketList() {
     try {
         let items = document.getElementsByClassName('marketplace-content');
@@ -244,17 +268,10 @@ function scanMarketList() {
         }
         // Don't scan the sell container, this is done by scanSellList()
         if (items[0].firstChild.className == "marketplace-sell-container") {
+            highlightFavoriteSell();
             return;
         }
-        getFavoriteList().then(favoritesList => {
-            let items = document.getElementsByClassName('marketplace-content');
-            let item = items[0].firstChild.firstChild;
-            highlightFavorite(item, favoritesList);
-            while (item.nextElementSibling != null) {
-                item = item.nextElementSibling;
-                highlightFavorite(item, favoritesList);
-            }
-        });
+        highlightFavoriteBuy();
         items = items[0].firstChild;
         scanList(items);
     } catch (err) {
