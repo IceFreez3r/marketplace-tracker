@@ -1,3 +1,6 @@
+@import "checkmark.css";
+@import "spinner.css";
+
 .marketplace-offer-low {
     background-image: linear-gradient(270deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%);
 }

@@ -3,11 +3,19 @@
 
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../css/popup.css" />
 </head>
 
 <body>
     <button id="export">Export</button>
+    <div class="toggle">
+        <input class="toggle-input" type="checkbox" />
+        <div class="toggle-bg"></div>
+        <div class="toggle-switch">
+            <div class="toggle-switch-figure"></div>
+            <div class="toggle-switch-figureAlt"></div>
+        </div>
+    </div>
     <div class="table-container">
         <table id="update-table">
             <thead>
@@ -18,34 +26,8 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr class="entry">
-                    <td class="name">Itemname</td>
-                    <td class="price">Itemprice</td>
-                    <td class="last-update">Item Last Update</td>
-                    <td class="actions">
-                        <img class="action icon favorite" src="../icons/favorite.png" alt="favorite" />
-                        <img class="action icon black-list" src="../icons/blackList.png" alt="blacklist" />
-                    </td>
-                </tr>
-                <tr class="entry">
-                    <td class="name">Itemname</td>
-                    <td class="price">Itemprice</td>
-                    <td class="last-update">Item Last Update</td>
-                    <td class="actions">
-                        <img class="action icon favorite" src="../icons/favorite.png" alt="favorite" />
-                        <img class="action icon black-list" src="../icons/blackList.png" alt="blacklist" />
-                    </td>
-                </tr>
-                <tr class="entry">
-                    <td class="name">Itemname</td>
-                    <td class="price">Itemprice</td>
-                    <td class="last-update">Item Last Update</td>
-                    <td class="actions">
-                        <img class="action icon favorite" src="../icons/favorite.png" alt="favorite" />
-                        <img class="action icon black-list" src="../icons/blackList.png" alt="blacklist" />
-                    </td>
-                </tr>
+            <tbody id="update-table-values">
+                <!-- Content inserted by popup.js -->
             </tbody>
         </table>
         <div id="no-items">No items tracked</div>

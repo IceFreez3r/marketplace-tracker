@@ -17,7 +17,7 @@
                 "marketplace_tracker.js"
             ],
             "css": [
-                "custom_classes.css"
+                "css/custom_classes.css"
             ]
         }
     ],
