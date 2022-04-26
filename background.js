@@ -15,7 +15,6 @@ function handleMessage(request, sender, sendResponse) {
             }
             break;
         case "get-favorite":
-            console.log("handle favorite request");
             return isFavorite(request.data.item);
         case "get-favorites-list":
             return browser.storage.local.get('favorites').then(function(result){

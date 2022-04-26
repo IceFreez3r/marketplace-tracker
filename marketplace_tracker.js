@@ -7,10 +7,10 @@ function getOffer(currentItemId, currentItemName) {
         if (offers.length == 0) {
             return;
         }
-        favoriteButton(currentItemId);
         if (offers[0].classList.contains('marketplace-my-auctions-table')) {
             return;
         }
+        favoriteButton(currentItemId);
         let offer = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         while (offer.className == 'marketplace-own-listing') {
             offer = offer.nextElementSibling;
@@ -72,28 +72,25 @@ function getSellPrice() {
 }
 
 function favoriteButton(currentItem){
-    if(document.getElementById("marketplace-refresh-button").nextSibling==document.getElementById("marketplace-item-list-searchbar")){
-        //above: refresh doesn't add buttons
-        sendMessage({
-            type: 'get-favorite',
-            item: currentItem
-        }).then(response => {
-            console.log(response);
-            document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(response.isFavorite));
-            let favoriteButton = document.getElementById("marketplace-favorite-button")
-            favoriteButton.addEventListener('click', function(){
-                sendMessage({
-                    type: 'toggle-favorite',
-                    item: currentItem
-                }).then(response => {
-                    console.log(response.success);
-                    console.log(response.isFavorite);
-                    favoriteButton.classList.replace(response.isFavorite ? 'fill-none' : 'fill-yellow', response.isFavorite ? 'fill-yellow' : 'fill-none');
-                    favoriteButton.getElementsByTagName('span')[0].classList.toggle('invisible');
-                });
+    if(document.getElementById("marketplace-refresh-button").nextSibling!=document.getElementById("marketplace-item-list-searchbar")){ //refresh doesn't add buttons
+        return; 
+    }
+    sendMessage({
+        type: 'get-favorite',
+        item: currentItem
+    }).then(response => {
+        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(response.isFavorite));
+        let favoriteButton = document.getElementById("marketplace-favorite-button")
+        favoriteButton.addEventListener('click', function(){
+            sendMessage({
+                type: 'toggle-favorite',
+                item: currentItem
+            }).then(response => {
+                favoriteButton.classList.replace(response.isFavorite ? 'fill-none' : 'fill-yellow', response.isFavorite ? 'fill-yellow' : 'fill-none');
+                favoriteButton.getElementsByTagName('span')[0].classList.toggle('invisible');
             });
         });
-    }
+    });
 }
 
 function sendMessage(message){
@@ -239,24 +236,26 @@ function highlightFavorite (itemNode, favorites) {
 function highlightFavoriteSell() {
     getFavoriteList().then(favoritesList => {
         let items = document.getElementsByClassName('marketplace-sell-items');
-        let item = items[0].firstChild;
-        highlightFavorite(item, favoritesList);
-        while (item.nextElementSibling != null) {
-            item = item.nextElementSibling;
-            highlightFavorite(item, favoritesList);
+        if (items.length == 0) {
+            return;
         }
+        let item = items[0]; //forEach works on arrays
+        item.childNodes.forEach(function (itemNode) {
+            highlightFavorite(itemNode, favoritesList);
+         });
     });
 }
 
 function highlightFavoriteBuy() {
     getFavoriteList().then(favoritesList => {
         let items = document.getElementsByClassName('marketplace-content');
-        let item = items[0].firstChild.firstChild;
-        highlightFavorite(item, favoritesList);
-        while (item.nextElementSibling != null) {
-            item = item.nextElementSibling;
-            highlightFavorite(item, favoritesList);
+        if (items.length == 0) {
+            return;
         }
+        let item = items[0].firstChild; //forEach works on arrays
+        item.childNodes.forEach(function (itemNode) { 
+           highlightFavorite(itemNode, favoritesList);
+        });
     });
 }
 

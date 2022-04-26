@@ -18,9 +18,8 @@ Tabelle
         rechts neben Enchantmentsuche
             whiteList / blackList Button
             Favoriten Button
-<<<<<<< HEAD
                 kleinere Buttons
                 Infotext entfernen
-=======
+                Button zu Sell-Popup hinzufügen
+                Highlight im Inventar?
 Export
->>>>>>> main
