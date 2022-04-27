@@ -14,6 +14,44 @@ function handleMessage(request, sender, sendResponse) {
                 sendResponse(analyzeItem(request.data.itemId));
             }
             break;
+        case "get-favorite":
+            return isFavorite(request.data.item);
+        case "get-favorites-list":
+            return browser.storage.local.get('favorites').then(function(result){
+                if (result.favorites) {
+                    return JSON.parse(result.favorites);
+                } else {
+                    return [];
+                }
+            });
+        case "toggle-favorite":
+            return browser.storage.local.get('favorites').then(function (result) {
+                if (result.favorites) {
+                    let favorites = JSON.parse(result.favorites);
+                    if (favorites.indexOf(request.data.item) > -1) {
+                        favorites.pop(request.data.item);
+                    } else {
+                        favorites.push(request.data.item);
+                    }
+                    browser.storage.local.set({
+                        favorites: JSON.stringify(favorites)
+                    });
+                    return {
+                        success: true,
+                        isFavorite: favorites.indexOf(request.data.item) > -1
+                    }
+                } else {
+                    let favorites = [];
+                    favorites.push(request.data.item);
+                    browser.storage.local.set({
+                        favorites: JSON.stringify(favorites)
+                    });
+                    return {
+                        success: true,
+                        isFavorite: true
+                    }
+                }
+            });
     }
 }
 
@@ -32,6 +70,23 @@ function handleOffer(itemId, price, itemName = undefined) {
     }
     itemList[itemId]["prices"][timestamp] = price;
     storeItemList();
+}
+
+function isFavorite(item){
+    return browser.storage.local.get('favorites').then(function (result) {
+        if (result.favorites) {
+            let favorites = JSON.parse(result.favorites);
+            return {
+                type: "is-favorite",
+                isFavorite: favorites.indexOf(item) > -1
+            }
+        } else {
+            return {
+                type: "is-favorite",
+                isFavorite: false
+            };
+        }
+    });
 }
 
 function storeItemList() {
