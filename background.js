@@ -36,6 +36,11 @@ function handleMessage(request, sender, sendResponse) {
                     return null;
                 }
             });
+        case "crafting-recipe":
+            sendResponse(handleCraftingRecipe(request.data.craftedItemId, request.data.resourceItemIds));
+            break;
+        default:
+            console.log("Unknown request: " + request.data);
     }
 }
 
@@ -104,6 +109,41 @@ function toggleFavorite(itemId) {
         }
     });
 }
+
+function handleCraftingRecipe(craftedItemId, resourceItemIds) {
+    console.log("Crafting recipe: " + craftedItemId + " " + resourceItemIds);
+    let craftedApiId = idMap[craftedItemId];
+    let resourceApiIds = [];
+    for (let i = 0; i < resourceItemIds.length; i++) {
+        resourceApiIds.push(idMap[resourceItemIds[i]]);
+    }
+
+    let craftedItemMinPrice = "?";
+    let craftedItemMaxPrice = "?";
+    if (craftedApiId in itemList) {
+        craftedItemMinPrice = minPrice(craftedApiId);
+        craftedItemMaxPrice = maxPrice(craftedApiId);
+    }
+    // sum of all resource prices
+    let resourceItemMinPrices = [];
+    let resourceItemMaxPrices = [];
+    for (let i = 0; i < resourceApiIds.length; i++) {
+        if (resourceApiIds[i] in itemList) {
+            resourceItemMinPrices.push(minPrice(resourceApiIds[i]));
+            resourceItemMaxPrices.push(maxPrice(resourceApiIds[i]));
+        } else {
+            resourceItemMinPrices.push("?");
+            resourceItemMaxPrices.push("?");
+        }
+    }
+    return {
+        type: "crafting-recipe-analysis",
+        craftedItemMinPrice: craftedItemMinPrice,
+        craftedItemMaxPrice: craftedItemMaxPrice,
+        resourceItemMinPrices: resourceItemMinPrices,
+        resourceItemMaxPrices: resourceItemMaxPrices
+    };
+}    
 
 function storeItemList() {
     itemList = sortObj(itemList);
@@ -210,6 +250,28 @@ function addHardcodedItems() {
                 0: 1
             }
         };
+}
+
+function minPrice(apiId) {
+    let minPrice = Infinity;
+    for (let timestamp in itemList[apiId]["prices"]) {
+        let price = itemList[apiId]["prices"][timestamp];
+        if (price < minPrice) {
+            minPrice = price;
+        }
+    }
+    return minPrice;
+}
+
+function maxPrice(apiId) {
+    let maxPrice = 0;
+    for (let timestamp in itemList[apiId]["prices"]) {
+        let price = itemList[apiId]["prices"][timestamp];
+        if (price > maxPrice) {
+            maxPrice = price;
+        }
+    }
+    return maxPrice;
 }
 
 let itemList = {};

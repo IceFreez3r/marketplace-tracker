@@ -1,0 +1,44 @@
+.crafting-item-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.crafting-container {
+    height: auto;
+    flex: 1 0 auto;
+}
+
+.crafting-info-container {
+    border: 2px solid gray;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .705);
+    margin-top: 4px;
+}
+
+.crafting-info-header {
+    margin: 0;
+    text-align: center;
+}
+
+.crafting-info-table {
+    display: grid; /* Grid Layout specified by js */
+    grid-gap: 5px;
+    background: rgba(36, 36, 36, .671);
+    border: 2px solid hsla(0, 0%, 100%, .452);
+    padding: 6px;
+    margin: 6px;
+    border-radius: 10px;
+}
+
+.crafting-info-table-content {
+    text-align: center;
+}
+
+.crafting-info-table-content:first-child {
+    grid-column: 2;
+}
+
+.text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+}

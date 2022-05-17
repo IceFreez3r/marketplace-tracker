@@ -233,6 +233,7 @@ let tick = setInterval(() => {
     scanMarketplaceLists();
     scanOfferList();
     offlineTracker();
+    getCraftingRecipe();
 }, 1000);
 
 fetchAPI();

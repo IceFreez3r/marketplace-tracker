@@ -16,6 +16,7 @@
             "js": [
                 "marketplace_tracker.js",
                 "offline_tracker.js",
+                "crafting_tracker.js",
                 "utility.js"
             ],
             "css": [
