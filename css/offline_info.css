@@ -1,0 +1,31 @@
+.offline-info-box {
+    padding: 10px;
+    text-align: center;
+    font-size: 25px;
+}
+
+.offline-gold-icon {
+    height: 28px;
+    width: 28px;
+    vertical-align: text-top;
+}
+
+.offline-info-value {
+    display: flex;
+    justify-content: center;
+}
+
+.offline-info-value .left-info {
+    flex: 1;
+    text-align: right;
+}
+
+.offline-info-value .center-info {
+    flex: 0;
+    padding: 0 5px;
+}
+
+.offline-info-value .right-info {
+    flex: 1;
+    text-align: left;
+}

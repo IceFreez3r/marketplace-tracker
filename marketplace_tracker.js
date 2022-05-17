@@ -232,6 +232,7 @@ let createMap = true;
 let tick = setInterval(() => {
     scanMarketplaceLists();
     scanOfferList();
+    offlineTracker();
 }, 1000);
 
 fetchAPI();

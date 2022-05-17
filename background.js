@@ -25,12 +25,26 @@ function handleMessage(request, sender, sendResponse) {
         case "icon-to-id-map":
             updateIdMap(request.data.map);
             break;
+        case "get-item-values":
+            sendResponse(getItemValues(request.data.itemIds));
+            break;
+        case "get-last-login":
+            return browser.storage.local.get('lastLogin').then(function(result){
+                if (result.lastLogin) {
+                    return result.lastLogin;
+                } else {
+                    return null;
+                }
+            });
     }
 }
 
 function handleClose() {
     console.log("Close");
     storeItemList();
+    browser.storage.local.set({
+        lastLogin: Date.now()
+    });
 }
 
 function handleApiData(data) {
@@ -142,6 +156,38 @@ function analyzeItem(itemId) {
     }
 }
 
+function getItemValues(itemIds) {
+    console.log(itemIds);
+    let itemMinPrices = [];
+    let itemMaxPrices = [];
+    for (let i = 0; i < itemIds.length; i++) {
+        let apiId = idMap[itemIds[i]];
+        if (!(apiId in itemList)) {
+            itemMinPrices.push("?");
+            itemMaxPrices.push("?");
+            continue;
+        }
+        let minPrice = Number.MAX_SAFE_INTEGER;
+        let maxPrice = 0;
+        for (let timestamp in itemList[apiId]["prices"]) {
+            let price = itemList[apiId]["prices"][timestamp];
+            if (price > maxPrice) {
+                maxPrice = price;
+            }
+            if (price < minPrice) {
+                minPrice = price;
+            }
+        }
+        itemMinPrices.push(minPrice);
+        itemMaxPrices.push(maxPrice);
+    }
+    return {
+        type: "item-values",
+        itemMinPrices: itemMinPrices,
+        itemMaxPrices: itemMaxPrices
+    }
+}
+
 function filterItemList() {
     let twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 6) - (14 * 24 * 6);
     for (let apiId in itemList) {
@@ -153,7 +199,17 @@ function filterItemList() {
         if (Object.keys(itemList[apiId]["prices"]).length === 0) {
             delete itemList[apiId];
         }
-    }    
+    }
+    addHardcodedItems();
+}
+
+function addHardcodedItems() {
+    itemList[1] = {
+            "name": "Gold",
+            "prices": {
+                0: 1
+            }
+        };
 }
 
 let itemList = {};
@@ -163,7 +219,9 @@ browser.storage.local.get('itemList').then(function (result) {
     }
     filterItemList();
 });
-let idMap = {};
+let idMap = {
+    "money_icon": 1
+};
 browser.storage.local.get('idMap').then(function (result) {
     if (result.idMap) {
         idMap = JSON.parse(result.idMap);
