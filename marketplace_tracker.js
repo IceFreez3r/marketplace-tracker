@@ -234,6 +234,7 @@ let tick = setInterval(() => {
     scanOfferList();
     offlineTracker();
     getCraftingRecipe();
+    enchantingTracker();
 }, 1000);
 
 fetchAPI();

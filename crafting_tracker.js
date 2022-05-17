@@ -73,18 +73,13 @@ function craftingInfoTemplate(craftedItemMinPrice,
                                 resourceItemMinPrices,
                                 resourceItemMaxPrices,
                                 resourceItemCounts,
-                                resourceItemIcons) {
-    let resourceImgs = "";
-    let resourceMinHTML = "";
-    let resourceMaxHTML = "";
-    for (let i = 0; i < resourceItemIcons.length; i++) {
-        resourceImgs += `
-            <div class="crafting-info-table-content">
-                <img class="crafting-item-resource-icon" src="${resourceItemIcons[i]}">
-            </div>`;
-        resourceMinHTML += `<span class="crafting-info-table-content">${formatNumber(resourceItemMinPrices[i])}</span>`;
-        resourceMaxHTML += `<span class="crafting-info-table-content">${formatNumber(resourceItemMaxPrices[i])}</span>`;
-    }
+    resourceItemIcons) {
+    let resourceImgs = resourceItemIcons.map(icon => `
+        <div class="crafting-info-table-content">
+            <img class="crafting-item-resource-icon" src="${icon}">
+        </div>`).join("");
+    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
+    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
     let totalResourceMinPrice = 0;
     let totalResourceMaxPrice = 0;
     let totalPriceUnclear = false;
@@ -105,12 +100,8 @@ function craftingInfoTemplate(craftedItemMinPrice,
     let totalCraftedItemMinHTML = "";
     let totalCraftedItemMaxHTML = "";
     if (craftedItemCount > 1) {
-        let totalCraftedItemMinPrice = "?";
-        let totalCraftedItemMaxPrice = "?";
-        if (craftedItemMinPrice !== "?") {
-            totalCraftedItemMinPrice = craftedItemMinPrice * craftedItemCount;
-            totalCraftedItemMaxPrice = craftedItemMaxPrice * craftedItemCount;
-        }
+        let totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
+        let totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
         totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
         totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMinPrice)}</span>`;
         totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMaxPrice)}</span>`;

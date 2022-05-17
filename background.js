@@ -37,7 +37,10 @@ function handleMessage(request, sender, sendResponse) {
                 }
             });
         case "crafting-recipe":
-            sendResponse(handleCraftingRecipe(request.data.craftedItemId, request.data.resourceItemIds));
+            sendResponse(handleRecipe(request.data.craftedItemId, request.data.resourceItemIds));
+            break;
+        case "enchanting-recipe":
+            sendResponse(handleRecipe(request.data.scrollId, request.data.resourceItemIds));
             break;
         default:
             console.log("Unknown request: " + request.data);
@@ -110,40 +113,31 @@ function toggleFavorite(itemId) {
     });
 }
 
-function handleCraftingRecipe(craftedItemId, resourceItemIds) {
-    console.log("Crafting recipe: " + craftedItemId + " " + resourceItemIds);
+function handleRecipe(craftedItemId, resourceItemIds) {
+    console.log("Recipe: " + craftedItemId + " " + resourceItemIds);
     let craftedApiId = idMap[craftedItemId];
     let resourceApiIds = [];
     for (let i = 0; i < resourceItemIds.length; i++) {
         resourceApiIds.push(idMap[resourceItemIds[i]]);
     }
 
-    let craftedItemMinPrice = "?";
-    let craftedItemMaxPrice = "?";
-    if (craftedApiId in itemList) {
-        craftedItemMinPrice = minPrice(craftedApiId);
-        craftedItemMaxPrice = maxPrice(craftedApiId);
-    }
+    let craftedItemMinPrice = minPrice(craftedApiId);
+    let craftedItemMaxPrice = maxPrice(craftedApiId);
     // sum of all resource prices
     let resourceItemMinPrices = [];
     let resourceItemMaxPrices = [];
     for (let i = 0; i < resourceApiIds.length; i++) {
-        if (resourceApiIds[i] in itemList) {
-            resourceItemMinPrices.push(minPrice(resourceApiIds[i]));
-            resourceItemMaxPrices.push(maxPrice(resourceApiIds[i]));
-        } else {
-            resourceItemMinPrices.push("?");
-            resourceItemMaxPrices.push("?");
-        }
+        resourceItemMinPrices.push(minPrice(resourceApiIds[i]));
+        resourceItemMaxPrices.push(maxPrice(resourceApiIds[i]));
     }
     return {
-        type: "crafting-recipe-analysis",
+        type: "recipe-analysis",
         craftedItemMinPrice: craftedItemMinPrice,
         craftedItemMaxPrice: craftedItemMaxPrice,
         resourceItemMinPrices: resourceItemMinPrices,
         resourceItemMaxPrices: resourceItemMaxPrices
     };
-}    
+}
 
 function storeItemList() {
     itemList = sortObj(itemList);
@@ -253,6 +247,9 @@ function addHardcodedItems() {
 }
 
 function minPrice(apiId) {
+    if (!(apiId in itemList)) {
+        return "?";
+    }
     let minPrice = Infinity;
     for (let timestamp in itemList[apiId]["prices"]) {
         let price = itemList[apiId]["prices"][timestamp];
@@ -264,6 +261,9 @@ function minPrice(apiId) {
 }
 
 function maxPrice(apiId) {
+    if (!(apiId in itemList)) {
+        return "?";
+    }
     let maxPrice = 0;
     for (let timestamp in itemList[apiId]["prices"]) {
         let price = itemList[apiId]["prices"][timestamp];
