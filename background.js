@@ -1,5 +1,7 @@
 function handleMessage(request, sender, sendResponse) {
     request.data = JSON.parse(request.data);
+    // log time and request type
+    console.log(new Date().toLocaleTimeString() + ": " + request.data.type);
     switch (request.data.type) {
         case "close":
             handleClose();
@@ -48,7 +50,6 @@ function handleMessage(request, sender, sendResponse) {
 }
 
 function handleClose() {
-    console.log("Close");
     storeItemList();
     browser.storage.local.set({
         lastLogin: Date.now()
@@ -114,28 +115,16 @@ function toggleFavorite(itemId) {
 }
 
 function handleRecipe(craftedItemId, resourceItemIds) {
-    console.log("Recipe: " + craftedItemId + " " + resourceItemIds);
     let craftedApiId = idMap[craftedItemId];
-    let resourceApiIds = [];
-    for (let i = 0; i < resourceItemIds.length; i++) {
-        resourceApiIds.push(idMap[resourceItemIds[i]]);
-    }
-
     let craftedItemMinPrice = minPrice(craftedApiId);
     let craftedItemMaxPrice = maxPrice(craftedApiId);
-    // sum of all resource prices
-    let resourceItemMinPrices = [];
-    let resourceItemMaxPrices = [];
-    for (let i = 0; i < resourceApiIds.length; i++) {
-        resourceItemMinPrices.push(minPrice(resourceApiIds[i]));
-        resourceItemMaxPrices.push(maxPrice(resourceApiIds[i]));
-    }
+    let resourceItemPrices = getItemValues(resourceItemIds);
     return {
         type: "recipe-analysis",
         craftedItemMinPrice: craftedItemMinPrice,
         craftedItemMaxPrice: craftedItemMaxPrice,
-        resourceItemMinPrices: resourceItemMinPrices,
-        resourceItemMaxPrices: resourceItemMaxPrices
+        resourceItemMinPrices: resourceItemPrices.itemMinPrices,
+        resourceItemMaxPrices: resourceItemPrices.itemMaxPrices,
     };
 }
 
@@ -163,62 +152,22 @@ function sortObj(obj) {
 }
 
 function analyzeItem(itemId) {
-    apiId = idMap[itemId];
-    if (!(apiId in itemList)) {
-        return {
-            type: "analyze-item",
-            minPrice: "?",
-            maxPrice: "?",
-        };
-    }
-    let minPrice = Number.MAX_SAFE_INTEGER;
-    let maxPrice = 0;
-    for (let timestamp in itemList[apiId]["prices"]) {
-        let price = itemList[apiId]["prices"][timestamp];
-        if (price > maxPrice) {
-            maxPrice = price;
-        }
-        if (price < minPrice) {
-            minPrice = price;
-        }
-    }
-    console.log("Analyzed item " + itemId + ": " + minPrice + " - " + maxPrice);
     return {
         type: "item-analysis",
-        minPrice: minPrice,
-        maxPrice: maxPrice
+        minPrice: minPrice(idMap[itemId]),
+        maxPrice: maxPrice(idMap[itemId]),
     }
 }
 
 function getItemValues(itemIds) {
-    console.log(itemIds);
-    let itemMinPrices = [];
-    let itemMaxPrices = [];
-    for (let i = 0; i < itemIds.length; i++) {
-        let apiId = idMap[itemIds[i]];
-        if (!(apiId in itemList)) {
-            itemMinPrices.push("?");
-            itemMaxPrices.push("?");
-            continue;
-        }
-        let minPrice = Number.MAX_SAFE_INTEGER;
-        let maxPrice = 0;
-        for (let timestamp in itemList[apiId]["prices"]) {
-            let price = itemList[apiId]["prices"][timestamp];
-            if (price > maxPrice) {
-                maxPrice = price;
-            }
-            if (price < minPrice) {
-                minPrice = price;
-            }
-        }
-        itemMinPrices.push(minPrice);
-        itemMaxPrices.push(maxPrice);
-    }
     return {
         type: "item-values",
-        itemMinPrices: itemMinPrices,
-        itemMaxPrices: itemMaxPrices
+        itemMinPrices: itemIds.map(function (itemId) {
+            return minPrice(idMap[itemId]);
+        }),
+        itemMaxPrices: itemIds.map(function (itemId) {
+            return maxPrice(idMap[itemId]);
+        }),
     }
 }
 

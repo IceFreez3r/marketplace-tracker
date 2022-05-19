@@ -9,10 +9,14 @@ function offlineTracker(){
     }
     offlineProgressBox = offlineProgressBox[0];
     let itemIds = [];
-    let resourceCounts = [];
+    let itemCounts = [];
     for (let itemNode of offlineProgressBox.childNodes) {
-        itemIds.push(convertItemId(itemNode.firstChild.src));
-        resourceCounts.push(parseNumberString(itemNode.childNodes[1].innerText));
+        let itemId = convertItemId(itemNode.firstChild.src);
+        if (itemId.includes('essence')) {
+            continue;
+        }
+        itemIds.push(itemId);
+        itemCounts.push(parseNumberString(itemNode.childNodes[1].innerText));
     }
     Promise.all([
         sendMessage({
@@ -27,12 +31,12 @@ function offlineTracker(){
         let totalMinValue = 0;
         let totalMaxValue = 0;
         for (let i = 0; i < itemIds.length; i++) {
-            // ignore items with no known value (e.g. essences)
+            // ignore items with no known value
             if (itemValues.itemMinPrices[i] === '?' || itemValues.itemMaxPrices[i] === '?') {
                 continue;
             }
-            totalMinValue += itemValues.itemMinPrices[i] * resourceCounts[i];
-            totalMaxValue += itemValues.itemMaxPrices[i] * resourceCounts[i];
+            totalMinValue += itemValues.itemMinPrices[i] * itemCounts[i];
+            totalMaxValue += itemValues.itemMaxPrices[i] * itemCounts[i];
         }
 
         /* Offline Time

@@ -8,26 +8,15 @@
     flex: 1 0 auto;
 }
 
-.crafting-info-container {
-    border: 2px solid gray;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, .705);
-    margin-top: 4px;
-}
-
-.crafting-info-header {
-    margin: 0;
-    text-align: center;
-}
-
 .crafting-info-table {
     display: grid; /* Grid Layout specified by js */
     grid-gap: 5px;
-    background: rgba(36, 36, 36, .671);
-    border: 2px solid hsla(0, 0%, 100%, .452);
+    /* combination of rgba(36, 36, 36, .671) in front of rgba(0, 0, 0, .705) */
+    background: rgba(24.156, 24.156, 24.156, .902945);
+    border: 2px solid gray;
     padding: 6px;
-    margin: 6px;
-    border-radius: 10px;
+    margin-top: 6px;
+    border-radius: 6px;
 }
 
 .crafting-info-table-content {

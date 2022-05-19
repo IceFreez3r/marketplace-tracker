@@ -86,16 +86,20 @@ function enchantingInfoTemplate(craftedItemMinPrice,
         totalResourceMinPrice += resourceItemMinPrices[i] * resourceItemCounts[i];
         totalResourceMaxPrice += resourceItemMaxPrices[i] * resourceItemCounts[i];
     }
+    // Total effective price is higher if the chance is < 100%
     totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
     totalResourceMaxPrice = Math.round((totalResourceMaxPrice / chance));
-    let prozentualMinProfit = (totalPriceUnclear ? "<" : "") + (((craftedItemMinPrice - totalResourceMinPrice) / totalResourceMinPrice * 100).toFixed(2) + "%");
-    let prozentualMaxProfit = (totalPriceUnclear ? "<" : "") + (((craftedItemMaxPrice - totalResourceMaxPrice) / totalResourceMaxPrice * 100).toFixed(2) + "%");
-    prozentualMinProfit = craftedItemMinPrice !== "?" ? prozentualMinProfit : "?";
-    prozentualMaxProfit = craftedItemMaxPrice !== "?" ? prozentualMaxProfit : "?";
+    // Profit includes 5% market fee
+    let prozentualMinProfit = ((craftedItemMinPrice * 0.95 - totalResourceMinPrice) / totalResourceMinPrice * 100).toFixed(2) + "%";
+    let prozentualMaxProfit = ((craftedItemMaxPrice * 0.95 - totalResourceMaxPrice) / totalResourceMaxPrice * 100).toFixed(2) + "%";
     if (totalPriceUnclear) {
         totalResourceMinPrice += "*";
         totalResourceMaxPrice += "*";
+        prozentualMinProfit = "<" + prozentualMinProfit;
+        prozentualMaxProfit = "<" + prozentualMaxProfit;
     }
+    prozentualMinProfit = craftedItemMinPrice !== "?" ? prozentualMinProfit : "?";
+    prozentualMaxProfit = craftedItemMaxPrice !== "?" ? prozentualMaxProfit : "?";
     return `
 <div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr 1fr">
     <!-- header -->

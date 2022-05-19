@@ -11,14 +11,13 @@ function getCraftingRecipe(){
         if (craftedItemId === lastCraftedItemId) {
             // for items with multiple recipes
             let selectedNavTab = recipeNode.getElementsByClassName("selected-tab");
-            if (selectedNavTab.length !== 0) {
-                if (lastSelectedNavTab === recipeNode.getElementsByClassName("selected-tab")[0].innerText) {
-                    return;
-                }
-                lastSelectedNavTab = recipeNode.getElementsByClassName("selected-tab")[0].innerText;
-            } else {
+            if (selectedNavTab.length === 0) {
                 return;
             }
+            if (lastSelectedNavTab === selectedNavTab[0].innerText) {
+                return;
+            }
+            lastSelectedNavTab = selectedNavTab[0].innerText;
         }
         lastCraftedItemId = craftedItemId;
 
@@ -36,7 +35,11 @@ function getCraftingRecipe(){
         let resourceItemIcons = [];
         let resourceItemCounts = [];
         for (let i = 0; i < resourceItemNodes.length; i++) {
-            resourceItemIds.push(convertItemId(resourceItemNodes[i].childNodes[1].src));
+            let resourceItemId = convertItemId(resourceItemNodes[i].childNodes[1].src);
+            if (resourceItemId.includes('essence')) {
+                continue;
+            }
+            resourceItemIds.push(resourceItemId);
             resourceItemIcons.push(resourceItemNodes[i].childNodes[1].src);
             resourceItemCounts.push(parseInt(resourceItemNodes[i].firstChild.textContent.replace(/\./g, '')));
         }
@@ -46,9 +49,9 @@ function getCraftingRecipe(){
             craftedItemId: craftedItemId,
             resourceItemIds: resourceItemIds
         }).then(response => {
-            // remove existing container
-            if (document.getElementsByClassName("crafting-info-container").length !== 0) {
-                document.getElementsByClassName("crafting-info-container")[0].remove();
+            // remove existing table
+            if (document.getElementsByClassName("crafting-info-table").length !== 0) {
+                document.getElementsByClassName("crafting-info-table")[0].remove();
             }
             let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
             craftingContainer.insertAdjacentHTML('beforeend', 
@@ -95,7 +98,7 @@ function craftingInfoTemplate(craftedItemMinPrice,
         totalResourceMinPrice += "*";
         totalResourceMaxPrice += "*";
     }
-    
+
     let totalCraftedItemHeaderHTML = "";
     let totalCraftedItemMinHTML = "";
     let totalCraftedItemMaxHTML = "";
@@ -107,45 +110,42 @@ function craftingInfoTemplate(craftedItemMinPrice,
         totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMaxPrice)}</span>`;
     }
     return `
-<div class="crafting-info-container">
-    <h2 class="crafting-info-header">Crafting Tracker</h2>
-    <div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr${craftedItemCount > 1 ? " 1fr" : ""}">
-        <!-- header -->
-        ${resourceImgs}
-        <span class="crafting-info-table-content text-4xl">
-            &Sigma;
-        </span>
-        <div class="crafting-info-table-content">
-            <img class="crafting-info-table-content crafting-item-resource-icon" src="${craftedItemIcon}">
-        </div>
-        ${totalCraftedItemHeaderHTML}
-
-        <!-- min -->
-        <span class="crafting-info-table-content">
-            Minimal Marketprice
-        </span>
-        ${resourceMinHTML}
-        <span class="crafting-info-table-content">
-            ${formatNumber(totalResourceMinPrice)}
-        </span>
-        <span class="crafting-info-table-content">
-            ${formatNumber(craftedItemMinPrice)}
-        </span>
-        ${totalCraftedItemMinHTML}
-
-        <!-- max -->
-        <span class="crafting-info-table-content">
-            Maximal Marketprice
-        </span>
-        ${resourceMaxHTML}
-        <span class="crafting-info-table-content">
-            ${formatNumber(totalResourceMaxPrice)}
-        </span>
-        <span class="crafting-info-table-content">
-            ${formatNumber(craftedItemMaxPrice)}
-        </span>
-        ${totalCraftedItemMaxHTML}
+<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr${craftedItemCount > 1 ? " 1fr" : ""}">
+    <!-- header -->
+    ${resourceImgs}
+    <span class="crafting-info-table-content text-4xl">
+        &Sigma;
+    </span>
+    <div class="crafting-info-table-content">
+        <img class="crafting-info-table-content crafting-item-resource-icon" src="${craftedItemIcon}">
     </div>
+    ${totalCraftedItemHeaderHTML}
+
+    <!-- min -->
+    <span class="crafting-info-table-content">
+        Minimal Marketprice
+    </span>
+    ${resourceMinHTML}
+    <span class="crafting-info-table-content">
+        ${formatNumber(totalResourceMinPrice)}
+    </span>
+    <span class="crafting-info-table-content">
+        ${formatNumber(craftedItemMinPrice)}
+    </span>
+    ${totalCraftedItemMinHTML}
+
+    <!-- max -->
+    <span class="crafting-info-table-content">
+        Maximal Marketprice
+    </span>
+    ${resourceMaxHTML}
+    <span class="crafting-info-table-content">
+        ${formatNumber(totalResourceMaxPrice)}
+    </span>
+    <span class="crafting-info-table-content">
+        ${formatNumber(craftedItemMaxPrice)}
+    </span>
+    ${totalCraftedItemMaxHTML}
 </div>
 `;
 }
