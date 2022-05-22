@@ -19,7 +19,7 @@ function sendMessage(message) {
 }
 
 function parseNumberString(numberString) {
-    const baseNumber = parseFloat(numberString.replace(/\./g, ''));
+    const baseNumber = parseFloat(numberString.replace(/\./g, '').replace(/,/, '.'));
     let scale = 0;
     switch (numberString.slice(-1)) {
         case 'K':
@@ -35,18 +35,24 @@ function parseNumberString(numberString) {
             scale = 12;
             break;
     }
-    return baseNumber * Math.pow(10, scale);
+    return Math.round(baseNumber * Math.pow(10, scale));
 }
 
-function parseTimeString(timeString) {
+// Parses a time string and returns the time in milliseconds
+function parseTimeString(timeString, returnScale = false) {
     const baseTime = parseFloat(timeString);
     let scale = 1;
     if (timeString.includes('day')) {
-        scale = 60 * 60 * 24;
+        scale = 1000 * 60 * 60 * 24;
     } else if (timeString.includes('hour')) {
-        scale = 60 * 60;
+        scale = 1000 * 60 * 60;
     } else if (timeString.includes('minute')) {
-        scale = 60;
+        scale = 1000 * 60;
+    } else if (timeString.includes('second')) {
+        scale = 1000;
+    }
+    if (returnScale) {
+        return [baseTime * scale, scale];
     }
     return baseTime * scale;
 }

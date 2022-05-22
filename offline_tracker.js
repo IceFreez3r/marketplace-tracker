@@ -48,15 +48,27 @@ function offlineTracker(){
            Offline time is also limited to a maximum of 12 hours.
         */ 
         let lastLogin = results[1];
-        let offlineTimeBackground = Math.min(12 * 60 * 60 * 1000, Date.now() - lastLogin);
-        let offlineTimeScrapped = Math.min(12 * 60 * 60 * 1000, parseTimeString(offlineProgressBox.previousSibling.childNodes[1].textContent) * 1000);
-        console.log(offlineTimeBackground, offlineTimeScrapped);
-        if (offlineTimeScrapped * 2 < offlineTimeBackground) {
-            offlineProgressBox.insertAdjacentHTML('afterend', offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTimeBackground));
-        } else {
-            offlineProgressBox.insertAdjacentHTML('afterend', offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTimeScrapped));
-        }
+        let offlineTimeBackground = Date.now() - lastLogin;
+        let offlineTimeScrappedString = offlineProgressBox.previousSibling.childNodes[1].textContent;
+        let [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, returnScale = true);
+        console.log(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+        let offlineTime = calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+        offlineProgressBox.insertAdjacentHTML('afterend', 
+                                                offlineInfoTemplate(totalMinValue, 
+                                                                    totalMaxValue, 
+                                                                    offlineTime));
     });
+}
+
+function calculateOfflineTime(background, scrapped, scale) {
+    if (background < scrapped) {
+        return Math.min(12 * 60 * 60 * 1000, scrapped);
+    }
+    // background and scale differ by more than one time unit (second/minute/hour/day)
+    if (((background / scale) - (scrapped / scale)) > 1) {
+        return Math.min(12 * 60 * 60 * 1000, scrapped);
+    }
+    return Math.min(12 * 60 * 60 * 1000, background);
 }
 
 function offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {

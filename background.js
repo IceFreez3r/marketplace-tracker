@@ -35,7 +35,7 @@ function handleMessage(request, sender, sendResponse) {
                 if (result.lastLogin) {
                     return result.lastLogin;
                 } else {
-                    return null;
+                    return Date.now();
                 }
             });
         case "crafting-recipe":

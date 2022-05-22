@@ -110,7 +110,7 @@ function craftingInfoTemplate(craftedItemMinPrice,
         totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMaxPrice)}</span>`;
     }
     return `
-<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr${craftedItemCount > 1 ? " 1fr" : ""}">
+<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1)}, 1fr)">
     <!-- header -->
     ${resourceImgs}
     <span class="crafting-info-table-content text-4xl">
