@@ -129,7 +129,7 @@ function priceTooltipTemplate(maxPrice, price, amount) {
 function highlightFavorite (itemNode, favorites) {
     let itemId = convertItemId(itemNode.firstChild.firstChild.src);
     if (favorites.indexOf(itemId) > -1) {
-        itemNode.firstChild.classList.add("highlight");
+        itemNode.firstChild.classList.add("favorite-highlight");
     }
 }
 
@@ -140,6 +140,24 @@ function highlightFavorites(items) {
         items.childNodes.forEach(function (itemNode) {
             highlightFavorite(itemNode, favoritesList);
          });
+    });
+}
+
+function highlightBestHeatItem(items) {
+    sendMessage({
+        type: 'get-best-heat-item',
+    }).then(bestHeatItem => {
+        console.log(bestHeatItem);
+        items.childNodes.forEach(function (itemNode) {
+            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
+                itemNode.firstChild.classList.add("heat-highlight");
+                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
+            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
+                itemNode.firstChild.classList.remove("heat-highlight");
+                itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
+            }
+        });
     });
 }
 
@@ -160,6 +178,7 @@ function scanMarketplaceLists() {
             items = items[0];
         }
         highlightFavorites(items);
+        highlightBestHeatItem(items);
     } catch (err) {
         console.log(err);
     }

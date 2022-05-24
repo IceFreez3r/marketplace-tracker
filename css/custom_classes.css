@@ -44,8 +44,17 @@
     visibility: visible;
 }
 
-.highlight {
+.favorite-highlight {
     border: 3px solid white;
+}
+
+.heat-highlight {
+    border: 3px solid red;
+}
+
+.favorite-highlight.heat-highlight {
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px red;
 }
 
 .tooltip{
