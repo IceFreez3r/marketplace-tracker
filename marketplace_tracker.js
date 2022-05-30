@@ -46,21 +46,6 @@ function favoriteButton(itemId) {
     });
 }
 
-function sendMessage(message){
-    message = JSON.stringify(message);
-    return browser.runtime.sendMessage({
-        data: message
-    });
-}
-
-// example:
-// "/images/mining/stygian_ore.png" -> "Stygian Ore"
-function convertItemId(itemName) {
-    itemName = itemName.substring(itemName.lastIndexOf('/') + 1, itemName.lastIndexOf('.'));
-    itemName = itemName.replace(/-/g, '_');
-    return itemName;
-}
-
 function priceHoverListener(offers, maxPrice) {
     for (let offer of offers) {
         let priceCell = offer.childNodes[3];
@@ -138,12 +123,7 @@ function priceTooltipTemplate(maxPrice, price, amount) {
         </div>
     </div>
 </div>
-`
-}
-
-// Add thousands separator to number
-function formatNumber(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+`;
 }
 
 function highlightFavorite (itemNode, favorites) {
@@ -252,6 +232,9 @@ let createMap = true;
 let tick = setInterval(() => {
     scanMarketplaceLists();
     scanOfferList();
+    offlineTracker();
+    getCraftingRecipe();
+    enchantingTracker();
 }, 1000);
 
 fetchAPI();

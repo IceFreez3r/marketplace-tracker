@@ -14,7 +14,11 @@
                 "https://idlescape.com/game"
             ],
             "js": [
-                "marketplace_tracker.js"
+                "marketplace_tracker.js",
+                "offline_tracker.js",
+                "crafting_tracker.js",
+                "enchanting_tracker.js",
+                "utility.js"
             ],
             "css": [
                 "css/custom_classes.css"

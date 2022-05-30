@@ -1,5 +1,7 @@
 function handleMessage(request, sender, sendResponse) {
     request.data = JSON.parse(request.data);
+    // log time and request type
+    console.log(new Date().toLocaleTimeString() + ": " + request.data.type);
     switch (request.data.type) {
         case "close":
             handleClose();
@@ -25,12 +27,33 @@ function handleMessage(request, sender, sendResponse) {
         case "icon-to-id-map":
             updateIdMap(request.data.map);
             break;
+        case "get-item-values":
+            sendResponse(getItemValues(request.data.itemIds));
+            break;
+        case "get-last-login":
+            return browser.storage.local.get('lastLogin').then(function(result){
+                if (result.lastLogin) {
+                    return result.lastLogin;
+                } else {
+                    return Date.now();
+                }
+            });
+        case "crafting-recipe":
+            sendResponse(handleRecipe(request.data.craftedItemId, request.data.resourceItemIds));
+            break;
+        case "enchanting-recipe":
+            sendResponse(handleRecipe(request.data.scrollId, request.data.resourceItemIds));
+            break;
+        default:
+            console.log("Unknown request: " + request.data);
     }
 }
 
 function handleClose() {
-    console.log("Close");
     storeItemList();
+    browser.storage.local.set({
+        lastLogin: Date.now()
+    });
 }
 
 function handleApiData(data) {
@@ -91,6 +114,20 @@ function toggleFavorite(itemId) {
     });
 }
 
+function handleRecipe(craftedItemId, resourceItemIds) {
+    let craftedApiId = idMap[craftedItemId];
+    let craftedItemMinPrice = minPrice(craftedApiId);
+    let craftedItemMaxPrice = maxPrice(craftedApiId);
+    let resourceItemPrices = getItemValues(resourceItemIds);
+    return {
+        type: "recipe-analysis",
+        craftedItemMinPrice: craftedItemMinPrice,
+        craftedItemMaxPrice: craftedItemMaxPrice,
+        resourceItemMinPrices: resourceItemPrices.itemMinPrices,
+        resourceItemMaxPrices: resourceItemPrices.itemMaxPrices,
+    };
+}
+
 function storeItemList() {
     itemList = sortObj(itemList);
     console.log(itemList);
@@ -115,30 +152,22 @@ function sortObj(obj) {
 }
 
 function analyzeItem(itemId) {
-    apiId = idMap[itemId];
-    if (!(apiId in itemList)) {
-        return {
-            type: "analyze-item",
-            minPrice: "?",
-            maxPrice: "?",
-        };
-    }
-    let minPrice = Number.MAX_SAFE_INTEGER;
-    let maxPrice = 0;
-    for (let timestamp in itemList[apiId]["prices"]) {
-        let price = itemList[apiId]["prices"][timestamp];
-        if (price > maxPrice) {
-            maxPrice = price;
-        }
-        if (price < minPrice) {
-            minPrice = price;
-        }
-    }
-    console.log("Analyzed item " + itemId + ": " + minPrice + " - " + maxPrice);
     return {
         type: "item-analysis",
-        minPrice: minPrice,
-        maxPrice: maxPrice
+        minPrice: minPrice(idMap[itemId]),
+        maxPrice: maxPrice(idMap[itemId]),
+    }
+}
+
+function getItemValues(itemIds) {
+    return {
+        type: "item-values",
+        itemMinPrices: itemIds.map(function (itemId) {
+            return minPrice(idMap[itemId]);
+        }),
+        itemMaxPrices: itemIds.map(function (itemId) {
+            return maxPrice(idMap[itemId]);
+        }),
     }
 }
 
@@ -153,7 +182,45 @@ function filterItemList() {
         if (Object.keys(itemList[apiId]["prices"]).length === 0) {
             delete itemList[apiId];
         }
-    }    
+    }
+    addHardcodedItems();
+}
+
+function addHardcodedItems() {
+    itemList[1] = {
+            "name": "Gold",
+            "prices": {
+                0: 1
+            }
+        };
+}
+
+function minPrice(apiId) {
+    if (!(apiId in itemList)) {
+        return "?";
+    }
+    let minPrice = Infinity;
+    for (let timestamp in itemList[apiId]["prices"]) {
+        let price = itemList[apiId]["prices"][timestamp];
+        if (price < minPrice) {
+            minPrice = price;
+        }
+    }
+    return minPrice;
+}
+
+function maxPrice(apiId) {
+    if (!(apiId in itemList)) {
+        return "?";
+    }
+    let maxPrice = 0;
+    for (let timestamp in itemList[apiId]["prices"]) {
+        let price = itemList[apiId]["prices"][timestamp];
+        if (price > maxPrice) {
+            maxPrice = price;
+        }
+    }
+    return maxPrice;
 }
 
 let itemList = {};
@@ -163,7 +230,9 @@ browser.storage.local.get('itemList').then(function (result) {
     }
     filterItemList();
 });
-let idMap = {};
+let idMap = {
+    "money_icon": 1
+};
 browser.storage.local.get('idMap').then(function (result) {
     if (result.idMap) {
         idMap = JSON.parse(result.idMap);
