@@ -18,6 +18,7 @@
                 "offline_tracker.js",
                 "crafting_tracker.js",
                 "enchanting_tracker.js",
+                "smithing_tracker.js",
                 "utility.js"
             ],
             "css": [

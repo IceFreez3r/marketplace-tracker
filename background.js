@@ -47,6 +47,9 @@ function handleMessage(request, sender, sendResponse) {
         case "enchanting-recipe":
             sendResponse(handleRecipe(request.data.scrollId, request.data.resourceItemIds));
             break;
+        case "smithing-recipe":
+            sendResponse(handleRecipe(request.data.bar, request.data.resourceIds));
+            break;
         default:
             console.log("Unknown request: " + request.data);
     }
@@ -76,7 +79,7 @@ function handleApiData(data) {
         itemList[2]["name"] = "Heat";
         itemList[2]["prices"] = {};
     }
-    itemList[2]["prices"][timestamp] = heatValue(timestamp).heatValue;
+    itemList[2]["prices"][timestamp] = heatValue(timestamp).heatValue.toFixed(2);
 }
 
 function heatValue(timestamp) {
@@ -99,9 +102,11 @@ function heatValue(timestamp) {
         {apiId: 11036, heat: 125},  // Mystical Driftwood
     ];
     let bestHeatItem = heatItems.reduce(function (result, heatItem) {
-        if (itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat < result.heatValue) {
-            result.apiId = heatItem.apiId;
-            result.heatValue = itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat;
+        if (heatItem.apiId in itemList) {
+            if (itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat < result.heatValue) {
+                result.apiId = heatItem.apiId;
+                result.heatValue = itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat;
+            }
         }
         return result;
     }, {apiId: null, heatValue: Infinity});

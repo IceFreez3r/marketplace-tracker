@@ -249,11 +249,25 @@ window.addEventListener('beforeunload', function () {
 
 let createMap = true;
 let tick = setInterval(() => {
-    scanMarketplaceLists();
-    scanOfferList();
     offlineTracker();
-    getCraftingRecipe();
-    enchantingTracker();
+    let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
+    if (selectedSkill.length > 0) {
+        switch (selectedSkill[0].innerText) {
+            case 'Crafting':
+                getCraftingRecipe();
+                break;
+            case 'Enchanting':
+                enchantingTracker();
+                break;
+            case 'Marketplace':
+                scanMarketplaceLists();
+                scanOfferList();
+                break;
+            case 'Smithing':
+                smithingTracker();
+                break;
+        }
+    }
 }, 1000);
 
 fetchAPI();

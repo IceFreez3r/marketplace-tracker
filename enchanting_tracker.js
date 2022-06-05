@@ -75,31 +75,13 @@ function enchantingInfoTemplate(craftedItemMinPrice,
         </div>`).join("");
     let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${formatNumber(price)}</span>`).join("");
     let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${formatNumber(price)}</span>`).join("");
-    let totalResourceMinPrice = 0;
-    let totalResourceMaxPrice = 0;
-    let totalPriceUnclear = false;
-    for (let i = 0; i < resourceItemCounts.length; i++) {
-        if (resourceItemMinPrices[i] === "?") {
-            totalPriceUnclear = true;
-            continue;
-        }
-        totalResourceMinPrice += resourceItemMinPrices[i] * resourceItemCounts[i];
-        totalResourceMaxPrice += resourceItemMaxPrices[i] * resourceItemCounts[i];
-    }
+    let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
     // Total effective price is higher if the chance is < 100%
     totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
     totalResourceMaxPrice = Math.round((totalResourceMaxPrice / chance));
     // Profit includes 5% market fee
-    let prozentualMinProfit = ((craftedItemMinPrice * 0.95 - totalResourceMinPrice) / totalResourceMinPrice * 100).toFixed(2) + "%";
-    let prozentualMaxProfit = ((craftedItemMaxPrice * 0.95 - totalResourceMaxPrice) / totalResourceMaxPrice * 100).toFixed(2) + "%";
-    if (totalPriceUnclear) {
-        totalResourceMinPrice += "*";
-        totalResourceMaxPrice += "*";
-        prozentualMinProfit = "<" + prozentualMinProfit;
-        prozentualMaxProfit = "<" + prozentualMaxProfit;
-    }
-    prozentualMinProfit = craftedItemMinPrice !== "?" ? prozentualMinProfit : "?";
-    prozentualMaxProfit = craftedItemMaxPrice !== "?" ? prozentualMaxProfit : "?";
+    let prozentualMinProfit = profitPercent(totalResourceMinPrice, craftedItemMinPrice);
+    let prozentualMaxProfit = profitPercent(totalResourceMaxPrice, craftedItemMaxPrice);
     return `
 <div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr 1fr">
     <!-- header -->

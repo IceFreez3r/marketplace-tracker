@@ -76,28 +76,14 @@ function craftingInfoTemplate(craftedItemMinPrice,
                                 resourceItemMinPrices,
                                 resourceItemMaxPrices,
                                 resourceItemCounts,
-    resourceItemIcons) {
+                                resourceItemIcons) {
     let resourceImgs = resourceItemIcons.map(icon => `
         <div class="crafting-info-table-content">
             <img class="crafting-item-resource-icon" src="${icon}">
         </div>`).join("");
     let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
     let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
-    let totalResourceMinPrice = 0;
-    let totalResourceMaxPrice = 0;
-    let totalPriceUnclear = false;
-    for (let i = 0; i < resourceItemCounts.length; i++) {
-        if (resourceItemMinPrices[i] === "?") {
-            totalPriceUnclear = true;
-            continue;
-        }
-        totalResourceMinPrice += resourceItemMinPrices[i] * resourceItemCounts[i];
-        totalResourceMaxPrice += resourceItemMaxPrices[i] * resourceItemCounts[i];
-    }
-    if (totalPriceUnclear) {
-        totalResourceMinPrice += "*";
-        totalResourceMaxPrice += "*";
-    }
+    let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
 
     let totalCraftedItemHeaderHTML = "";
     let totalCraftedItemMinHTML = "";
