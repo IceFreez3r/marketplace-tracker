@@ -28,9 +28,5 @@
     ],
     "permissions": [
         "storage"
-    ], 
-    "browser_action": {
-        "default_icon": "icons/stonks.png",
-        "default_popup": "popup/view.html"
-    }
+    ]
 }
