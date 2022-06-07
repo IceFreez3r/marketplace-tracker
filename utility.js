@@ -27,13 +27,6 @@ function shortenNumber(number) {
     return number.toFixed(1).replace('.0', '') + SYMBOL[index] + suffix;
 }
 
-function sendMessage(message) {
-    message = JSON.stringify(message);
-    return browser.runtime.sendMessage({
-        data: message
-    });
-}
-
 function parseNumberString(numberString) {
     const baseNumber = parseFloat(numberString.replace(/\./g, '').replace(/,/, '.'));
     let scale = 0;

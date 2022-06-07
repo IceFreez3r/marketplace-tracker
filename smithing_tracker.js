@@ -29,20 +29,19 @@ function processSmithingRecipe(recipe) {
     let craftingImage = recipe.getElementsByClassName('resource-container-image')[0];
     let requiredResourceNode = recipe.getElementsByClassName('resource-required-resources')[0];
     craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
-    sendMessage({
+    let response = storageRequest({
         type: 'smithing-recipe',
         bar: bar,
         resourceIds: resourceIds
-    }).then(response => {
-        craftingImage.insertAdjacentHTML('afterend', 
-            smithingInfoTemplate(response.craftedItemMinPrice,
-                                response.craftedItemMaxPrice,
-                                barIcon,
-                                response.resourceItemMinPrices,
-                                response.resourceItemMaxPrices,
-                                resourceCounts,
-                                resourceIcons));
     });
+    craftingImage.insertAdjacentHTML('afterend', 
+        smithingInfoTemplate(response.craftedItemMinPrice,
+                            response.craftedItemMaxPrice,
+                            barIcon,
+                            response.resourceItemMinPrices,
+                            response.resourceItemMaxPrices,
+                            resourceCounts,
+                            resourceIcons));
 }
 
 function smithingInfoTemplate(barMinPrice,

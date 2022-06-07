@@ -1,65 +1,45 @@
-function handleMessage(request, sender, sendResponse) {
-    request.data = JSON.parse(request.data);
+function storageRequest(request) {
     // log time and request type
-    console.log(new Date().toLocaleTimeString() + ": " + request.data.type);
-    switch (request.data.type) {
+    console.log(new Date().toLocaleTimeString() + ": " + request.type);
+    switch (request.type) {
         case "close":
             handleClose();
             break;
         case "analyze-item":
-            sendResponse(analyzeItem(request.data.itemId));
-            break;
+            return analyzeItem(request.itemId);
         case "get-favorite":
-            return isFavorite(request.data.itemId);
+            return isFavorite(request.itemId);
         case "get-favorites-list":
-            return browser.storage.local.get('favorites').then(function(result){
-                if (result.favorites) {
-                    return JSON.parse(result.favorites);
-                } else {
-                    return [];
-                }
-            });
+            return favorites;
         case "get-best-heat-item":
-            sendResponse(itemList[heatValue(timestamp).apiId].itemId);
-            break;
+            return itemList[heatValue(timestamp).apiId].itemId;
         case "toggle-favorite":
-            return toggleFavorite(request.data.itemId);
+            return toggleFavorite(request.itemId);
         case "market-api-data":
-            handleApiData(request.data.data);
+            handleApiData(request.data);
             break;
         case "icon-to-id-map":
-            updateIdMap(request.data.map);
+            updateIdMap(request.map);
             break;
         case "get-item-values":
-            sendResponse(getItemValues(request.data.itemIds));
-            break;
+            return getItemValues(request.itemIds);
         case "get-last-login":
-            return browser.storage.local.get('lastLogin').then(function(result){
-                if (result.lastLogin) {
-                    return result.lastLogin;
-                } else {
-                    return Date.now();
-                }
-            });
+            return lastLogin;
         case "crafting-recipe":
-            sendResponse(handleRecipe(request.data.craftedItemId, request.data.resourceItemIds));
-            break;
+            return handleRecipe(request.craftedItemId, request.resourceItemIds);
         case "enchanting-recipe":
-            sendResponse(handleRecipe(request.data.scrollId, request.data.resourceItemIds));
-            break;
+            return handleRecipe(request.scrollId, request.resourceItemIds);
         case "smithing-recipe":
-            sendResponse(handleRecipe(request.data.bar, request.data.resourceIds));
-            break;
+            return handleRecipe(request.bar, request.resourceIds);
         default:
-            console.log("Unknown request: " + request.data);
+            console.log("Unknown request: " + request);
     }
 }
 
 function handleClose() {
     storeItemList();
-    browser.storage.local.set({
-        lastLogin: Date.now()
-    });
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+    localStorage.setItem('lastLogin', Date.now());
 }
 
 function handleApiData(data) {
@@ -118,41 +98,17 @@ function updateIdMap(map) {
 }
 
 function isFavorite(itemId){
-    return browser.storage.local.get('favorites').then(function (result) {
-        if (result.favorites) {
-            let favorites = JSON.parse(result.favorites);
-            return {
-                type: "is-favorite",
-                isFavorite: favorites.indexOf(itemId) > -1
-            }
-        } else {
-            return {
-                type: "is-favorite",
-                isFavorite: false
-            };
-        }
-    });
+    return favorites.indexOf(itemId) > -1
 }
 
 function toggleFavorite(itemId) {
-    return browser.storage.local.get('favorites').then(function (result) {
-        let favorites = [];
-        if (result.favorites) {
-            favorites = JSON.parse(result.favorites);
-        }
-        if (favorites.indexOf(itemId) > -1) {
-            favorites.pop(itemId);
-        } else {
-            favorites.push(itemId);
-        }
-        browser.storage.local.set({
-            favorites: JSON.stringify(favorites)
-        });
-        return {
-            success: true,
-            isFavorite: favorites.indexOf(itemId) > -1
-        }
-    });
+    let isFavorite = favorites.indexOf(itemId) > -1;
+    if (isFavorite) {
+        favorites.pop(itemId);
+    } else {
+        favorites.push(itemId);
+    }
+    return !isFavorite;
 }
 
 function handleRecipe(craftedItemId, resourceItemIds) {
@@ -171,18 +127,12 @@ function handleRecipe(craftedItemId, resourceItemIds) {
 
 function storeItemList() {
     itemList = sortObj(itemList);
-    console.log(itemList);
-    browser.storage.local.set({
-        itemList: JSON.stringify(itemList)
-    });
+    localStorage.setItem('itemList', JSON.stringify(itemList));
 }
 
 function storeIdMap() {
     idMap = sortObj(idMap);
-    console.log(idMap);
-    browser.storage.local.set({
-        idMap: JSON.stringify(idMap)
-    });
+    localStorage.setItem('idMap', JSON.stringify(idMap));
 }
 
 function sortObj(obj) {
@@ -202,7 +152,6 @@ function analyzeItem(itemId) {
 
 function getItemValues(itemIds) {
     return {
-        type: "item-values",
         itemMinPrices: itemIds.map(function (itemId) {
             return minPrice(idMap[itemId]);
         }),
@@ -228,18 +177,22 @@ function filterItemList() {
 }
 
 function addHardcodedItems() {
-    itemList[1] = {
+    if (!(1 in itemList)) {
+        itemList[1] = {
             "name": "Gold",
             "itemId": "money_icon",
             "prices": {
                 0: 1
             }
         };
-    itemList[2] = {
+    }
+    if (!(2 in itemList)) {
+        itemList[2] = {
             "name": "Heat",
             "itemId": "heat_icon",
             "prices": {}
         };
+    }
 }
 
 function minPrice(apiId) {
@@ -270,22 +223,32 @@ function maxPrice(apiId) {
     return maxPrice;
 }
 
+let result; // Helper variable for storing result of localStorage.getItem
 let itemList = {};
-browser.storage.local.get('itemList').then(function (result) {
-    if (result.itemList) {
-        itemList = JSON.parse(result.itemList);
-    }
-    filterItemList();
-});
+result = localStorage.getItem('itemList');
+if (result) {
+    itemList = JSON.parse(result);
+}
+filterItemList();
+
+// stores last timestamp at which API date arrived
+let timestamp = 0;
 let idMap = {
     "money_icon": 1,
     "heat_icon": 2,
 };
-browser.storage.local.get('idMap').then(function (result) {
-    if (result.idMap) {
-        idMap = JSON.parse(result.idMap);
-    }
-});
-// stores last timestamp at which API date arrived
-let timestamp = 0;
-browser.runtime.onMessage.addListener(handleMessage);
+result = localStorage.getItem('idMap');
+if (result) {
+    idMap = JSON.parse(result);
+}
+
+let favorites = [];
+result = localStorage.getItem('favorites');
+if (result) {
+    favorites = JSON.parse(result);
+}
+
+let lastLogin = localStorage.getItem('lastLogin');
+if (!lastLogin) {
+    lastLogin = Date.now();
+}

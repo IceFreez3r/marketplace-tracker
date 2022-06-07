@@ -44,26 +44,25 @@ function getCraftingRecipe(){
             resourceItemCounts.push(parseInt(resourceItemNodes[i].firstChild.textContent.replace(/\./g, '')));
         }
 
-        sendMessage({
+        let response = storageRequest({
             type: 'crafting-recipe',
             craftedItemId: craftedItemId,
             resourceItemIds: resourceItemIds
-        }).then(response => {
-            // remove existing table
-            if (document.getElementsByClassName("crafting-info-table").length !== 0) {
-                document.getElementsByClassName("crafting-info-table")[0].remove();
-            }
-            let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-            craftingContainer.insertAdjacentHTML('beforeend', 
-                                                    craftingInfoTemplate(response.craftedItemMinPrice, 
-                                                                            response.craftedItemMaxPrice,
-                                                                            craftedItemCount,
-                                                                            craftedItemIcon,
-                                                                            response.resourceItemMinPrices, 
-                                                                            response.resourceItemMaxPrices,
-                                                                            resourceItemCounts,
-                                                                            resourceItemIcons));
         });
+        // remove existing table
+        if (document.getElementsByClassName("crafting-info-table").length !== 0) {
+            document.getElementsByClassName("crafting-info-table")[0].remove();
+        }
+        let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
+        craftingContainer.insertAdjacentHTML('beforeend',
+                                                craftingInfoTemplate(response.craftedItemMinPrice,
+                                                                        response.craftedItemMaxPrice,
+                                                                        craftedItemCount,
+                                                                        craftedItemIcon,
+                                                                        response.resourceItemMinPrices,
+                                                                        response.resourceItemMaxPrices,
+                                                                        resourceItemCounts,
+                                                                        resourceItemIcons));
     } catch (err) {
         console.log(err);
     }
