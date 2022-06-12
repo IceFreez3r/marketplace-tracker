@@ -10,8 +10,7 @@
 }
 
 .theme-smithing .resource-container {
-    min-width: 100%;
-    width: min-content;
+    width: 100%;
     height: unset;
 }
 

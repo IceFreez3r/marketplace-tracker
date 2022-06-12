@@ -73,12 +73,6 @@ function handleApiData(data) {
         }
         itemList[data[i].itemID]["prices"][timestamp] = data[i].minPrice;
     }
-    // 2 is the official id for heat
-    if (!(2 in itemList)) {
-        itemList[2] = {};
-        itemList[2]["name"] = "Heat";
-        itemList[2]["prices"] = {};
-    }
     itemList[2]["prices"][timestamp] = heatValue(timestamp).heatValue.toFixed(2);
 }
 
@@ -110,8 +104,6 @@ function heatValue(timestamp) {
         }
         return result;
     }, {apiId: null, heatValue: Infinity});
-    console.log(bestHeatItem);
-    console.log(itemList[bestHeatItem.apiId].itemId);
     return bestHeatItem;
 }
 
@@ -238,9 +230,15 @@ function filterItemList() {
 function addHardcodedItems() {
     itemList[1] = {
             "name": "Gold",
+            "itemId": "money_icon",
             "prices": {
                 0: 1
             }
+        };
+    itemList[2] = {
+            "name": "Heat",
+            "itemId": "heat_icon",
+            "prices": {}
         };
 }
 

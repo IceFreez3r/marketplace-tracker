@@ -147,7 +147,6 @@ function highlightBestHeatItem(items) {
     sendMessage({
         type: 'get-best-heat-item',
     }).then(bestHeatItem => {
-        console.log(bestHeatItem);
         items.childNodes.forEach(function (itemNode) {
             let itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
