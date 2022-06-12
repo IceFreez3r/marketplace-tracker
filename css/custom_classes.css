@@ -2,6 +2,7 @@
 @import "offline_info.css";
 @import "crafting_info.css";
 @import "enchanting_info.css";
+@import "smithing_info.css";
 @import "spinner.css";
 
 .marketplace-offer-low {
@@ -44,8 +45,18 @@
     visibility: visible;
 }
 
-.highlight {
+.favorite-highlight {
     border: 3px solid white;
+}
+
+.heat-highlight {
+    border: 3px solid red;
+}
+
+/* Overwrite when both highlights are active */
+.favorite-highlight.heat-highlight {
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px red;
 }
 
 .tooltip{

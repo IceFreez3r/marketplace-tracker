@@ -19,6 +19,9 @@ function handleMessage(request, sender, sendResponse) {
                     return [];
                 }
             });
+        case "get-best-heat-item":
+            sendResponse(itemList[heatValue(timestamp).apiId].itemId);
+            break;
         case "toggle-favorite":
             return toggleFavorite(request.data.itemId);
         case "market-api-data":
@@ -44,6 +47,9 @@ function handleMessage(request, sender, sendResponse) {
         case "enchanting-recipe":
             sendResponse(handleRecipe(request.data.scrollId, request.data.resourceItemIds));
             break;
+        case "smithing-recipe":
+            sendResponse(handleRecipe(request.data.bar, request.data.resourceIds));
+            break;
         default:
             console.log("Unknown request: " + request.data);
     }
@@ -57,7 +63,7 @@ function handleClose() {
 }
 
 function handleApiData(data) {
-    let timestamp = Math.floor(Date.now() / 1000 / 60 / 6);
+    timestamp = Math.floor(Date.now() / 1000 / 60 / 6);
     for (let i = 0; i < data.length; i++) {
         // data[i].itemID == apiId
         if (!(data[i].itemID in itemList)) {
@@ -67,11 +73,46 @@ function handleApiData(data) {
         }
         itemList[data[i].itemID]["prices"][timestamp] = data[i].minPrice;
     }
+    itemList[2]["prices"][timestamp] = heatValue(timestamp).heatValue.toFixed(2);
+}
+
+function heatValue(timestamp) {
+    let heatItems = [
+        {apiId: 50, heat: 50},      // Book
+        {apiId: 112, heat: 10},     // Coal
+        {apiId: 301, heat: 1},      // Branch
+        {apiId: 302, heat: 5},      // Log
+        {apiId: 303, heat: 10},     // Oak Log
+        {apiId: 304, heat: 20},     // Willow Log
+        {apiId: 305, heat: 70},     // Maple Log
+        {apiId: 306, heat: 200},    // Yew Log
+        {apiId: 702, heat: 100},    // Pyre Log
+        {apiId: 703, heat: 200},    // Oak Pyre Log
+        {apiId: 704, heat: 400},    // Willow Pyre Log
+        {apiId: 705, heat: 800},    // Maple Pyre Log
+        {apiId: 706, heat: 3000},   // Yew Pyre Log
+        {apiId: 11030, heat: 25},   // Rotten Driftwood
+        {apiId: 11031, heat: 75},   // Sturdy Driftwood
+        {apiId: 11036, heat: 125},  // Mystical Driftwood
+    ];
+    let bestHeatItem = heatItems.reduce(function (result, heatItem) {
+        if (heatItem.apiId in itemList) {
+            if (itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat < result.heatValue) {
+                result.apiId = heatItem.apiId;
+                result.heatValue = itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat;
+            }
+        }
+        return result;
+    }, {apiId: null, heatValue: Infinity});
+    return bestHeatItem;
 }
 
 function updateIdMap(map) {
     for (let i = 0; i < map.length; i++) {
+        // itemId -> apiId
         idMap[map[i].itemId] = map[i].apiId;
+        // apiId -> itemId
+        itemList[map[i].apiId].itemId = map[i].itemId;
     }
     storeIdMap();
 }
@@ -189,9 +230,15 @@ function filterItemList() {
 function addHardcodedItems() {
     itemList[1] = {
             "name": "Gold",
+            "itemId": "money_icon",
             "prices": {
                 0: 1
             }
+        };
+    itemList[2] = {
+            "name": "Heat",
+            "itemId": "heat_icon",
+            "prices": {}
         };
 }
 
@@ -231,11 +278,14 @@ browser.storage.local.get('itemList').then(function (result) {
     filterItemList();
 });
 let idMap = {
-    "money_icon": 1
+    "money_icon": 1,
+    "heat_icon": 2,
 };
 browser.storage.local.get('idMap').then(function (result) {
     if (result.idMap) {
         idMap = JSON.parse(result.idMap);
     }
 });
+// stores last timestamp at which API date arrived
+let timestamp = 0;
 browser.runtime.onMessage.addListener(handleMessage);

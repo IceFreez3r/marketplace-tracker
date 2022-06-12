@@ -11,6 +11,22 @@ function formatNumber(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+// Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
+function shortenNumber(number) {
+    let suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
+    number = parseFloat(number);
+    if (number < 10000) {
+        return number.toFixed(1).replace('.0', '') + suffix;
+    }
+    const SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E'];
+    let index = 0;
+    while (number >= 1000) {
+        number /= 1000;
+        index++;
+    }
+    return number.toFixed(1).replace('.0', '') + SYMBOL[index] + suffix;
+}
+
 function sendMessage(message) {
     message = JSON.stringify(message);
     return browser.runtime.sendMessage({
@@ -34,6 +50,12 @@ function parseNumberString(numberString) {
         case 'T':
             scale = 12;
             break;
+        case 'P':
+            scale = 15;
+            break;
+        case 'E':
+            scale = 18;
+            break;
     }
     return Math.round(baseNumber * Math.pow(10, scale));
 }
@@ -55,4 +77,26 @@ function parseTimeString(timeString, returnScale = false) {
         return [baseTime * scale, scale];
     }
     return baseTime * scale;
+}
+
+function totalRecipePrice(resourceMinPrices,
+                            resourceMaxPrices,
+                            resourceCounts) {
+    let totalResourceMinPrice = 0;
+    let totalResourceMaxPrice = 0;
+    for (let i = 0; i < resourceCounts.length; i++) {
+        if (resourceMinPrices[i] !== "?") {
+            totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
+            totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
+        }
+    }
+    return [totalResourceMinPrice, totalResourceMaxPrice];
+}
+
+// Returns the profit including market fee in percent as a string
+function profitPercent(buyPrice, sellPrice, decimalPlaces = 2) {
+    if (buyPrice === "?" || sellPrice === "?") {
+        return "?";
+    }
+    return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100).toFixed(decimalPlaces) + "%";
 }
