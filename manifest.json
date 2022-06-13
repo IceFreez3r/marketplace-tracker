@@ -3,11 +3,6 @@
     "name": "Idlescape Marketplace Tracker",
     "version": "1.0",
     "description": "Automatically tracks prices of items on the Idlescape Marketplace",
-    "background": {
-        "scripts": [
-            "background.js"
-        ]
-    },
     "content_scripts": [
         {
             "matches": [
@@ -15,6 +10,7 @@
             ],
             "js": [
                 "marketplace_tracker.js",
+                "storage.js",
                 "offline_tracker.js",
                 "crafting_tracker.js",
                 "enchanting_tracker.js",
@@ -28,9 +24,5 @@
     ],
     "permissions": [
         "storage"
-    ], 
-    "browser_action": {
-        "default_icon": "icons/stonks.png",
-        "default_popup": "popup/view.html"
-    }
+    ]
 }

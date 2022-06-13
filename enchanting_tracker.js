@@ -18,21 +18,20 @@ function processEnchantment(recipe) {
     let resourceItemIds = ["scroll"].concat(dynamicResources.map(resource => resource.itemId));
     let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));
     let resourceItemCounts = [standardResources.scrolls].concat(dynamicResources.map(resource => resource.amount));
-    sendMessage({
+    let response = storageRequest({
         type: "enchanting-recipe",
         scrollId: scrollId,
         resourceItemIds: resourceItemIds
-    }).then(response => {
-        recipe.insertAdjacentHTML('beforeend', 
-            enchantingInfoTemplate(response.craftedItemMinPrice,
-                                   response.craftedItemMaxPrice,
-                                   scrollIcon,
-                                   response.resourceItemMinPrices,
-                                   response.resourceItemMaxPrices,
-                                   resourceItemCounts,
-                                   resourceItemIcons,
-                                   standardResources.chance));
     });
+    recipe.insertAdjacentHTML('beforeend', 
+        enchantingInfoTemplate(response.craftedItemMinPrice,
+                                response.craftedItemMaxPrice,
+                                scrollIcon,
+                                response.resourceItemMinPrices,
+                                response.resourceItemMaxPrices,
+                                resourceItemCounts,
+                                resourceItemIcons,
+                                standardResources.chance));
 }
 
 function getStandardResources(standardResourceNode) {

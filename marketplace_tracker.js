@@ -11,13 +11,12 @@ function scanOfferList() {
         offers = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr');
         let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
         favoriteButton(itemId);
-        sendMessage({
+        let response = storageRequest({
             type: 'analyze-item',
             itemId: itemId
-        }).then(response => {
-            markOffers(offers, response.maxPrice);
-            priceHoverListener(offers, response.maxPrice);
         });
+        markOffers(offers, response.maxPrice);
+        priceHoverListener(offers, response.maxPrice);
     }
     catch (err) {
         console.log(err);
@@ -28,21 +27,19 @@ function favoriteButton(itemId) {
     if (document.getElementById("marketplace-favorite-button")) {
         return; 
     }
-    sendMessage({
+    let isFavorite = storageRequest({
         type: 'get-favorite',
         itemId: itemId
-    }).then(response => {
-        document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(response.isFavorite));
-        let favoriteButton = document.getElementById("marketplace-favorite-button")
-        favoriteButton.addEventListener('click', function(){
-            sendMessage({
-                type: 'toggle-favorite',
-                itemId: itemId
-            }).then(response => {
-                favoriteButton.classList.replace(response.isFavorite ? 'fill-none' : 'fill-yellow', response.isFavorite ? 'fill-yellow' : 'fill-none');
-                favoriteButton.getElementsByTagName('span')[0].classList.toggle('invisible');
-            });
+    });
+    document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(isFavorite));
+    let favoriteButton = document.getElementById("marketplace-favorite-button")
+    favoriteButton.addEventListener('click', function() {
+        let isFavorite = storageRequest({
+            type: 'toggle-favorite',
+            itemId: itemId
         });
+        favoriteButton.classList.replace(isFavorite ? 'fill-none' : 'fill-yellow', isFavorite ? 'fill-yellow' : 'fill-none');
+        favoriteButton.getElementsByTagName('span')[0].classList.toggle('invisible');
     });
 }
 
@@ -134,29 +131,27 @@ function highlightFavorite (itemNode, favorites) {
 }
 
 function highlightFavorites(items) {
-    sendMessage({
+    let favoritesList = storageRequest({
         type: 'get-favorites-list',
-    }).then(favoritesList => {
-        items.childNodes.forEach(function (itemNode) {
-            highlightFavorite(itemNode, favoritesList);
-         });
+    });
+    items.childNodes.forEach(function (itemNode) {
+        highlightFavorite(itemNode, favoritesList);
     });
 }
 
 function highlightBestHeatItem(items) {
-    sendMessage({
+    let bestHeatItem = storageRequest({
         type: 'get-best-heat-item',
-    }).then(bestHeatItem => {
-        items.childNodes.forEach(function (itemNode) {
-            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.add("heat-highlight");
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
-            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.remove("heat-highlight");
-                itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
-            }
-        });
+    });
+    items.childNodes.forEach(function (itemNode) {
+        let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+        if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
+            itemNode.firstChild.classList.add("heat-highlight");
+            itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
+        } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
+            itemNode.firstChild.classList.remove("heat-highlight");
+            itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
+        }
     });
 }
 
@@ -197,7 +192,7 @@ function iconToIdMap(items) {
             apiId: apiId
         });
     }
-    sendMessage({
+    storageRequest({
         type: 'icon-to-id-map',
         map: map
     });
@@ -229,7 +224,7 @@ function fetchAPI() {
         })
         .then(function (data) {
             if (data.status === "Success") {
-                sendMessage({
+                storageRequest({
                     type: 'market-api-data',
                     data: data.manifest
                 });
@@ -241,7 +236,7 @@ function fetchAPI() {
 }
 
 window.addEventListener('beforeunload', function () {
-    sendMessage({
+    storageRequest({
         type: 'close'
     });
 });
