@@ -4,6 +4,7 @@ function farmingTracker() {
         return;
     }
     let seedList = seedContainer.getElementsByClassName("item");
+    let existingSeeds = [[false, false, false, false], [false, false, false, false], [false, false, false, false], [false, false, false, false]];
     // Add classes to seeds
     for (let i = 0; i < seedList.length; i++) {
         let seed = seedList[i];
@@ -11,13 +12,24 @@ function farmingTracker() {
         // check in which list the seed name is
         if (seedName === mysteriousSeedName) {
             const mysteriousSeedSize = seed.getElementsByClassName("item-augment")[0].innerText;
-            seed.parentNode.classList.add("mysterious-seed-" + mysteriousSeedSize);
+            let [size_1, size_2] = mysteriousSeedSize.split("x");
+            existingSeeds[size_1 - 1][size_2 - 1] = true;
+            seed.parentNode.style.gridArea = "mysterious-seed-" + mysteriousSeedSize;
         } else if (singleSlotSeedNames.indexOf(seedName) !== -1) {
             seed.parentNode.classList.add("single-slot-seed");
         } else if (multiSlotSeedNames.indexOf(seedName) !== -1) {
             seed.parentNode.classList.add("multi-slot-seed");
         } else {
             console.log("Unknown seed name: " + seedName);
+        }
+    }
+    // Add pseudo mysterious seed divs if the user doesn't have that type
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            if (!existingSeeds[i][j]) {
+                console.log(i, j)
+                seedContainer.insertAdjacentHTML("beforeend", `<div style="grid-area: mysterious-seed-${i+1}x${j+1};" class="fake-item"></div>`);
+            }
         }
     }
     // Remove old header
