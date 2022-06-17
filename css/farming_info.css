@@ -14,17 +14,17 @@
                          "mysterious-seed-3x1 mysterious-seed-3x2 mysterious-seed-3x3 mysterious-seed-3x4"
                          "mysterious-seed-4x1 mysterious-seed-4x2 mysterious-seed-4x3 mysterious-seed-4x4"
                          "seed-header-single seed-header-single seed-header-single seed-header-single"
-                         "seed-header-single-border seed-header-single-border seed-header-single-border seed-header-single-border";
+                         "seed-header-single-border seed-header-single-border seed-header-single-border seed-header-single-border"
+                         "carrot-seed potato-seed wheat-seed tomato-seed"
+                         "mushroom-spore sugarcane-seed chili-pepper-seed rice-seed"
+                         "pumpkin-seed peppercorn-seed . ."
+                         "seed-header-multi seed-header-multi seed-header-multi seed-header-multi"
+                         "seed-header-multi-border seed-header-multi-border seed-header-multi-border seed-header-multi-border"
+                         "wildberry-bush-seed sageberry-bush-seed tree-seed oak-tree-seed"
+                         "willow-tree-seed banana-tree-seed apple-tree-seed maple-tree-seed"
+                         "yew-tree-seed elder-tree-seed . .";
     grid-template-columns: repeat(4, 60px);
     max-height: unset;
-}
-
-.single-slot-seed {
-    order: 1;
-}
-
-.multi-slot-seed {
-    order: 4;
 }
 
 .seed-header-mysterious {
@@ -44,15 +44,11 @@
 }
 
 .seed-header-multi {
-    grid-column-start: 1;
-    grid-column-end: 5;
-    order: 2;
+    grid-area: seed-header-multi;
 }
 
 .seed-header-multi-border {
-    grid-column-start: 1;
-    grid-column-end: 5;
-    order: 3;
+    grid-area: seed-header-multi-border;
 }
 
 .fake-item {
