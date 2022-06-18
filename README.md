@@ -46,6 +46,13 @@ If you don't have a seed type an empty box is added, resulting in a grid, that h
 
 <img src="./images/readme/farming_tracker.png" alt="Farming Tracker" width="250">
 
+### Offline Summary
+Adds up the value of all the items you acquired while offline and displays total and per hour information.
+
+<img src="./images/readme/offline_tracker.png" alt="Offline Tracker" width="600">
+
+Note that the per hour information is only accurate if you are offline for a longer time and will always only be an estimate.
+
 ### Other
 When ever the minimum or maximum price is shown, it is actually the 5%/95% quantile of the collected data. This step is done to reduce the impact of outliers. Otherwise a direct player trade with a price of only 1 gold, that manages to get into the API data, would make all computations pretty useless.
 
