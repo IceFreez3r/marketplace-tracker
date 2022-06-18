@@ -58,6 +58,8 @@ When ever the minimum or maximum price is shown, it is actually the 5%/95% quant
 
 The data is stored on your computer in the `localStorage` of the browser. There is no exchange of data with any server.
 
+To make sure, that the data of the extension isn't outdated, every API call is only stored for two weeks.
+
 ## Planned Features
 (without any particular order)
 - Marketplace
