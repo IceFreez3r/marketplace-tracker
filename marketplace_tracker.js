@@ -235,6 +235,9 @@ let tick = setInterval(() => {
             case 'Enchanting':
                 enchantingTracker();
                 break;
+            case 'Farming':
+                farmingTracker();
+                break;
             case 'Marketplace':
                 scanMarketplaceLists();
                 scanOfferList();
