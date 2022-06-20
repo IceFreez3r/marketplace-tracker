@@ -49,11 +49,11 @@ function handleApiData(data) {
         if (!(data[i].itemID in itemList)) {
             itemList[data[i].itemID] = {};
             itemList[data[i].itemID]["name"] = data[i].name
-            itemList[data[i].itemID]["prices"] = {};
+            itemList[data[i].itemID]["prices"] = [];
         }
-        itemList[data[i].itemID]["prices"][timestamp] = data[i].minPrice;
+        itemList[data[i].itemID]["prices"].push([timestamp, data[i].minPrice]);
     }
-    itemList[2]["prices"][timestamp] = heatValue(timestamp).heatValue.toFixed(2);
+    itemList[2]["prices"].push([timestamp, heatValue(timestamp).heatValue.toFixed(2)]);
 }
 
 function heatValue(timestamp) {
@@ -77,9 +77,17 @@ function heatValue(timestamp) {
     ];
     let bestHeatItem = heatItems.reduce(function (result, heatItem) {
         if (heatItem.apiId in itemList) {
-            if (itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat < result.heatValue) {
-                result.apiId = heatItem.apiId;
-                result.heatValue = itemList[heatItem.apiId]["prices"][timestamp] / heatItem.heat;
+            // find the price tuple with the current timestamp
+            let priceTuple = itemList[heatItem.apiId].prices.find(function (priceTuple) {
+                return priceTuple[0] === timestamp;
+            });
+            if (priceTuple) {
+                if (priceTuple[1] / heatItem.heat < result.heatValue) {
+                    result = {
+                        apiId: heatItem.apiId,
+                        heatValue: priceTuple[1] / heatItem.heat,
+                    };
+                }
             }
         }
         return result;
@@ -164,9 +172,10 @@ function getItemValues(itemIds) {
 function filterItemList() {
     let twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 6) - (14 * 24 * 6);
     for (let apiId in itemList) {
-        for (let timestamp in itemList[apiId]["prices"]) {
-            if (timestamp < twoWeeksAgo) {
-                delete itemList[apiId]["prices"][timestamp];
+        for (let i = 0; i < itemList[apiId]["prices"].length; i++) {
+            if (itemList[apiId]["prices"][i][0] < twoWeeksAgo) {
+                itemList[apiId]["prices"].splice(i, 1);
+                i--;
             }
         }
         if (Object.keys(itemList[apiId]["prices"]).length === 0) {
@@ -181,16 +190,14 @@ function addHardcodedItems() {
         itemList[1] = {
             "name": "Gold",
             "itemId": "money_icon",
-            "prices": {
-                0: 1
-            }
+            "prices": [[0, 1]]
         };
     }
     if (!(2 in itemList)) {
         itemList[2] = {
             "name": "Heat",
             "itemId": "heat_icon",
-            "prices": {}
+            "prices": []
         };
     }
 }
@@ -199,28 +206,42 @@ function minPrice(apiId) {
     if (!(apiId in itemList)) {
         return "?";
     }
-    let minPrice = Infinity;
-    for (let timestamp in itemList[apiId]["prices"]) {
-        let price = itemList[apiId]["prices"][timestamp];
-        if (price < minPrice) {
-            minPrice = price;
-        }
-    }
-    return minPrice;
+    // Sort the price tuples by price
+    itemList[apiId]["prices"].sort(function (a, b) {
+        return a[1] - b[1];
+    });
+    let quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
+    return itemList[apiId]["prices"][quantile][1];
 }
 
 function maxPrice(apiId) {
     if (!(apiId in itemList)) {
         return "?";
     }
-    let maxPrice = 0;
-    for (let timestamp in itemList[apiId]["prices"]) {
-        let price = itemList[apiId]["prices"][timestamp];
-        if (price > maxPrice) {
-            maxPrice = price;
-        }
-    }
-    return maxPrice;
+    // Sort the price tuples by price
+    itemList[apiId]["prices"].sort(function (a, b) {
+        return a[1] - b[1];
+    });
+    let quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
+    return itemList[apiId]["prices"][quantile][1];
+}
+
+function fetchAPI() {
+    fetch("https://idlescape.com/api/market/manifest")
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            if (data.status === "Success") {
+                storageRequest({
+                    type: 'market-api-data',
+                    data: data.manifest
+                });
+            }
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
 }
 
 let result; // Helper variable for storing result of localStorage.getItem
@@ -231,8 +252,6 @@ if (result) {
 }
 filterItemList();
 
-// stores last timestamp at which API date arrived
-let timestamp = 0;
 let idMap = {
     "money_icon": 1,
     "heat_icon": 2,
@@ -252,3 +271,10 @@ let lastLogin = localStorage.getItem('lastLogin');
 if (!lastLogin) {
     lastLogin = Date.now();
 }
+
+// stores last timestamp at which API date arrived
+let timestamp = 0;
+fetchAPI();
+let apiFetch = setInterval(() => {
+    fetchAPI();
+}, 1000 * 60 * 10); // 10 minutes

@@ -217,24 +217,6 @@ function markOffers(offers, maxPrice) {
     }
 }
 
-function fetchAPI() {
-    fetch("https://idlescape.com/api/market/manifest")
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (data) {
-            if (data.status === "Success") {
-                storageRequest({
-                    type: 'market-api-data',
-                    data: data.manifest
-                });
-            }
-        })
-        .catch(function (err) {
-            console.log(err);
-        });
-}
-
 window.addEventListener('beforeunload', function () {
     storageRequest({
         type: 'close'
@@ -263,8 +245,3 @@ let tick = setInterval(() => {
         }
     }
 }, 1000);
-
-fetchAPI();
-let apiFetch = setInterval(() => {
-    fetchAPI();
-}, 1000 * 60 * 10); // 10 minutes
