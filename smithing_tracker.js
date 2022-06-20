@@ -34,14 +34,13 @@ function processSmithingRecipe(recipe) {
         bar: bar,
         resourceIds: resourceIds
     });
-    craftingImage.insertAdjacentHTML('afterend', 
-        smithingInfoTemplate(response.craftedItemMinPrice,
-                            response.craftedItemMaxPrice,
-                            barIcon,
-                            response.resourceItemMinPrices,
-                            response.resourceItemMaxPrices,
-                            resourceCounts,
-                            resourceIcons));
+    saveInsertAdjacentHTML(craftingImage, 'afterend', smithingInfoTemplate(response.craftedItemMinPrice,
+                                                                            response.craftedItemMaxPrice,
+                                                                            barIcon,
+                                                                            response.resourceItemMinPrices,
+                                                                            response.resourceItemMaxPrices,
+                                                                            resourceCounts,
+                                                                            resourceIcons));
 }
 
 function smithingInfoTemplate(barMinPrice,

@@ -47,12 +47,10 @@ function offlineTracker(){
     let offlineTimeBackground = Date.now() - lastLogin;
     let offlineTimeScrappedString = offlineProgressBox.previousSibling.childNodes[1].textContent;
     let [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, returnScale = true);
-    console.log(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
     let offlineTime = calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
-    offlineProgressBox.insertAdjacentHTML('afterend', 
-                                            offlineInfoTemplate(totalMinValue, 
-                                                                totalMaxValue, 
-                                                                offlineTime));
+    saveInsertAdjacentHTML(offlineProgressBox, 'afterend', offlineInfoTemplate(totalMinValue, 
+                                                                                totalMaxValue, 
+                                                                                offlineTime));
 }
 
 function calculateOfflineTime(background, scrapped, scale) {

@@ -31,7 +31,8 @@ function favoriteButton(itemId) {
         type: 'get-favorite',
         itemId: itemId
     });
-    document.getElementById("marketplace-refresh-button").insertAdjacentHTML("afterend", favoriteTemplate(isFavorite));
+    let refreshButton = document.getElementById("marketplace-refresh-button")
+    saveInsertAdjacentHTML(refreshButton, "afterend", favoriteTemplate(isFavorite));
     let favoriteButton = document.getElementById("marketplace-favorite-button")
     favoriteButton.addEventListener('click', function() {
         let isFavorite = storageRequest({
@@ -55,7 +56,7 @@ function priceHoverListener(offers, maxPrice) {
         let price = priceCell.innerText;
 
         let tooltip = priceTooltipTemplate(maxPrice, price, amount);
-        priceCell.insertAdjacentHTML('beforeend', tooltip);
+        saveInsertAdjacentHTML(priceCell, 'beforeend', tooltip);
     }
 }
 

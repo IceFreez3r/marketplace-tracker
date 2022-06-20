@@ -1,6 +1,6 @@
 function storageRequest(request) {
     // log time and request type
-    console.log(new Date().toLocaleTimeString() + ": " + request.type);
+    // console.log(new Date().toLocaleTimeString() + ": " + request.type);
     switch (request.type) {
         case "close":
             handleClose();

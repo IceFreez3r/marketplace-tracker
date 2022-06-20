@@ -23,15 +23,14 @@ function processEnchantment(recipe) {
         scrollId: scrollId,
         resourceItemIds: resourceItemIds
     });
-    recipe.insertAdjacentHTML('beforeend', 
-        enchantingInfoTemplate(response.craftedItemMinPrice,
-                                response.craftedItemMaxPrice,
-                                scrollIcon,
-                                response.resourceItemMinPrices,
-                                response.resourceItemMaxPrices,
-                                resourceItemCounts,
-                                resourceItemIcons,
-                                standardResources.chance));
+    saveInsertAdjacentHTML(recipe, 'beforeend', enchantingInfoTemplate(response.craftedItemMinPrice,
+                                                                        response.craftedItemMaxPrice,
+                                                                        scrollIcon,
+                                                                        response.resourceItemMinPrices,
+                                                                        response.resourceItemMaxPrices,
+                                                                        resourceItemCounts,
+                                                                        resourceItemIcons,
+                                                                        standardResources.chance));
 }
 
 function getStandardResources(standardResourceNode) {

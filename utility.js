@@ -93,3 +93,7 @@ function profitPercent(buyPrice, sellPrice, decimalPlaces = 2) {
     }
     return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100).toFixed(decimalPlaces) + "%";
 }
+
+function saveInsertAdjacentHTML(element, position, html) {
+    element.insertAdjacentHTML(position, DOMPurify.sanitize(html));
+}
