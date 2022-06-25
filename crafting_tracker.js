@@ -54,15 +54,14 @@ function getCraftingRecipe(){
             document.getElementsByClassName("crafting-info-table")[0].remove();
         }
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        craftingContainer.insertAdjacentHTML('beforeend',
-                                                craftingInfoTemplate(response.craftedItemMinPrice,
-                                                                        response.craftedItemMaxPrice,
-                                                                        craftedItemCount,
-                                                                        craftedItemIcon,
-                                                                        response.resourceItemMinPrices,
-                                                                        response.resourceItemMaxPrices,
-                                                                        resourceItemCounts,
-                                                                        resourceItemIcons));
+        saveInsertAdjacentHTML(craftingContainer, 'beforeend', craftingInfoTemplate(response.craftedItemMinPrice,
+                                                                                    response.craftedItemMaxPrice,
+                                                                                    craftedItemCount,
+                                                                                    craftedItemIcon,
+                                                                                    response.resourceItemMinPrices,
+                                                                                    response.resourceItemMaxPrices,
+                                                                                    resourceItemCounts,
+                                                                                    resourceItemIcons));
     } catch (err) {
         console.log(err);
     }

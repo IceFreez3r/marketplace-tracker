@@ -16,7 +16,8 @@
                 "enchanting_tracker.js",
                 "farming_tracker.js",
                 "smithing_tracker.js",
-                "utility.js"
+                "utility.js",
+                "external/DOMpurify.min.js"
             ],
             "css": [
                 "css/custom_classes.css"

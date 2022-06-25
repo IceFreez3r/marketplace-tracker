@@ -5,7 +5,6 @@ function farmingTracker() {
     }
     let existingSeeds = {};
     for (let i = 0; i < seeds.length; i++) {
-        console.log(seeds[i]);
         existingSeeds[seeds[i]] = false;
     }
     let seedList = seedContainer.getElementsByClassName("item");
@@ -25,9 +24,11 @@ function farmingTracker() {
     }
     // Add empty boxes for missing seeds
     Object.entries(existingSeeds).forEach(([seedName, exists]) => {
-        console.log(seedName);
         if (!exists) {
-            seedContainer.insertAdjacentHTML("beforeend", `<div style="grid-area: ${seedName};" class="fake-item"></div>`);
+            let seed = document.createElement("div");
+            seed.classList.add("fake-item");
+            seed.style.gridArea = seedName;
+            seedContainer.appendChild(seed);
         }
     });    
     // Remove old header
