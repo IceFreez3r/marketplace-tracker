@@ -20,7 +20,12 @@
                 "external/DOMpurify.min.js"
             ],
             "css": [
-                "css/custom_classes.css"
+                "css/crafting_info.css",
+                "css/enchanting_info.css",
+                "css/farming_info.css",
+                "css/marketplace_info.css",
+                "css/offline_info.css",
+                "css/smithing_info.css"
             ]
         }
     ],
