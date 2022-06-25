@@ -9,13 +9,14 @@
                 "https://idlescape.com/game"
             ],
             "js": [
-                "marketplace_tracker.js",
-                "storage.js",
-                "offline_tracker.js",
+                "main.js",
                 "crafting_tracker.js",
                 "enchanting_tracker.js",
                 "farming_tracker.js",
+                "marketplace_tracker.js",
+                "offline_tracker.js",
                 "smithing_tracker.js",
+                "storage.js",
                 "utility.js",
                 "external/DOMpurify.min.js"
             ],
