@@ -60,6 +60,23 @@
     box-shadow: 0 0 0 3px red;
 }
 
+.marketplace-analysis-table {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5px;
+    border: 2px solid hsla(0, 0%, 100%, .452);
+    padding: 6px;
+    margin: 6px;
+    border-radius: 10px;
+    width: 90%;
+    margin: 10px auto 10px auto;
+    box-shadow: inset 0 8px 8px -10px #ccc, inset 0 -8px 8px -10px #ccc;
+}
+
+.marketplace-analysis-table-content {
+    justify-self: center;
+}
+
 .tooltip {
     display: none
 }

@@ -15,6 +15,10 @@ function scanOfferList() {
             itemId: itemId
         });
         favoriteButton(itemId);
+        if (document.getElementsByClassName('marketplace-analysis-table').length == 0) {
+            let marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+            saveInsertAdjacentHTML(marketplaceTop, "afterend", priceAnalysisTableTemplate(analysis));
+        }
         markOffers(offers, analysis.maxPrice);
         priceHoverListener(offers, analysis.maxPrice);
     }
@@ -55,6 +59,31 @@ function favoriteTemplate(isFavorite) {
     <span class=${invisible}> not</span> 
     FAV
 </button>`
+}
+
+function priceAnalysisTableTemplate(analysis) {
+    return `
+<div class="marketplace-analysis-table">
+    <div class="marketplace-analysis-table-content">
+        Minimum
+    </div>
+    <div class="marketplace-analysis-table-content">
+        Median
+    </div>
+    <div class="marketplace-analysis-table-content">
+        Maximum
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.minPrice)}
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.medianPrice)}
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.maxPrice)}
+    </div>
+</div>
+    `;
 }
 
 function markOffers(offers, maxPrice) {
