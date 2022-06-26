@@ -3,6 +3,12 @@
 
 Automatically tracks the marketprices for Idlescape using the [market API](https://idlescape.com/api/market/manifest). Prices are analyzed and displayed at various places in the game.
 
+## Installation Options
+
+Install the [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/idlescape-marketplace-tracker/) from Mozillas Addon Store or
+
+Install Tampermonkey for your browser ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/), [Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)) and then install the [Userscript](https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js). (Supports Firefox and Chrome)
+
 ## Features
 
 ### Marketplace
@@ -10,7 +16,7 @@ Adds the option to mark items as favorite, which highlights them in the market o
 
 <img src="./images/readme/marketplace_overview.png" alt="Marketplace Overview" width="600">
 
-On the sell tab low cost items are highlighted in relation to the maximum price in the collected data:
+On the buy tab low cost items are highlighted in relation to the maximum price in the collected data:
 - <95% of maximum price &rarr; red 🔴
 - <80% of maximum price &rarr; yellow 🟡
 - <60% of maximum price &rarr; green 🟢
