@@ -26,7 +26,7 @@
     background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(128, 0, 0, .938), rgba(128, 0, 0, 0) 70%);
 }
 
-.marketplace-offer-price-tooltip{
+.marketplace-offer-price-tooltip {
     visibility: hidden;
     overflow: hidden;
     position: absolute;
@@ -42,7 +42,7 @@
     position: relative;
 }
 
-.marketplace-offer-price:hover .marketplace-offer-price-tooltip{
+.marketplace-offer-price:hover .marketplace-offer-price-tooltip {
     visibility: visible;
 }
 
@@ -60,11 +60,11 @@
     box-shadow: 0 0 0 3px red;
 }
 
-.tooltip{
+.tooltip {
     display: none
 }
 
-.tooltip:hover{
+.tooltip:hover {
     display: block;
     position: absolute;
     z-index: 10;
