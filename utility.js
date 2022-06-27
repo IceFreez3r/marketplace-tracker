@@ -8,7 +8,7 @@ function convertItemId(itemName) {
 
 // Add thousands separator to number
 function formatNumber(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return Math.round(price).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 // Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
@@ -55,21 +55,37 @@ function parseNumberString(numberString) {
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    const baseTime = parseFloat(timeString);
-    let scale = 1;
-    if (timeString.includes('day')) {
-        scale = 1000 * 60 * 60 * 24;
-    } else if (timeString.includes('hour')) {
-        scale = 1000 * 60 * 60;
-    } else if (timeString.includes('minute')) {
-        scale = 1000 * 60;
-    } else if (timeString.includes('second')) {
+    timeString.replace("s ", "");
+    const secondRegex = /(\d+) second/;
+    const minuteRegex = /(\d+) minute/;
+    const hourRegex = /(\d+) hour/;
+    const dayRegex = /(\d+) day/;
+    const secondMatch = secondRegex.exec(timeString);
+    const minuteMatch = minuteRegex.exec(timeString);
+    const hourMatch = hourRegex.exec(timeString);
+    const dayMatch = dayRegex.exec(timeString);
+    let time = 0;
+    let scale;
+    if (secondMatch) {
+        time += parseInt(secondMatch[1]) * 1000;
         scale = 1000;
     }
-    if (returnScale) {
-        return [baseTime * scale, scale];
+    if (minuteMatch) {
+        time += parseInt(minuteMatch[1]) * 60 * 1000;
+        scale = 60 * 1000;
     }
-    return baseTime * scale;
+    if (hourMatch) {
+        time += parseInt(hourMatch[1]) * 60 * 60 * 1000;
+        scale = 60 * 60 * 1000;
+    }
+    if (dayMatch) {
+        time += parseInt(dayMatch[1]) * 24 * 60 * 60 * 1000;
+        scale = 24 * 60 * 60 * 1000;
+    }
+    if (returnScale) {
+        return [time, scale];
+    }
+    return time;
 }
 
 function totalRecipePrice(resourceMinPrices,
@@ -79,8 +95,13 @@ function totalRecipePrice(resourceMinPrices,
     let totalResourceMaxPrice = 0;
     for (let i = 0; i < resourceCounts.length; i++) {
         if (resourceMinPrices[i] !== "?") {
-            totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
-            totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
+            if (resourceCounts[i] > 0) {
+                totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
+                totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
+            } else {
+                totalResourceMinPrice += resourceMaxPrices[i] * resourceCounts[i];
+                totalResourceMaxPrice += resourceMinPrices[i] * resourceCounts[i];
+            }
         }
     }
     return [totalResourceMinPrice, totalResourceMaxPrice];
