@@ -93,4 +93,4 @@ To make sure, that the data of the extension isn't outdated, every API call is o
     - Add a settings page 🔧
 
 ## Contact
-If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).
+If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).
