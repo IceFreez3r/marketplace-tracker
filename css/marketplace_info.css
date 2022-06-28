@@ -1,12 +1,4 @@
-@import "checkmark.css";
-@import "offline_info.css";
-@import "crafting_info.css";
-@import "enchanting_info.css";
-@import "farming_info.css";
-@import "smithing_info.css";
-@import "spinner.css";
-
-.marketplace-table {
+body .marketplace-table {
     overflow: unset;
 }
 

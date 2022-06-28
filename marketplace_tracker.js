@@ -74,13 +74,13 @@ function priceAnalysisTableTemplate(analysis) {
         Maximum
     </div>
     <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.minPrice)}
+        ${numberWithSeparators(analysis.minPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.medianPrice)}
+        ${numberWithSeparators(analysis.medianPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.maxPrice)}
+        ${numberWithSeparators(analysis.maxPrice)}
     </div>
 </div>
     `;
@@ -135,7 +135,7 @@ function priceTooltipTemplate(maxPrice, price, amount) {
                 <br>
             </span>
             <span>
-                Maximum price: ${formatNumber(maxPrice)}
+                Maximum price: ${numberWithSeparators(maxPrice)}
             </span>
             <span>
                 <hr>
@@ -149,19 +149,19 @@ function priceTooltipTemplate(maxPrice, price, amount) {
                     (
                 </span>
                 <span class="text-green">
-                    ${formatNumber(maxPrice)}
+                    ${numberWithSeparators(maxPrice)}
                 </span>
                 <span>
                     * 0.95 - 
                 </span>
                 <span class="text-red">
-                    ${formatNumber(price)}
+                    ${numberWithSeparators(price)}
                 </span>
                 <span>
-                    ) * ${formatNumber(amount)} =
+                    ) * ${numberWithSeparators(amount)} =
                 </span>
                 <span class="${color}">
-                    ${formatNumber(profit)}
+                    ${numberWithSeparators(profit)}
                 </span>
                 <br>
             </span>
@@ -249,34 +249,4 @@ function highlightBestHeatItem(items) {
     });
 }
 
-window.addEventListener('beforeunload', function () {
-    storageRequest({
-        type: 'close'
-    });
-});
-
 let createMap = true;
-let tick = setInterval(() => {
-    offlineTracker();
-    let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
-    if (selectedSkill.length > 0) {
-        switch (selectedSkill[0].innerText) {
-            case 'Crafting':
-                getCraftingRecipe();
-                break;
-            case 'Enchanting':
-                enchantingTracker();
-                break;
-            case 'Farming':
-                farmingTracker();
-                break;
-            case 'Marketplace':
-                scanMarketplaceLists();
-                scanOfferList();
-                break;
-            case 'Smithing':
-                smithingTracker();
-                break;
-        }
-    }
-}, 1000);

@@ -3,7 +3,7 @@
     flex-direction: column;
 }
 
-.crafting-container {
+body .crafting-container {
     height: auto;
     flex: 1 0 auto;
 }

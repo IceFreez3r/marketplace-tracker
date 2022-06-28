@@ -25,16 +25,7 @@ function offlineTracker(){
     let lastLogin = storageRequest({
         type: 'get-last-login',
     });
-    let totalMinValue = 0;
-    let totalMaxValue = 0;
-    for (let i = 0; i < itemIds.length; i++) {
-        // ignore items with no known value
-        if (itemValues.itemMinPrices[i] === '?' || itemValues.itemMaxPrices[i] === '?') {
-            continue;
-        }
-        totalMinValue += itemValues.itemMinPrices[i] * itemCounts[i];
-        totalMaxValue += itemValues.itemMaxPrices[i] * itemCounts[i];
-    }
+    let [totalMinValue, totalMaxValue] = totalRecipePrice(itemValues.itemMinPrices, itemValues.itemMaxPrices, itemCounts);
 
     /* Offline Time
         The background script stores the last login time in localStorage whenever the tab is closed.
@@ -45,7 +36,7 @@ function offlineTracker(){
         Offline time is also limited to a maximum of 12 hours.
     */ 
     let offlineTimeBackground = Date.now() - lastLogin;
-    let offlineTimeScrappedString = offlineProgressBox.previousSibling.childNodes[1].textContent;
+    let offlineTimeScrappedString = offlineProgressBox.previousElementSibling.innerText;
     let [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, returnScale = true);
     let offlineTime = calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
     saveInsertAdjacentHTML(offlineProgressBox, 'afterend', offlineInfoTemplate(totalMinValue, 
@@ -67,26 +58,24 @@ function calculateOfflineTime(background, scrapped, scale) {
 function offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
     let minPerHour = 0;
     let maxPerHour = 0;
-    if (totalMinValue > 0) {
+    if (offlineTime > 0) {
         minPerHour = Math.floor(totalMinValue * 1000 * 60 * 60 / offlineTime);
-    }
-    if (totalMaxValue > 0) {
         maxPerHour = Math.floor(totalMaxValue * 1000 * 60 * 60 / offlineTime);
     }
     return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">
-        Total offline value
+        Total value
     </div>
     <div class="offline-info-value">
         <div class="left-info">
             <span>
-                ${formatNumber(totalMinValue)}
+                ${numberWithSeparators(limitDecimalPlaces(totalMinValue, 0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${formatNumber(minPerHour)}/h
+                ${numberWithSeparators(minPerHour)}/h
             </span>
         </div>
         <div class="center-info">
@@ -96,12 +85,12 @@ function offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
         </div>
         <div class="right-info">
             <span>
-                ${formatNumber(totalMaxValue)}
+                ${numberWithSeparators(limitDecimalPlaces(totalMaxValue, 0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${formatNumber(maxPerHour)}/h
+                ${numberWithSeparators(maxPerHour)}/h
             </span>
         </div>
     </div>

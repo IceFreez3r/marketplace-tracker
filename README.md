@@ -3,6 +3,14 @@
 
 Automatically tracks the marketprices for Idlescape using the [market API](https://idlescape.com/api/market/manifest). Prices are analyzed and displayed at various places in the game.
 
+## Installation Options
+
+Install the [Firefox Extension](https://addons.mozilla.org/en-US/firefox/addon/idlescape-marketplace-tracker/) from Mozillas Addon Store or
+
+Install Tampermonkey for your browser ([Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/), [Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo), [Opera](https://addons.opera.com/en/extensions/details/tampermonkey-beta/)) and then install the [Userscript](https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js).
+
+Please visit the marketplace once afterwards to initialize the extension.
+
 ## Features
 
 ### Marketplace
@@ -10,7 +18,7 @@ Adds the option to mark items as favorite, which highlights them in the market o
 
 <img src="./images/readme/marketplace_overview.png" alt="Marketplace Overview" width="600">
 
-On the sell tab low cost items are highlighted in relation to the maximum price in the collected data:
+On the buy tab low cost items are highlighted in relation to the maximum price in the collected data:
 - <95% of maximum price &rarr; red 🔴
 - <80% of maximum price &rarr; yellow 🟡
 - <60% of maximum price &rarr; green 🟢
@@ -85,4 +93,4 @@ To make sure, that the data of the extension isn't outdated, every API call is o
     - Add a settings page 🔧
 
 ## Contact
-If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact me over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5): IceFreez3r.
+If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).

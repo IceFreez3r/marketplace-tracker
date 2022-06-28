@@ -1,12 +1,12 @@
-.farming-info > p {
+body .farming-info > p {
     max-height: unset;
 }
 
-.farming-seed-settings {
+body .farming-seed-settings {
     position: unset;
 }
 
-.farming-seeds .all-items {
+body .farming-seeds .all-items {
     grid-template-areas: "seed-header-mysterious seed-header-mysterious seed-header-mysterious seed-header-mysterious"
                          "seed-header-mysterious-border seed-header-mysterious-border seed-header-mysterious-border seed-header-mysterious-border"
                          "mysterious-seed-1x1 mysterious-seed-2x1 mysterious-seed-3x1 mysterious-seed-4x1"
