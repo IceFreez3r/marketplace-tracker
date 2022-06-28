@@ -59,8 +59,8 @@ function smithingInfoTemplate(barMinPrice,
 </div>
         `;
     }
-    let resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${formatNumber(price)}</span>`).join("");
-    let resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${formatNumber(price)}</span>`).join("");
+    let resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+    let resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
     let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
     let minProfit = profitPercent(totalResourceMinPrice, barMinPrice);
     let maxProfit = profitPercent(totalResourceMaxPrice, barMaxPrice);
@@ -84,13 +84,13 @@ function smithingInfoTemplate(barMinPrice,
     </span>
     ${resourceMinHTML}
     <span class="smithing-info-table-content">
-        ${formatNumber(shortenNumber(totalResourceMinPrice))}
+        ${numberWithSeparators(shortenNumber(totalResourceMinPrice))}
     </span>
     <span class="smithing-info-table-content">
-        ${formatNumber(shortenNumber(barMinPrice))}
+        ${numberWithSeparators(shortenNumber(barMinPrice))}
     </span>
     <span class="smithing-info-table-content">
-        ${formatNumber(minProfit)}
+        ${minProfit}
     </span>
     
     <!-- max prices -->
@@ -99,13 +99,13 @@ function smithingInfoTemplate(barMinPrice,
     </span>
     ${resourceMaxHTML}
     <span class="smithing-info-table-content">
-        ${formatNumber(shortenNumber(totalResourceMaxPrice))}
+        ${numberWithSeparators(shortenNumber(totalResourceMaxPrice))}
     </span>
     <span class="smithing-info-table-content">
-        ${formatNumber(shortenNumber(barMaxPrice))}
+        ${numberWithSeparators(shortenNumber(barMaxPrice))}
     </span>
     <span class="smithing-info-table-content">
-        ${formatNumber(maxProfit)}
+        ${maxProfit}
     </span>
 </div>
     `;

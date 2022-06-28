@@ -71,8 +71,8 @@ function enchantingInfoTemplate(craftedItemMinPrice,
         <div class="enchanting-info-table-content">
             <img class="icon24" src="${icon}">
         </div>`).join("");
-    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${formatNumber(price)}</span>`).join("");
-    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${formatNumber(price)}</span>`).join("");
+    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
+    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
     let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
     // Total effective price is higher if the chance is < 100%
     totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
@@ -100,10 +100,10 @@ function enchantingInfoTemplate(craftedItemMinPrice,
     </span>
     ${resourceMinHTML}
     <span class="enchanting-info-table-content">
-        ${formatNumber(totalResourceMinPrice)}
+        ${numberWithSeparators(totalResourceMinPrice)}
     </span>
     <span class="crafting-info-table-content">
-        ${formatNumber(craftedItemMinPrice)}
+        ${numberWithSeparators(craftedItemMinPrice)}
     </span>
     <span class="crafting-info-table-content">
         ${prozentualMinProfit}
@@ -115,10 +115,10 @@ function enchantingInfoTemplate(craftedItemMinPrice,
     </span>
     ${resourceMaxHTML}
     <span class="enchanting-info-table-content">
-        ${formatNumber(totalResourceMaxPrice)}
+        ${numberWithSeparators(totalResourceMaxPrice)}
     </span>
     <span class="enchanting-info-table-content">
-        ${formatNumber(craftedItemMaxPrice)}
+        ${numberWithSeparators(craftedItemMaxPrice)}
     </span>
     <span class="enchanting-info-table-content">
         ${prozentualMaxProfit}

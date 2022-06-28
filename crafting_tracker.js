@@ -79,8 +79,8 @@ function craftingInfoTemplate(craftedItemMinPrice,
         <div class="crafting-info-table-content">
             <img class="crafting-item-resource-icon" src="${icon}">
         </div>`).join("");
-    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
-    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${formatNumber(price)}</span>`).join("");
+    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
     let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
 
     let totalCraftedItemHeaderHTML = "";
@@ -90,8 +90,8 @@ function craftingInfoTemplate(craftedItemMinPrice,
         let totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
         let totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
         totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
-        totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMinPrice)}</span>`;
-        totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${formatNumber(totalCraftedItemMaxPrice)}</span>`;
+        totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
+        totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;
     }
     return `
 <div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1)}, 1fr)">
@@ -111,10 +111,10 @@ function craftingInfoTemplate(craftedItemMinPrice,
     </span>
     ${resourceMinHTML}
     <span class="crafting-info-table-content">
-        ${formatNumber(totalResourceMinPrice)}
+        ${numberWithSeparators(limitDecimalPlaces(totalResourceMinPrice, 2))}
     </span>
     <span class="crafting-info-table-content">
-        ${formatNumber(craftedItemMinPrice)}
+        ${numberWithSeparators(limitDecimalPlaces(craftedItemMinPrice, 2))}
     </span>
     ${totalCraftedItemMinHTML}
 
@@ -124,10 +124,10 @@ function craftingInfoTemplate(craftedItemMinPrice,
     </span>
     ${resourceMaxHTML}
     <span class="crafting-info-table-content">
-        ${formatNumber(totalResourceMaxPrice)}
+        ${numberWithSeparators(limitDecimalPlaces(totalResourceMaxPrice, 2))}
     </span>
     <span class="crafting-info-table-content">
-        ${formatNumber(craftedItemMaxPrice)}
+        ${numberWithSeparators(limitDecimalPlaces(craftedItemMaxPrice, 2))}
     </span>
     ${totalCraftedItemMaxHTML}
 </div>

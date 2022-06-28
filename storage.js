@@ -53,7 +53,7 @@ function handleApiData(data) {
         }
         itemList[data[i].itemID]["prices"].push([timestamp, data[i].minPrice]);
     }
-    itemList[2]["prices"].push([timestamp, heatValue(timestamp).heatValue.toFixed(2)]);
+    itemList[2]["prices"].push([timestamp, heatValue(timestamp).heatValue]);
 }
 
 function heatValue(timestamp) {

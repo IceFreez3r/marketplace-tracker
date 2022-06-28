@@ -65,17 +65,17 @@ function offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
     return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">
-        Total offline value
+        Total value
     </div>
     <div class="offline-info-value">
         <div class="left-info">
             <span>
-                ${formatNumber(totalMinValue)}
+                ${numberWithSeparators(limitDecimalPlaces(totalMinValue, 0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${formatNumber(minPerHour)}/h
+                ${numberWithSeparators(minPerHour)}/h
             </span>
         </div>
         <div class="center-info">
@@ -85,12 +85,12 @@ function offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
         </div>
         <div class="right-info">
             <span>
-                ${formatNumber(totalMaxValue)}
+                ${numberWithSeparators(limitDecimalPlaces(totalMaxValue, 0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${formatNumber(maxPerHour)}/h
+                ${numberWithSeparators(maxPerHour)}/h
             </span>
         </div>
     </div>

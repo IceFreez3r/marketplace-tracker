@@ -7,8 +7,12 @@ function convertItemId(itemName) {
 }
 
 // Add thousands separator to number
-function formatNumber(price) {
-    return Math.round(price).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+function numberWithSeparators(price) {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function limitDecimalPlaces(number, decimalPlaces = 0) {
+    return Math.round(number * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
 }
 
 // Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
