@@ -151,10 +151,18 @@ function sortObj(obj) {
 }
 
 function analyzeItem(itemId) {
+    let apiId = idMap[itemId];
+    // Sort the price tuples by price
+    itemList[apiId]["prices"].sort(function (a, b) {
+        return a[1] - b[1];
+    });
+    let minQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
+    let medianQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.5);
+    let maxQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
     return {
-        type: "item-analysis",
-        minPrice: minPrice(idMap[itemId]),
-        maxPrice: maxPrice(idMap[itemId]),
+        minPrice: itemList[apiId]["prices"][minQuantile][1],
+        medianPrice: itemList[apiId]["prices"][medianQuantile][1],
+        maxPrice: itemList[apiId]["prices"][maxQuantile][1]
     }
 }
 

@@ -10,13 +10,17 @@ function scanOfferList() {
         }
         offers = offers[0].getElementsByTagName('tbody')[0].getElementsByTagName('tr');
         let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
-        favoriteButton(itemId);
-        let response = storageRequest({
+        let analysis = storageRequest({
             type: 'analyze-item',
             itemId: itemId
         });
-        markOffers(offers, response.maxPrice);
-        priceHoverListener(offers, response.maxPrice);
+        favoriteButton(itemId);
+        if (document.getElementsByClassName('marketplace-analysis-table').length == 0) {
+            let marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+            saveInsertAdjacentHTML(marketplaceTop, "afterend", priceAnalysisTableTemplate(analysis));
+        }
+        markOffers(offers, analysis.maxPrice);
+        priceHoverListener(offers, analysis.maxPrice);
     }
     catch (err) {
         console.log(err);
@@ -44,23 +48,7 @@ function favoriteButton(itemId) {
     });
 }
 
-function priceHoverListener(offers, maxPrice) {
-    for (let offer of offers) {
-        let priceCell = offer.childNodes[3];
-        if (priceCell.getElementsByClassName('marketplace-offer-price-tooltip').length > 0) {
-            continue;
-        }
-
-        let amount = parseInt(offer.childNodes[2].innerText.replace(/\./g, ''));
-        priceCell.classList.add('marketplace-offer-price');
-        let price = priceCell.innerText;
-
-        let tooltip = priceTooltipTemplate(maxPrice, price, amount);
-        saveInsertAdjacentHTML(priceCell, 'beforeend', tooltip);
-    }
-}
-
-function favoriteTemplate(isFavorite){
+function favoriteTemplate(isFavorite) {
     let fill = isFavorite ? 'fill-yellow' : 'fill-none';
     let invisible = isFavorite ? 'invisible' : '';
     return `
@@ -73,8 +61,67 @@ function favoriteTemplate(isFavorite){
 </button>`
 }
 
+function priceAnalysisTableTemplate(analysis) {
+    return `
+<div class="marketplace-analysis-table">
+    <div class="marketplace-analysis-table-content">
+        Minimum
+    </div>
+    <div class="marketplace-analysis-table-content">
+        Median
+    </div>
+    <div class="marketplace-analysis-table-content">
+        Maximum
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.minPrice)}
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.medianPrice)}
+    </div>
+    <div class="marketplace-analysis-table-content">
+        ${formatNumber(analysis.maxPrice)}
+    </div>
+</div>
+    `;
+}
+
+function markOffers(offers, maxPrice) {
+    for (let i = 0; i < offers.length; i++) {
+        let offer = offers[i];
+        offer.classList.remove('marketplace-offer-low', 'marketplace-offer-medium', 'marketplace-offer-high');
+        let offerPrice = offer.childNodes[3].innerText
+        offerPrice = parseInt(offerPrice.replace(/\./g, '').replace(/\,/g, ''));
+        if (offerPrice < maxPrice * 0.6) {
+            offer.classList.add('marketplace-offer-low');
+        }
+        else if (offerPrice < maxPrice * 0.8) {
+            offer.classList.add('marketplace-offer-medium');
+        }
+        else if (offerPrice < maxPrice * 0.95) {
+            offer.classList.add('marketplace-offer-high');
+        }
+    }
+}
+
+function priceHoverListener(offers, maxPrice) {
+    for (let offer of offers) {
+        let priceCell = offer.childNodes[3];
+        if (priceCell.getElementsByClassName('marketplace-offer-price-tooltip').length > 0) {
+            continue;
+        }
+
+        let amount = parseInt(offer.childNodes[2].innerText.replace(/\./g, '').replace(/\,/g, ''));
+        priceCell.classList.add('marketplace-offer-price');
+        let price = parseInt(priceCell.innerText.replace(/\./g, '').replace(/\,/g, ''));
+
+        let tooltip = priceTooltipTemplate(maxPrice, price, amount);
+        saveInsertAdjacentHTML(priceCell, 'beforeend', tooltip);
+    }
+}
+
 function priceTooltipTemplate(maxPrice, price, amount) {
-    let profit = Math.floor((maxPrice * 0.95 - parseInt(price.replace(/\./g, ''))) * amount);
+    let profit = Math.floor((maxPrice * 0.95 - price) * amount);
     let color = profit > 0 ? 'text-green' : 'text-red';
     return `
 <div class="marketplace-offer-price-tooltip">
@@ -124,37 +171,7 @@ function priceTooltipTemplate(maxPrice, price, amount) {
 `;
 }
 
-function highlightFavorite (itemNode, favorites) {
-    let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-    if (favorites.indexOf(itemId) > -1) {
-        itemNode.firstChild.classList.add("favorite-highlight");
-    }
-}
-
-function highlightFavorites(items) {
-    let favoritesList = storageRequest({
-        type: 'get-favorites-list',
-    });
-    items.childNodes.forEach(function (itemNode) {
-        highlightFavorite(itemNode, favoritesList);
-    });
-}
-
-function highlightBestHeatItem(items) {
-    let bestHeatItem = storageRequest({
-        type: 'get-best-heat-item',
-    });
-    items.childNodes.forEach(function (itemNode) {
-        let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-        if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
-            itemNode.firstChild.classList.add("heat-highlight");
-            itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
-        } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
-            itemNode.firstChild.classList.remove("heat-highlight");
-            itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
-        }
-    });
-}
+// ###########################################################################
 
 function scanMarketplaceLists() {
     try {
@@ -200,22 +217,36 @@ function iconToIdMap(items) {
     createMap = false;
 }
 
-function markOffers(offers, maxPrice) {
-    for (let i = 0; i < offers.length; i++) {
-        let offer = offers[i];
-        offer.classList.remove('marketplace-offer-low', 'marketplace-offer-medium', 'marketplace-offer-high');
-        let offerPrice = offer.childNodes[3].innerText
-        offerPrice = parseInt(offerPrice.replace(/\./g, ''));
-        if (offerPrice < maxPrice * 0.6) {
-            offer.classList.add('marketplace-offer-low');
-        }
-        else if (offerPrice < maxPrice * 0.8) {
-            offer.classList.add('marketplace-offer-medium');
-        }
-        else if (offerPrice < maxPrice * 0.95) {
-            offer.classList.add('marketplace-offer-high');
-        }
+function highlightFavorites(items) {
+    let favoritesList = storageRequest({
+        type: 'get-favorites-list',
+    });
+    items.childNodes.forEach(function (itemNode) {
+        highlightFavorite(itemNode, favoritesList);
+    });
+}
+
+function highlightFavorite (itemNode, favorites) {
+    let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+    if (favorites.indexOf(itemId) > -1) {
+        itemNode.firstChild.classList.add("favorite-highlight");
     }
+}
+
+function highlightBestHeatItem(items) {
+    let bestHeatItem = storageRequest({
+        type: 'get-best-heat-item',
+    });
+    items.childNodes.forEach(function (itemNode) {
+        let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+        if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
+            itemNode.firstChild.classList.add("heat-highlight");
+            itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
+        } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
+            itemNode.firstChild.classList.remove("heat-highlight");
+            itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
+        }
+    });
 }
 
 window.addEventListener('beforeunload', function () {
