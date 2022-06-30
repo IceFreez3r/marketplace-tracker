@@ -15,9 +15,6 @@ let tick = setInterval(() => {
             case 'Enchanting':
                 enchantingTracker();
                 break;
-            case 'Farming':
-                farmingTracker();
-                break;
             case 'Marketplace':
                 scanMarketplaceLists();
                 scanOfferList();
@@ -28,3 +25,19 @@ let tick = setInterval(() => {
         }
     }
 }, 1000);
+
+function onGameReady(callback) {
+    const gameContainer = document.getElementsByClassName("play-area-container")[0];
+    if (!gameContainer) {
+        setTimeout(function () {
+            onGameReady(callback);
+        }, 250);
+    } else {
+        callback();
+    }
+}
+
+let extensions = [];
+onGameReady(() => {
+    extensions.push(new FarmingTracker());
+});
