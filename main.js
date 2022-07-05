@@ -5,7 +5,6 @@ window.addEventListener('beforeunload', function () {
 });
 
 let tick = setInterval(() => {
-    offlineTracker();
     let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
     if (selectedSkill.length > 0) {
         switch (selectedSkill[0].innerText) {
@@ -39,5 +38,6 @@ function onGameReady(callback) {
 
 let extensions = [];
 onGameReady(() => {
+    extensions.push(new OfflineTracker());
     extensions.push(new FarmingTracker());
 });
