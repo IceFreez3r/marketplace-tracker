@@ -12,9 +12,6 @@ let tick = setInterval(() => {
                 scanMarketplaceLists();
                 scanOfferList();
                 break;
-            case 'Smithing':
-                smithingTracker();
-                break;
         }
     }
 }, 1000);
@@ -36,4 +33,5 @@ onGameReady(() => {
     extensions.push(new EnchantingTracker());
     extensions.push(new FarmingTracker());
     extensions.push(new OfflineTracker());
+    extensions.push(new SmithingTracker());
 });
