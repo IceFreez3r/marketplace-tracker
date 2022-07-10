@@ -4,7 +4,7 @@ class CraftingTracker {
         this.lastSelectedNavTab = null;
 
         this.observer = new MutationObserver((mutations) => {
-            let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
             }

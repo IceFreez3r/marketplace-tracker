@@ -8,9 +8,6 @@ let tick = setInterval(() => {
     let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
     if (selectedSkill.length > 0) {
         switch (selectedSkill[0].innerText) {
-            case 'Enchanting':
-                enchantingTracker();
-                break;
             case 'Marketplace':
                 scanMarketplaceLists();
                 scanOfferList();
@@ -36,6 +33,7 @@ function onGameReady(callback) {
 let extensions = [];
 onGameReady(() => {
     extensions.push(new CraftingTracker());
-    extensions.push(new OfflineTracker());
+    extensions.push(new EnchantingTracker());
     extensions.push(new FarmingTracker());
+    extensions.push(new OfflineTracker());
 });
