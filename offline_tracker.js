@@ -3,8 +3,7 @@ class OfflineTracker {
         this.observer = new MutationObserver(mutations => {
             this.offlineTracker();
         });
-        const body = document.getElementsByTagName('body')[0];
-        this.observer.observe(body, {
+        this.observer.observe(document.body, {
             childList: true
         });
     };

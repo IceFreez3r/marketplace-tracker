@@ -41,16 +41,16 @@ class FarmingTracker {
     constructor() {
         // setup mutation observer
         this.observer = new MutationObserver(mutations => {
-            let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
-            if (selectedSkill.length === 0) {
+            let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+            if (!selectedSkill) {
                 return;
             }
-            if (selectedSkill[0].innerText !== 'Farming') {
+            if (selectedSkill.innerText !== 'Farming') {
                 return;
             }
             this.farmingTracker();
         });
-        let playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
