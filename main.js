@@ -4,17 +4,6 @@ window.addEventListener('beforeunload', function () {
     });
 });
 
-let tick = setInterval(() => {
-    let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
-    if (selectedSkill.length > 0) {
-        switch (selectedSkill[0].innerText) {
-            case 'Marketplace':
-                scanMarketplaceLists();
-                scanOfferList();
-                break;
-        }
-    }
-}, 1000);
 
 function onGameReady(callback) {
     const gameContainer = document.getElementsByClassName("play-area-container")[0];
@@ -32,6 +21,7 @@ onGameReady(() => {
     extensions.push(new CraftingTracker());
     extensions.push(new EnchantingTracker());
     extensions.push(new FarmingTracker());
+    extensions.push(new MarketplaceTracker());
     extensions.push(new OfflineTracker());
     extensions.push(new SmithingTracker());
 });
