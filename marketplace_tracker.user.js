@@ -30,7 +30,7 @@
 (function () {
     'use strict';
 
-// Comment out the modules that you don't want to use. Both the css and the corresponding function below.
+// Comment out the modules that you don't want to use. Both the css and the corresponding class in the extension array below.
 
     let my_css = "";
     my_css += GM_getResourceText("CRAFTING_INFO");
@@ -47,28 +47,26 @@
         });
     });
 
-    let tick = setInterval(() => {
-        offlineTracker();
-        let selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab');
-        if (selectedSkill.length > 0) {
-            switch (selectedSkill[0].innerText) {
-                case 'Crafting':
-                    getCraftingRecipe();
-                    break;
-                case 'Enchanting':
-                    enchantingTracker();
-                    break;
-                case 'Farming':
-                    farmingTracker();
-                    break;
-                case 'Marketplace':
-                    scanMarketplaceLists();
-                    scanOfferList();
-                    break;
-                case 'Smithing':
-                    smithingTracker();
-                    break;
-            }
+
+    function onGameReady(callback) {
+        const gameContainer = document.getElementsByClassName("play-area-container")[0];
+        if (!gameContainer) {
+            setTimeout(function () {
+                onGameReady(callback);
+            }, 250);
+        } else {
+            callback();
         }
-    }, 1000);
+    }
+
+    let extensions = [];
+    onGameReady(() => {
+        extensions.push(new CraftingTracker());
+        extensions.push(new EnchantingTracker());
+        extensions.push(new FarmingTracker());
+        extensions.push(new MarketplaceTracker());
+        extensions.push(new OfflineTracker());
+        extensions.push(new SmithingTracker());
+    });
+
 })();
