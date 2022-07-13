@@ -9,7 +9,7 @@ class OfflineTracker {
     };
 
     offlineTracker(){
-        const offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
+        let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
         if (!offlineProgressBox) {
             return;
         }
@@ -22,7 +22,7 @@ class OfflineTracker {
         let itemIds = [];
         let itemCounts = [];
         for (let itemNode of offlineProgressBox.childNodes) {
-            let itemId = convertItemId(itemNode.firstChild.src);
+            const itemId = convertItemId(itemNode.firstChild.src);
             if (itemId.includes('essence')) {
                 continue;
             }

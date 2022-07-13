@@ -28,7 +28,7 @@ class CraftingTracker {
             this.lastCraftedItemId = null;
             return;
         }
-        let craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
+        const craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
         // prevent repeated calls
         if (craftedItemId === this.lastCraftedItemId) {
             // for items with multiple recipes
@@ -43,16 +43,16 @@ class CraftingTracker {
         }
         this.lastCraftedItemId = craftedItemId;
 
-        let craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src;
+        const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src;
         let craftedItemCount = 1;
         // for recipes which result in more than one item (usually baits)
-        let description = recipeNode.getElementsByClassName('crafting-item-description')[0].innerText;
-        let regex = /(?<=Each craft results in )\d+/.exec(description);
+        const description = recipeNode.getElementsByClassName('crafting-item-description')[0].innerText;
+        const regex = /(?<=Each craft results in )\d+/.exec(description);
         if (regex !== null) {
             craftedItemCount = parseInt(regex[0]);
         }
 
-        let resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
+        const resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
         let resourceItemIds = [];
         let resourceItemIcons = [];
         let resourceItemCounts = [];
@@ -94,20 +94,20 @@ class CraftingTracker {
                             resourceItemMaxPrices,
                             resourceItemCounts,
                             resourceItemIcons) {
-        let resourceImgs = resourceItemIcons.map(icon => `
+        const resourceImgs = resourceItemIcons.map(icon => `
             <div class="crafting-info-table-content">
                 <img class="crafting-item-resource-icon" src="${icon}">
             </div>`).join("");
-        let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
+        const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
 
         let totalCraftedItemHeaderHTML = "";
         let totalCraftedItemMinHTML = "";
         let totalCraftedItemMaxHTML = "";
         if (craftedItemCount > 1) {
-            let totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
-            let totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
+            const totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
+            const totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
             totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
             totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
             totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;

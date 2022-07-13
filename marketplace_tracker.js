@@ -25,15 +25,15 @@ class MarketplaceTracker {
     }
 
     scanOfferList() {
-        let offers = document.getElementsByClassName('marketplace-table')[0]
-        if (!offers) {
+        const marketplaceTable = document.getElementsByClassName('marketplace-table')[0]
+        if (!marketplaceTable) {
             return;
         }
         // Ignore offer table on sell page
-        if (offers.classList.contains('marketplace-my-auctions-table')) {
+        if (marketplaceTable.classList.contains('marketplace-my-auctions-table')) {
             return;
         }
-        offers = offers.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        let offers = marketplaceTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
         if (offers.length === 0) {
             return;
         }
@@ -73,8 +73,8 @@ class MarketplaceTracker {
     }
 
     favoriteTemplate(isFavorite) {
-        let fill = isFavorite ? 'fill-yellow' : 'fill-none';
-        let invisible = isFavorite ? 'invisible' : '';
+        const fill = isFavorite ? 'fill-yellow' : 'fill-none';
+        const invisible = isFavorite ? 'invisible' : '';
         return `
 <button id="marketplace-favorite-button" class="marketplace-refresh-button ${fill}"> 
     <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" stroke="yellow" stroke-width="30px" x="0px" y="0px" width="24px" heigth="24px" viewBox="-15 -10 366 366" style="enable-background:new 0 0 329.942 329.942;" xml:space="preserve">
@@ -247,11 +247,11 @@ class MarketplaceTracker {
     }
 
     highlightBestHeatItem(items) {
-        let bestHeatItem = storageRequest({
+        const bestHeatItem = storageRequest({
             type: 'get-best-heat-item',
         });
         items.childNodes.forEach((itemNode) => {
-            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.add("heat-highlight");
                 itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);

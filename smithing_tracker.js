@@ -28,8 +28,8 @@ class SmithingTracker {
         if (recipe.getElementsByClassName("smithing-info-table").length !== 0) {
             return;
         }
-        let bar = convertItemId(recipe.getElementsByClassName('resource-container-image')[0].src);
-        let barIcon = recipe.getElementsByClassName('resource-container-image')[0].src;
+        const barId = convertItemId(recipe.getElementsByClassName('resource-container-image')[0].src);
+        const barIcon = recipe.getElementsByClassName('resource-container-image')[0].src;
         let resourceNodes = recipe.getElementsByClassName('resource-node-time-tooltip');
         let resourceIds = [];
         let resourceIcons = [];
@@ -50,7 +50,7 @@ class SmithingTracker {
         craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
         let response = storageRequest({
             type: 'smithing-recipe',
-            bar: bar,
+            barId: barId,
             resourceIds: resourceIds
         });
         saveInsertAdjacentHTML(craftingImage, 'afterend', this.smithingInfoTemplate(response.craftedItemMinPrice,
@@ -78,11 +78,11 @@ class SmithingTracker {
 </div>
             `;
         }
-        let resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        let resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
-        let minProfit = profitPercent(totalResourceMinPrice, barMinPrice);
-        let maxProfit = profitPercent(totalResourceMaxPrice, barMaxPrice);
+        const resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
+        const minProfit = profitPercent(totalResourceMinPrice, barMinPrice);
+        const maxProfit = profitPercent(totalResourceMaxPrice, barMaxPrice);
         return `
 <div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 3}, 1fr)">
     <!-- header -->

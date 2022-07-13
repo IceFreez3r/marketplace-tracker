@@ -28,8 +28,8 @@ class EnchantingTracker {
         if (recipe.getElementsByClassName("enchanting-info-table").length !== 0) {
             return;
         }
-        let scrollId = convertItemId(recipe.firstChild.src);
-        let scrollIcon = recipe.firstChild.src;
+        const scrollId = convertItemId(recipe.firstChild.src);
+        const scrollIcon = recipe.firstChild.src;
 
         let standardResources = this.getStandardResources(recipe.childNodes[4].childNodes[0]);
         let dynamicResources = this.getDynamicResources(recipe.childNodes[4].childNodes[1]);
@@ -83,19 +83,19 @@ class EnchantingTracker {
                             resourceItemCounts,
                             resourceItemIcons,
                             chance) {
-        let resourceImgs = resourceItemIcons.map(icon => `
+        const resourceImgs = resourceItemIcons.map(icon => `
             <div class="enchanting-info-table-content">
                 <img class="icon24" src="${icon}">
             </div>`).join("");
-        let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
-        let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
+        const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
+        const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
         let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
         // Total effective price is higher if the chance is < 100%
         totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
         totalResourceMaxPrice = Math.round((totalResourceMaxPrice / chance));
         // Profit includes 5% market fee
-        let prozentualMinProfit = profitPercent(totalResourceMinPrice, craftedItemMinPrice);
-        let prozentualMaxProfit = profitPercent(totalResourceMaxPrice, craftedItemMaxPrice);
+        const prozentualMinProfit = profitPercent(totalResourceMinPrice, craftedItemMinPrice);
+        const prozentualMaxProfit = profitPercent(totalResourceMaxPrice, craftedItemMaxPrice);
         return `
 <div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr 1fr">
     <!-- header -->
