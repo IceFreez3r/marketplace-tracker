@@ -2,6 +2,12 @@ body .farming-info > p {
     max-height: unset;
 }
 
+body .farming-center-container {
+    position: sticky;
+    height: fit-content;
+    top: 0;
+}
+
 body .farming-seed-settings {
     position: unset;
 }
