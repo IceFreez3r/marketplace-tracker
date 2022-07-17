@@ -12,6 +12,9 @@ function numberWithSeparators(price) {
 }
 
 function limitDecimalPlaces(number, decimalPlaces = 0) {
+    if (number === "?") {
+        return "?";
+    }
     return Math.round(number * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
 }
 
