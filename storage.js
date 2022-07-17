@@ -114,7 +114,7 @@ function isFavorite(itemId){
 function toggleFavorite(itemId) {
     let isFavorite = favorites.indexOf(itemId) > -1;
     if (isFavorite) {
-        favorites.pop(itemId);
+        favorites.splice(favorites.indexOf(itemId), 1);
     } else {
         favorites.push(itemId);
     }
