@@ -68,7 +68,7 @@ class EnchantingTracker {
     }
 
     getResource(node) {
-        return resource = {
+        return {
             itemId: convertItemId(node.childNodes[0].src),
             icon: node.childNodes[0].src,
             amount: node.childNodes[1].innerText

@@ -30,7 +30,7 @@ function storageRequest(request) {
         case "enchanting-recipe":
             return handleRecipe(request.scrollId, request.resourceItemIds);
         case "smithing-recipe":
-            return handleRecipe(request.bar, request.resourceIds);
+            return handleRecipe(request.barId, request.resourceIds);
         default:
             console.log("Unknown request: " + request);
     }
