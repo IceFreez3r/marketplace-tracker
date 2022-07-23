@@ -12,12 +12,15 @@ function numberWithSeparators(price) {
 }
 
 function limitDecimalPlaces(number, decimalPlaces = 0) {
+    if (number === "?") {
+        return "?";
+    }
     return Math.round(number * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
 }
 
 // Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
 function shortenNumber(number) {
-    let suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
+    const suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
     number = parseFloat(number);
     if (number < 10000) {
         return number.toFixed(1).replace('.0', '') + suffix;

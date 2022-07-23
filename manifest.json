@@ -9,7 +9,6 @@
                 "https://idlescape.com/game"
             ],
             "js": [
-                "main.js",
                 "crafting_tracker.js",
                 "enchanting_tracker.js",
                 "farming_tracker.js",
@@ -18,7 +17,8 @@
                 "smithing_tracker.js",
                 "storage.js",
                 "utility.js",
-                "external/DOMpurify.min.js"
+                "external/DOMpurify.min.js",
+                "main.js"
             ],
             "css": [
                 "css/crafting_info.css",
