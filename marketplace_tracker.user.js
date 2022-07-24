@@ -20,6 +20,7 @@
 // @resource     CRAFTING_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/crafting_info.css
 // @resource     ENCHANTING_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/enchanting_info.css
 // @resource     FARMING_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/farming_info.css
+// @resource     FAVORITE_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/favorite_info.css
 // @resource     MARKETPLACE_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/marketplace_info.css
 // @resource     OFFLINE_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/offline_info.css
 // @resource     SMITHING_INFO https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/css/smithing_info.css
@@ -36,6 +37,7 @@
     my_css += GM_getResourceText("CRAFTING_INFO");
     my_css += GM_getResourceText("ENCHANTING_INFO");
     my_css += GM_getResourceText("FARMING_INFO");
+    my_css += GM_getResourceText("FAVORITE_INFO");
     my_css += GM_getResourceText("MARKETPLACE_INFO");
     my_css += GM_getResourceText("OFFLINE_INFO");
     my_css += GM_getResourceText("SMITHING_INFO");
@@ -64,6 +66,7 @@
         extensions.push(new CraftingTracker());
         extensions.push(new EnchantingTracker());
         extensions.push(new FarmingTracker());
+        extensions.push(new FavoriteTracker());
         extensions.push(new MarketplaceTracker());
         extensions.push(new OfflineTracker());
         extensions.push(new SmithingTracker());

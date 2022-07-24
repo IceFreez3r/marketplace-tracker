@@ -7,14 +7,8 @@ function storageRequest(request) {
             break;
         case "analyze-item":
             return analyzeItem(request.itemId);
-        case "get-favorite":
-            return isFavorite(request.itemId);
-        case "get-favorites-list":
-            return favorites;
         case "get-best-heat-item":
             return itemList[heatValue(timestamp).apiId].itemId;
-        case "toggle-favorite":
-            return toggleFavorite(request.itemId);
         case "market-api-data":
             handleApiData(request.data);
             break;
@@ -38,7 +32,6 @@ function storageRequest(request) {
 
 function handleClose() {
     storeItemList();
-    localStorage.setItem('favorites', JSON.stringify(favorites));
     localStorage.setItem('lastLogin', Date.now());
 }
 
@@ -105,20 +98,6 @@ function updateIdMap(map) {
         }
     }
     storeIdMap();
-}
-
-function isFavorite(itemId){
-    return favorites.indexOf(itemId) > -1
-}
-
-function toggleFavorite(itemId) {
-    const isFavorite = favorites.indexOf(itemId) > -1;
-    if (isFavorite) {
-        favorites.splice(favorites.indexOf(itemId), 1);
-    } else {
-        favorites.push(itemId);
-    }
-    return !isFavorite;
 }
 
 function handleRecipe(craftedItemId, resourceItemIds) {
@@ -267,12 +246,6 @@ let idMap = {
 result = localStorage.getItem('idMap');
 if (result) {
     idMap = JSON.parse(result);
-}
-
-let favorites = [];
-result = localStorage.getItem('favorites');
-if (result) {
-    favorites = JSON.parse(result);
 }
 
 let lastLogin = localStorage.getItem('lastLogin');

@@ -44,10 +44,6 @@ body .marketplace-table {
     visibility: visible;
 }
 
-.favorite-highlight {
-    border: 3px solid white;
-}
-
 .heat-highlight {
     border: 3px solid red;
 }
@@ -81,16 +77,4 @@ body .marketplace-table {
 
 .text-red {
     color: rgb(128, 0, 0);
-}
-
-.fill-yellow {
-    fill: rgb(255, 255, 0);
-}
-
-.fill-none {
-    fill: none;
-}
-
-.invisible {
-    display: none;
 }
