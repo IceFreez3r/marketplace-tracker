@@ -1,3 +1,16 @@
+.tracker-favorite-filter-svg {
+    width: 33px;
+    height: 33px;
+    margin-left: 1px;
+    margin-right: 1px;
+    padding: 1px;
+    cursor: pointer;
+}
+
+.filter-active {
+    fill: rgb(255, 255, 0);
+}
+
 .favorite-highlight {
     border: 3px solid white;
 }
