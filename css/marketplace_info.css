@@ -3,8 +3,10 @@ body .marketplace-table {
 }
 
 .marketplace-table-cell-div {
-    display: inline;
+    display: flex;
     padding-top: 0;
+    flex-direction: column;
+    height: auto;
 }
 
 .marketplace-offer-low {
