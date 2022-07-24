@@ -2,7 +2,7 @@ body .marketplace-table {
     overflow: unset;
 }
 
-.marketplace-table-cell-div {
+body .marketplace-table-cell-div {
     display: flex;
     padding-top: 0;
     flex-direction: column;
