@@ -21,6 +21,7 @@ onGameReady(() => {
     extensions.push(new CraftingTracker());
     extensions.push(new EnchantingTracker());
     extensions.push(new FarmingTracker());
+    extensions.push(new FavoriteTracker());
     extensions.push(new MarketplaceTracker());
     extensions.push(new OfflineTracker());
     extensions.push(new SmithingTracker());
