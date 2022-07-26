@@ -1,36 +1,58 @@
-function getCraftingRecipe(){
-    try {
-        let recipeNode = document.getElementsByClassName("crafting-container");
-        if (recipeNode.length === 0) {
-            lastCraftedItemId = null;
+class CraftingTracker {
+    constructor() {
+        this.lastCraftedItemId = null;
+        this.lastSelectedNavTab = null;
+
+        this.observer = new MutationObserver((mutations) => {
+            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+            if (!selectedSkill) {
+                return;
+            }
+            if (selectedSkill.innerText !== 'Crafting') {
+                return;
+            }
+            this.craftingTracker();
+        });
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.observer.observe(playAreaContainer, {
+            attributes: true,
+            attributeFilter: ['src'],
+            childList: true,
+            subtree: true,
+        });
+    }
+
+    craftingTracker(){
+        let recipeNode = document.getElementsByClassName("crafting-container")[0];
+        if (!recipeNode) {
+            this.lastCraftedItemId = null;
             return;
         }
-        recipeNode = recipeNode[0];
-        let craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
+        const craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
         // prevent repeated calls
-        if (craftedItemId === lastCraftedItemId) {
+        if (craftedItemId === this.lastCraftedItemId) {
             // for items with multiple recipes
-            let selectedNavTab = recipeNode.getElementsByClassName("selected-tab");
-            if (selectedNavTab.length === 0) {
+            const selectedNavTab = recipeNode.getElementsByClassName("selected-tab")[0];
+            if (!selectedNavTab) {
                 return;
             }
-            if (lastSelectedNavTab === selectedNavTab[0].innerText) {
+            if (this.lastSelectedNavTab === selectedNavTab.innerText) {
                 return;
             }
-            lastSelectedNavTab = selectedNavTab[0].innerText;
+            this.lastSelectedNavTab = selectedNavTab.innerText;
         }
-        lastCraftedItemId = craftedItemId;
+        this.lastCraftedItemId = craftedItemId;
 
-        let craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src;
+        const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src;
         let craftedItemCount = 1;
         // for recipes which result in more than one item (usually baits)
-        let description = recipeNode.getElementsByClassName('crafting-item-description')[0].innerText;
-        let regex = /(?<=Each craft results in )\d+/.exec(description);
+        const description = recipeNode.getElementsByClassName('crafting-item-description')[0].innerText;
+        const regex = /(?<=Each craft results in )\d+/.exec(description);
         if (regex !== null) {
             craftedItemCount = parseInt(regex[0]);
         }
 
-        let resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
+        const resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
         let resourceItemIds = [];
         let resourceItemIcons = [];
         let resourceItemCounts = [];
@@ -54,46 +76,43 @@ function getCraftingRecipe(){
             document.getElementsByClassName("crafting-info-table")[0].remove();
         }
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        saveInsertAdjacentHTML(craftingContainer, 'beforeend', craftingInfoTemplate(response.craftedItemMinPrice,
-                                                                                    response.craftedItemMaxPrice,
-                                                                                    craftedItemCount,
-                                                                                    craftedItemIcon,
-                                                                                    response.resourceItemMinPrices,
-                                                                                    response.resourceItemMaxPrices,
-                                                                                    resourceItemCounts,
-                                                                                    resourceItemIcons));
-    } catch (err) {
-        console.log(err);
+        saveInsertAdjacentHTML(craftingContainer, 'beforeend', this.craftingInfoTemplate(response.craftedItemMinPrice,
+                                                                                            response.craftedItemMaxPrice,
+                                                                                            craftedItemCount,
+                                                                                            craftedItemIcon,
+                                                                                            response.resourceItemMinPrices,
+                                                                                            response.resourceItemMaxPrices,
+                                                                                            resourceItemCounts,
+                                                                                            resourceItemIcons));
     }
-}
 
-function craftingInfoTemplate(craftedItemMinPrice,
-                                craftedItemMaxPrice,
-                                craftedItemCount,
-                                craftedItemIcon,
-                                resourceItemMinPrices,
-                                resourceItemMaxPrices,
-                                resourceItemCounts,
-                                resourceItemIcons) {
-    let resourceImgs = resourceItemIcons.map(icon => `
-        <div class="crafting-info-table-content">
-            <img class="crafting-item-resource-icon" src="${icon}">
-        </div>`).join("");
-    let resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-    let resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-    let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
+    craftingInfoTemplate(craftedItemMinPrice,
+                            craftedItemMaxPrice,
+                            craftedItemCount,
+                            craftedItemIcon,
+                            resourceItemMinPrices,
+                            resourceItemMaxPrices,
+                            resourceItemCounts,
+                            resourceItemIcons) {
+        const resourceImgs = resourceItemIcons.map(icon => `
+            <div class="crafting-info-table-content">
+                <img class="crafting-item-resource-icon" src="${icon}">
+            </div>`).join("");
+        const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
+        const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
 
-    let totalCraftedItemHeaderHTML = "";
-    let totalCraftedItemMinHTML = "";
-    let totalCraftedItemMaxHTML = "";
-    if (craftedItemCount > 1) {
-        let totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
-        let totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
-        totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
-        totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
-        totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;
-    }
-    return `
+        let totalCraftedItemHeaderHTML = "";
+        let totalCraftedItemMinHTML = "";
+        let totalCraftedItemMaxHTML = "";
+        if (craftedItemCount > 1) {
+            const totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
+            const totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
+            totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
+            totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
+            totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;
+        }
+        return `
 <div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1)}, 1fr)">
     <!-- header -->
     ${resourceImgs}
@@ -131,8 +150,6 @@ function craftingInfoTemplate(craftedItemMinPrice,
     </span>
     ${totalCraftedItemMaxHTML}
 </div>
-`;
+        `;
+    }
 }
-
-let lastCraftedItemId = null;
-let lastSelectedNavTab = null;

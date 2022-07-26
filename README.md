@@ -14,7 +14,7 @@ Please visit the marketplace once afterwards to initialize the extension.
 ## Features
 
 ### Marketplace
-Adds the option to mark items as favorite, which highlights them in the market overview. Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview. 
+Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click. Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview. 
 
 <img src="./images/readme/marketplace_overview.png" alt="Marketplace Overview" width="600">
 
@@ -50,9 +50,9 @@ Sorts the seeds based on their type into categories:
 - Single Slot Seeds
 - Multi Slot Seeds
 
-If you don't have a seed type an empty box is added, resulting in a grid, that has always the same size.
+If you don't have a seed type an empty box with a faded image is added, resulting in a grid, that has always the same size. Seeds, that require a higher farming level than you have, have a darker image (not shown in the screenshot).
 
-<img src="./images/readme/farming_tracker.png" alt="Farming Tracker" width="250">
+<img src="./images/readme/farming_tracker.png" alt="Farming Tracker" width="600">
 
 ### Offline Summary
 Adds up the value of all the items you acquired while offline and displays total and per hour information.
@@ -61,7 +61,12 @@ Adds up the value of all the items you acquired while offline and displays total
 
 Note that the per hour information is only accurate if you are offline for a longer time and will always only be an estimate.
 
+The Offline tracker also works with the Resource Tracker from [ISscripts](https://github.com/daelidle/ISscripts).
+
 ### Other
+
+Note that API prices are always at least 10 minutes outdated due to how the API works. The extension doesn't sync it's API requests with the updates of the API, meaning longer times are possible.
+
 When ever the minimum or maximum price is shown, it is actually the 5%/95% quantile of the collected data. This step is done to reduce the impact of outliers. Otherwise a direct player trade with a price of only 1 gold, that manages to get into the API data, would make all computations pretty useless.
 
 The data is stored on your computer in the `localStorage` of the browser. There is no exchange of data with any server.
@@ -71,7 +76,6 @@ To make sure, that the data of the extension isn't outdated, every API call is o
 ## Planned Features
 (without any particular order)
 - Marketplace
-    - Toggle to only show the favorite items on the market overview page ⭐
     - Highlight items with a very low price in the last API call on the market overview page 📉
         - below current minPrice or below vendor price
     - Warning when selling items with less profit than the vendor price :warning:
@@ -81,9 +85,9 @@ To make sure, that the data of the extension isn't outdated, every API call is o
     - Display gold/heat for heat items 🔥
     - Continous colors for low price items instead of categories and update the crappy popup 🌈
 - Farming 🌽
-    - Add a faded icon for missing seeds
     - Calculate the average profit for farming per seed (maybe even per enchantment)
-    - Collect data for mysterious seeds and crack the algorithm behind them 
+    - Collect data for mysterious seeds and crack the algorithm behind them
+        - It is already known, that the algorithm will change with the coming big update. Therefore low prio for now.
 - Crafting
     - Show XP/Gold when selling on market or to vendor
     - store recipes to be able to highlight the best XP/Gold recipe

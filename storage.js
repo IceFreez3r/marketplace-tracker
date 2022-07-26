@@ -7,14 +7,8 @@ function storageRequest(request) {
             break;
         case "analyze-item":
             return analyzeItem(request.itemId);
-        case "get-favorite":
-            return isFavorite(request.itemId);
-        case "get-favorites-list":
-            return favorites;
         case "get-best-heat-item":
             return itemList[heatValue(timestamp).apiId].itemId;
-        case "toggle-favorite":
-            return toggleFavorite(request.itemId);
         case "market-api-data":
             handleApiData(request.data);
             break;
@@ -30,7 +24,7 @@ function storageRequest(request) {
         case "enchanting-recipe":
             return handleRecipe(request.scrollId, request.resourceItemIds);
         case "smithing-recipe":
-            return handleRecipe(request.bar, request.resourceIds);
+            return handleRecipe(request.barId, request.resourceIds);
         default:
             console.log("Unknown request: " + request);
     }
@@ -38,7 +32,6 @@ function storageRequest(request) {
 
 function handleClose() {
     storeItemList();
-    localStorage.setItem('favorites', JSON.stringify(favorites));
     localStorage.setItem('lastLogin', Date.now());
 }
 
@@ -57,7 +50,7 @@ function handleApiData(data) {
 }
 
 function heatValue(timestamp) {
-    let heatItems = [
+    const heatItems = [
         {apiId: 50, heat: 50},      // Book
         {apiId: 112, heat: 10},     // Coal
         {apiId: 301, heat: 1},      // Branch
@@ -75,10 +68,10 @@ function heatValue(timestamp) {
         {apiId: 11031, heat: 75},   // Sturdy Driftwood
         {apiId: 11036, heat: 125},  // Mystical Driftwood
     ];
-    let bestHeatItem = heatItems.reduce(function (result, heatItem) {
+    const bestHeatItem = heatItems.reduce(function (result, heatItem) {
         if (heatItem.apiId in itemList) {
             // find the price tuple with the current timestamp
-            let priceTuple = itemList[heatItem.apiId].prices.find(function (priceTuple) {
+            const priceTuple = itemList[heatItem.apiId].prices.find(function (priceTuple) {
                 return priceTuple[0] === timestamp;
             });
             if (priceTuple) {
@@ -107,29 +100,13 @@ function updateIdMap(map) {
     storeIdMap();
 }
 
-function isFavorite(itemId){
-    return favorites.indexOf(itemId) > -1
-}
-
-function toggleFavorite(itemId) {
-    let isFavorite = favorites.indexOf(itemId) > -1;
-    if (isFavorite) {
-        favorites.pop(itemId);
-    } else {
-        favorites.push(itemId);
-    }
-    return !isFavorite;
-}
-
 function handleRecipe(craftedItemId, resourceItemIds) {
-    let craftedApiId = idMap[craftedItemId];
-    let craftedItemMinPrice = minPrice(craftedApiId);
-    let craftedItemMaxPrice = maxPrice(craftedApiId);
-    let resourceItemPrices = getItemValues(resourceItemIds);
+    const craftedApiId = idMap[craftedItemId];
+    const resourceItemPrices = getItemValues(resourceItemIds);
     return {
         type: "recipe-analysis",
-        craftedItemMinPrice: craftedItemMinPrice,
-        craftedItemMaxPrice: craftedItemMaxPrice,
+        craftedItemMinPrice: minPrice(craftedApiId),
+        craftedItemMaxPrice: maxPrice(craftedApiId),
         resourceItemMinPrices: resourceItemPrices.itemMinPrices,
         resourceItemMaxPrices: resourceItemPrices.itemMaxPrices,
     };
@@ -153,14 +130,14 @@ function sortObj(obj) {
 }
 
 function analyzeItem(itemId) {
-    let apiId = idMap[itemId];
+    const apiId = idMap[itemId];
     // Sort the price tuples by price
     itemList[apiId]["prices"].sort(function (a, b) {
         return a[1] - b[1];
     });
-    let minQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
-    let medianQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.5);
-    let maxQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
+    const minQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
+    const medianQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.5);
+    const maxQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
     return {
         minPrice: itemList[apiId]["prices"][minQuantile][1],
         medianPrice: itemList[apiId]["prices"][medianQuantile][1],
@@ -180,7 +157,7 @@ function getItemValues(itemIds) {
 }
 
 function filterItemList() {
-    let twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 6) - (14 * 24 * 6);
+    const twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 6) - (14 * 24 * 6);
     for (let apiId in itemList) {
         for (let i = 0; i < itemList[apiId]["prices"].length; i++) {
             if (itemList[apiId]["prices"][i][0] < twoWeeksAgo) {
@@ -220,7 +197,7 @@ function minPrice(apiId) {
     itemList[apiId]["prices"].sort(function (a, b) {
         return a[1] - b[1];
     });
-    let quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
+    const quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
     return itemList[apiId]["prices"][quantile][1];
 }
 
@@ -232,7 +209,7 @@ function maxPrice(apiId) {
     itemList[apiId]["prices"].sort(function (a, b) {
         return a[1] - b[1];
     });
-    let quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
+    const quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
     return itemList[apiId]["prices"][quantile][1];
 }
 
@@ -269,12 +246,6 @@ let idMap = {
 result = localStorage.getItem('idMap');
 if (result) {
     idMap = JSON.parse(result);
-}
-
-let favorites = [];
-result = localStorage.getItem('favorites');
-if (result) {
-    favorites = JSON.parse(result);
 }
 
 let lastLogin = localStorage.getItem('lastLogin');
