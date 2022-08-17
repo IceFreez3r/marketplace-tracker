@@ -1,5 +1,15 @@
 class SmithingTracker {
-    constructor() {
+    static id = "smithing_tracker";
+    static displayName = "Smithing Tracker";
+    static icon = "<img src='/images/smithing/smithing_icon.png' alt='Smithing Tracker Icon'>";
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        if (!this.settings.profit) {
+            this.settings.profit = "percent";
+        }
+
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
@@ -10,11 +20,35 @@ class SmithingTracker {
             }
             this.smithingTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+    }
+
+    deactivate() {
+        this.observer.disconnect();
+    }
+
+    settingsElement() {
+        let extensionSetting = document.createElement('div');
+        extensionSetting.classList.add('tracker-extension-setting');
+        extensionSetting.insertAdjacentHTML('beforeend', `
+<div class="tracker-extension-setting-name">
+    Profit
+</div>
+        `);
+        extensionSetting.append(this.tracker.selectMenu(SmithingTracker.id + "-profit", {
+            none: "None",
+            percent: "Percent",
+            flat: "Flat",
+            per_hour: "Per Hour",
+        }, this.settings.profit));
+        return extensionSetting;
     }
 
    smithingTracker() {
@@ -81,10 +115,17 @@ class SmithingTracker {
         const resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
         const resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
         const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
-        const minProfit = profitPercent(totalResourceMinPrice, barMinPrice);
-        const maxProfit = profitPercent(totalResourceMaxPrice, barMaxPrice);
+        let profitHeaderHTML = "";
+        let minProfitHTML = "";
+        let maxProfitHTML = "";
+        // Profit includes 5% market fee
+        if (this.settings.profit !== "none") {
+            profitHeaderHTML = `<span class="smithing-info-table-content"><img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit"></span>`;
+            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, 1)))}</span>`; // TODO
+            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, 1)))}</span>`; // Get Time
+        }
         return `
-<div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 3}, 1fr)">
+<div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
     <!-- header -->
     ${resourceImgs}
     <span class="smithing-info-table-content">
@@ -93,9 +134,7 @@ class SmithingTracker {
     <div class="smithing-info-table-content">
         <img class="smithing-info-table-content smithing-item-resource-icon" src="${barIcon}">
     </div>
-    <div class="smithing-info-table-content">
-        <img class="smithing-item-resource-icon" src="/images/money_icon.png">
-    </div>
+    ${profitHeaderHTML}
 
     <!-- min prices -->
     <span class="enchanting-info-table-content">
@@ -108,9 +147,7 @@ class SmithingTracker {
     <span class="smithing-info-table-content">
         ${numberWithSeparators(shortenNumber(barMinPrice))}
     </span>
-    <span class="smithing-info-table-content">
-        ${minProfit}
-    </span>
+    ${minProfitHTML}
     
     <!-- max prices -->
     <span class="enchanting-info-table-content">
@@ -123,9 +160,7 @@ class SmithingTracker {
     <span class="smithing-info-table-content">
         ${numberWithSeparators(shortenNumber(barMaxPrice))}
     </span>
-    <span class="smithing-info-table-content">
-        ${maxProfit}
-    </span>
+    ${maxProfitHTML}
 </div>
         `;
     }

@@ -1,12 +1,29 @@
 class OfflineTracker {
-    constructor() {
+    static id = 'offline_tracker';
+    static displayName = 'Offline Tracker';
+    static icon = "<img src='/images/clock.png' alt='Offline Tracker Icon'>";
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
         this.observer = new MutationObserver(mutations => {
             this.offlineTracker();
         });
+    };
+    
+    onGameReady() {
         this.observer.observe(document.body, {
             childList: true
         });
-    };
+    }
+
+    deactivate() {
+        this.observer.disconnect();
+    }
+
+    settingsElement() {
+        return "";
+    }
 
     offlineTracker(){
         let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];

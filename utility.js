@@ -22,8 +22,10 @@ function limitDecimalPlaces(number, decimalPlaces = 0) {
 function shortenNumber(number) {
     const suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
     number = parseFloat(number);
+    const isNegative = number < 0;
+    number = Math.abs(number);
     if (number < 10000) {
-        return number.toFixed(1).replace('.0', '') + suffix;
+        return (isNegative ? -1 : 1) * cleanToFixed(number, 1) + suffix;
     }
     const SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E'];
     let index = 0;
@@ -31,7 +33,17 @@ function shortenNumber(number) {
         number /= 1000;
         index++;
     }
-    return number.toFixed(1).replace('.0', '') + SYMBOL[index] + suffix;
+    return (isNegative ? -1 : 1) * cleanToFixed(number, 1) + SYMBOL[index] + suffix;
+}
+
+/**
+ * 
+ * @param {number} number number to format
+ * @param {number | undefined} decimalPlaces maximum number of decimal places to round to
+ * @returns {number} number with at most `decimalPlaces` decimal places	and no trailing 0's
+ */
+function cleanToFixed(number, decimalPlaces) {
+    return parseFloat(number.toFixed(decimalPlaces));
 }
 
 function parseNumberString(numberString) {
@@ -114,12 +126,30 @@ function totalRecipePrice(resourceMinPrices,
     return [totalResourceMinPrice, totalResourceMaxPrice];
 }
 
-// Returns the profit including market fee in percent as a string
-function profitPercent(buyPrice, sellPrice, decimalPlaces = 2) {
+/**
+ * Returns the profit including market fee as a string
+ * 
+ * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
+ * @param {number} buyPrice 
+ * @param {number} sellPrice 
+ * @param {number=} decimalPlaces ignored when type is `flat`
+ * @param {number=} secondsPerAction only required if type is `per_hour`
+ * @returns {string} 
+ */
+function profit(type, buyPrice, sellPrice, decimalPlaces = 2, secondsPerAction = null) {
     if (buyPrice === "?" || sellPrice === "?") {
         return "?";
     }
-    return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100).toFixed(decimalPlaces) + "%";
+    switch (type) {
+        case "percent":
+            return cleanToFixed(((sellPrice * 0.95 - buyPrice) / buyPrice * 100), decimalPlaces) + "%";
+        case "flat":
+            return (sellPrice * 0.95 - buyPrice).toString();
+        case "per_hour":
+            return cleanToFixed(((sellPrice * 0.95 - buyPrice) * (60 * 60 / secondsPerAction)), decimalPlaces);
+        default:
+            console.error("Unknown profit type: " + type);
+    }
 }
 
 function saveInsertAdjacentHTML(element, position, html) {
@@ -136,3 +166,15 @@ function getLocalNumberSeparators() {
 }
 
 const localNumberSeparators = getLocalNumberSeparators();
+
+function loadLocalStorage(key, fallback) {
+    const value = localStorage.getItem(key);
+    if (value === null) {
+        // if fallback is a function, call it
+        if (typeof fallback === "function") {
+            return fallback();
+        }
+        return fallback;
+    }
+    return JSON.parse(value);
+}

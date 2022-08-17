@@ -1,5 +1,11 @@
 class MarketplaceTracker {
-    constructor() {
+    static id = "marketplace_tracker"
+    static displayName = "Marketplace Tracker";
+    static icon = "<img src='/images/ui/marketplace_icon.png' alt='Marketplace Tracker Icon'>";
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
         this.createMap = true;
 
         this.observer = new MutationObserver(mutations => {
@@ -12,11 +18,22 @@ class MarketplaceTracker {
             }
             this.marketplaceTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+    }
+
+    deactivate() {
+        this.observer.disconnect();
+    }
+
+    settingsElement() {
+        return "";
     }
 
     marketplaceTracker() {

@@ -1,5 +1,15 @@
 class EnchantingTracker {
-    constructor() {
+    static id = "enchanting_tracker"
+    static displayName = "Enchanting Tracker";
+    static icon = "<img src='/images/enchanting/enchanting_logo.png' alt='Enchanting Tracker Icon'>";
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        if (!this.settings.profit) {
+            this.settings.profit = "percent";
+        }
+
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
@@ -10,11 +20,35 @@ class EnchantingTracker {
             }
             this.enchantingTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+    }
+
+    deactivate() {
+        this.observer.disconnect();
+    }
+
+    settingsElement() {
+        let extensionSetting = document.createElement('div');
+        extensionSetting.classList.add('tracker-extension-setting');
+        extensionSetting.insertAdjacentHTML('beforeend', `
+<div class="tracker-extension-setting-name">
+    Profit
+</div>
+        `);
+        extensionSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
+            none: "None",
+            percent: "Percent",
+            flat: "Flat",
+            per_hour: "Per Hour",
+        }, this.settings.profit));
+        return extensionSetting;
     }
 
     enchantingTracker() {
@@ -85,7 +119,7 @@ class EnchantingTracker {
                             chance) {
         const resourceImgs = resourceItemIcons.map(icon => `
             <div class="enchanting-info-table-content">
-                <img class="icon24" src="${icon}">
+                <img class="enchanting-item-resource-icon" src="${icon}">
             </div>`).join("");
         const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
         const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
@@ -93,11 +127,17 @@ class EnchantingTracker {
         // Total effective price is higher if the chance is < 100%
         totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
         totalResourceMaxPrice = Math.round((totalResourceMaxPrice / chance));
+        let profitHeaderHTML = "";
+        let minProfitHTML = ""
+        let maxProfitHTML = ""
         // Profit includes 5% market fee
-        const prozentualMinProfit = profitPercent(totalResourceMinPrice, craftedItemMinPrice);
-        const prozentualMaxProfit = profitPercent(totalResourceMaxPrice, craftedItemMaxPrice);
+        if (this.settings.profit !== "none") {
+            profitHeaderHTML = `<span class="enchanting-info-table-content"><img src="/images/money_icon.png" class="enchanting-item-resource-icon" alt="Profit"></span>`;
+            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, 1))}</span>`; // TODO
+            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, 1))}</span>`; // Get Time
+        }
         return `
-<div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length}, 1fr) 1fr 1fr 1fr">
+<div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
     <!-- header -->
     ${resourceImgs}
     <span class="enchanting-info-table-content text-2xl">
@@ -106,9 +146,7 @@ class EnchantingTracker {
     <div class="enchanting-info-table-content">
         <img class="enchanting-item-resource-icon" src="${craftedItemIcon}">
     </div>
-    <span class="enchanting-info-table-content text-xl">
-        Profit
-    </span>
+    ${profitHeaderHTML}
 
     <!-- min prices -->
     <span class="enchanting-info-table-content">
@@ -121,9 +159,7 @@ class EnchantingTracker {
     <span class="crafting-info-table-content">
         ${numberWithSeparators(craftedItemMinPrice)}
     </span>
-    <span class="crafting-info-table-content">
-        ${prozentualMinProfit}
-    </span>
+    ${minProfitHTML}
 
     <!-- max -->
     <span class="enchanting-info-table-content">
@@ -136,9 +172,7 @@ class EnchantingTracker {
     <span class="enchanting-info-table-content">
         ${numberWithSeparators(craftedItemMaxPrice)}
     </span>
-    <span class="enchanting-info-table-content">
-        ${prozentualMaxProfit}
-    </span>
+    ${maxProfitHTML}
 </div>
         `;
     }

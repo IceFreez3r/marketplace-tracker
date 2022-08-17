@@ -256,6 +256,4 @@ if (!lastLogin) {
 // stores last timestamp at which API date arrived
 let timestamp = 0;
 fetchAPI();
-let apiFetch = setInterval(() => {
-    fetchAPI();
-}, 1000 * 60 * 10); // 10 minutes
+let apiFetch = setInterval(() => fetchAPI(), 1000 * 60 * 10); // 10 minutes

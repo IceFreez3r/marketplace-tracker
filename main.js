@@ -4,25 +4,11 @@ window.addEventListener('beforeunload', function () {
     });
 });
 
-
-function onGameReady(callback) {
-    const gameContainer = document.getElementsByClassName("play-area-container")[0];
-    if (!gameContainer) {
-        setTimeout(function () {
-            onGameReady(callback);
-        }, 250);
-    } else {
-        callback();
-    }
-}
-
-let extensions = [];
-onGameReady(() => {
-    extensions.push(new CraftingTracker());
-    extensions.push(new EnchantingTracker());
-    extensions.push(new FarmingTracker());
-    extensions.push(new FavoriteTracker());
-    extensions.push(new MarketplaceTracker());
-    extensions.push(new OfflineTracker());
-    extensions.push(new SmithingTracker());
-});
+let tracker = new Tracker();
+tracker.addExtension(CraftingTracker);
+tracker.addExtension(EnchantingTracker);
+tracker.addExtension(FarmingTracker);
+tracker.addExtension(FavoriteTracker);
+tracker.addExtension(MarketplaceTracker);
+tracker.addExtension(OfflineTracker);
+tracker.addExtension(SmithingTracker);

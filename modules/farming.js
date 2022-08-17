@@ -1,4 +1,7 @@
 class FarmingTracker {
+    static id = "farming_tracker"
+    static displayName = "Farming Tracker";
+    static icon = "<img src='/images/farming/farming_icon.png' alt='Farming Tracker Icon'>";
 
     seeds = {
         "mysterious-seed-1x1": {img: "/images/farming/mysterious_seed.png",     minLevel: 1 },
@@ -40,7 +43,9 @@ class FarmingTracker {
     }
     numGridElements = 42; // seeds (36) + headers (3) + borders (3)
 
-    constructor() {
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
         // setup mutation observer
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
@@ -52,6 +57,9 @@ class FarmingTracker {
             }
             this.farmingTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
@@ -59,24 +67,20 @@ class FarmingTracker {
         });
     }
 
+    deactivate() {
+        this.observer.disconnect();
+    }
+
+    settingsElement() {
+        return "";
+    }
+
     farmingTracker() {
         let seedContainer = document.getElementsByClassName("all-items")[0];
         if (seedContainer.childElementCount === this.numGridElements) {
             return;
         }
-        // remove old headers, borders, fake-items
-        let titles = seedContainer.parentNode.getElementsByClassName("farming-seeds-title");
-        for (let i = titles.length; i > 0; i--) {
-            titles[i - 1].remove();
-        }
-        let borders = seedContainer.parentNode.getElementsByClassName("farming-seeds-title-border");
-        for (let i = borders.length; i > 0; i--) {
-            borders[i - 1].remove();
-        }
-        let fakeItems = seedContainer.getElementsByClassName("fake-item");
-        for (let i = fakeItems.length; i > 0; i--) {
-            fakeItems[i - 1].remove();
-        }
+        this.clearMetaElements(seedContainer);
 
         const farmingLevel = this.getFarmingLevel();
         let existingSeeds = {};
@@ -122,6 +126,22 @@ class FarmingTracker {
             <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
             <div class="farming-seeds-title-border seed-header-multi-border"></div>
             `);
+    }
+
+    clearMetaElements(seedContainer) {
+        // remove old headers, borders, fake-items
+        let titles = seedContainer.parentNode.getElementsByClassName("farming-seeds-title");
+        for (let i = titles.length; i > 0; i--) {
+            titles[i - 1].remove();
+        }
+        let borders = seedContainer.parentNode.getElementsByClassName("farming-seeds-title-border");
+        for (let i = borders.length; i > 0; i--) {
+            borders[i - 1].remove();
+        }
+        let fakeItems = seedContainer.getElementsByClassName("fake-item");
+        for (let i = fakeItems.length; i > 0; i--) {
+            fakeItems[i - 1].remove();
+        }
     }
 
     getFarmingLevel() {
