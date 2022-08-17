@@ -90,7 +90,7 @@ function heatValue(timestamp) {
 
 function updateIdMap(map) {
     for (let i = 0; i < map.length; i++) {
-        if (map[i].itemID in itemList) {
+        if (map[i].apiId in itemList) {
             // itemId -> apiId
             idMap[map[i].itemId] = map[i].apiId;
             // apiId -> itemId
