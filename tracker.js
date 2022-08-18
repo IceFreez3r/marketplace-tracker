@@ -146,42 +146,52 @@ class Tracker {
         if (this.settings.activeExtensions[extensionId]) {
             let extensionContent = document.createElement('div');
             extensionContent.className = 'settings-extension-content';
-            extensionContent.append(this.activeExtensions[extensionId].settingsElement());
+            const menuContent = this.activeExtensions[extensionId].settingsMenuContent();
+            if (typeof menuContent === 'string') {
+                saveInsertAdjacentHTML(extensionContent, 'beforeend', menuContent);
+            } else {
+                extensionContent.append(menuContent);
+            }
             setting.append(extensionContent);
         };
         return setting;
     }
     
     saveSettings() {
-        let settings = {};
         // checkboxes
         const checkboxes = document.getElementsByClassName('tracker-settings-checkbox');
         for (let i = 0; i < checkboxes.length; i++) {
-            settings[checkboxes[i].id] = checkboxes[i].checked;
-        }
-        for (let extensionId in this.extensions) {
-            if (settings[extensionId]) {
-                this.activateExtension(extensionId);
+            if(checkboxes[i].id.includes('-')) {
+                // Normal setting
+                this.setSetting(checkboxes[i].id, checkboxes[i].checked ? 1 : 0);
             } else {
-                this.deactivateExtension(extensionId);
+                // Activate/deactivate extension
+                if (checkboxes[i].id in this.extensions) {
+                    if (checkboxes[i].checked) {
+                        this.activateExtension(checkboxes[i].id);
+                    } else {
+                        this.deactivateExtension(checkboxes[i].id);
+                    }
+                }
             }
         }
         // Select menus
         const selectMenus = document.getElementsByClassName('tracker-select-menu-selection');
         for (let i = 0; i < selectMenus.length; i++) {
-            let setting = this.settings;
-            let value = selectMenus[i].dataset.for;
-            const idString = selectMenus[i].id;
-            // Split id string into array
-            const idArray = idString.split('-');
-            for (let j = 0; j < idArray.length - 1; j++) {
-                setting = setting[idArray[j]];
-            }
-            setting[idArray[idArray.length - 1]] = value;
+            this.setSetting(selectMenus[i].id, selectMenus[i].dataset.for);
         }
         // Save settings
         console.log(this.settings);
         localStorage.setItem('TrackerSettings', JSON.stringify(this.settings));
+    }
+
+    setSetting(settingId, value) {
+        let setting = this.settings;
+        const idArray = settingId.split('-');
+        for (let j = 0; j < idArray.length - 1; j++) {
+            setting = setting[idArray[j]];
+        }
+        setting[idArray[idArray.length - 1]] = value;
     }
 
     onGameReady(callback) {
@@ -201,6 +211,18 @@ class Tracker {
     `;
     }
 
+    /**
+     * Creates a checkbox template
+     * 
+     * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
+     *                    e.g. a checkbox with id "module-css-header" will store `1` or `0` in `this.settings.module.css.header`.
+     *                    The setting needs to be set to a default value in the constructor of the corresponding module if it's
+     *                    not set.
+     *                    !! This will not check if the path exists in the settings !!
+     * @param {boolean} active The start state of the checkbox
+     * @param {string=} classes additional css classes
+     * @returns HTML template
+     */
     checkboxTemplate(id, active, classes = "") {
         return `
 <input id="${id}" type="checkbox" class="tracker-settings-checkbox ${classes}"${active ? " checked" : ""}>

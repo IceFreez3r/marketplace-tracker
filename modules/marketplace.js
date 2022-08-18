@@ -32,7 +32,7 @@ class MarketplaceTracker {
         this.observer.disconnect();
     }
 
-    settingsElement() {
+    settingsMenuContent() {
         return "";
     }
 

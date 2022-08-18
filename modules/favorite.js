@@ -34,7 +34,7 @@ class FavoriteTracker {
         this.observer.disconnect();
     }
 
-    settingsElement() {
+    settingsMenuContent() {
         return "";
     }
 

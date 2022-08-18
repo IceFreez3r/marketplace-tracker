@@ -6,6 +6,10 @@ class OfflineTracker {
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
+        if (this.settings.include_gold === undefined) {
+            this.settings.include_gold = 1;
+        }
+
         this.observer = new MutationObserver(mutations => {
             this.offlineTracker();
         });
@@ -21,8 +25,15 @@ class OfflineTracker {
         this.observer.disconnect();
     }
 
-    settingsElement() {
-        return "";
+    settingsMenuContent() {
+        return `
+<div class="tracker-extension-setting">
+    <div class="tracker-extension-setting-name">
+        Include Gold
+    </div>
+    ${this.tracker.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
+</div>
+        `;
     }
 
     offlineTracker(){
@@ -41,6 +52,9 @@ class OfflineTracker {
         for (let itemNode of offlineProgressBox.childNodes) {
             const itemId = convertItemId(itemNode.firstChild.src);
             if (itemId.includes('essence')) {
+                continue;
+            }
+            if (!this.settings.include_gold && itemId.includes('money_icon')) {
                 continue;
             }
             itemIds.push(itemId);
@@ -115,9 +129,9 @@ class OfflineTracker {
             </span>
         </div>
         <div class="center-info">
-            <span> - </span>
+            <span> ~ </span>
             <br>
-            <span> - </span>
+            <span> ~ </span>
         </div>
         <div class="right-info">
             <span>

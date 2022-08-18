@@ -39,7 +39,7 @@ class CraftingTracker {
         this.observer.disconnect();
     }
 
-    settingsElement() {
+    settingsMenuContent() {
         let extensionSetting = document.createElement('div');
         extensionSetting.classList.add('tracker-extension-setting');
         extensionSetting.insertAdjacentHTML('beforeend',`

@@ -71,7 +71,7 @@ class FarmingTracker {
         this.observer.disconnect();
     }
 
-    settingsElement() {
+    settingsMenuContent() {
         return "";
     }
 
