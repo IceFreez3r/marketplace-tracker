@@ -2,6 +2,7 @@ class FavoriteTracker {
     static id = "favorite_tracker"
     static displayName = "Favorite Tracker";
     static icon = FavoriteTracker.favoriteTemplate();
+    static category = "economy";
 
     constructor(tracker, settings) {
         this.tracker = tracker;

@@ -2,6 +2,15 @@
     margin-bottom: 1rem;
 }
 
+.tracker-settings-category-header {
+    text-align: center;
+    font-size: 2rem;
+    border-bottom: 1px solid #f50057;
+    margin: 5px 50px;
+    padding-bottom: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
 .settings-extension-header {
     display: flex;
     align-items: center;
@@ -22,24 +31,8 @@
     height: 30px;
 }
 
-.settings-checkbox-label {
-    width: 1.5rem;
-    height: 1.5rem;
-    border: 2px solid #fff;
-    border-radius: 2px;
-    margin-bottom: unset;
-}
-
-.settings-checkbox-svg {
-    display: none;
-    fill: #f50057;
-    transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-    width: 100%;
-    height: 100%;
-}
-
-.tracker-settings-checkbox:checked + .settings-checkbox-label > .settings-checkbox-svg {
-    display: block;
+.settings-extension-content > :last-child {
+    margin-bottom: -5px;
 }
 
 .settings-footer {
@@ -66,12 +59,32 @@
 .tracker-extension-setting {
     display: flex;
     justify-content: space-between;
-    margin: 0 35px 0 20px;
+    margin: 0 50px;
     align-items: center;
 }
 
 .tracker-extension-setting-name {
     font-size: 1.2rem;
+}
+
+.settings-checkbox-label {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #fff;
+    border-radius: 2px;
+    margin-bottom: unset;
+}
+
+.settings-checkbox-svg {
+    display: none;
+    fill: #f50057;
+    transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    width: 100%;
+    height: 100%;
+}
+
+.tracker-settings-checkbox:checked + .settings-checkbox-label > .settings-checkbox-svg {
+    display: block;
 }
 
 .tracker-select-menu {

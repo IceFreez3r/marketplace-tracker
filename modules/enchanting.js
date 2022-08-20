@@ -2,6 +2,7 @@ class EnchantingTracker {
     static id = "enchanting_tracker"
     static displayName = "Enchanting Tracker";
     static icon = "<img src='/images/enchanting/enchanting_logo.png' alt='Enchanting Tracker Icon'>";
+    static category = "recipe";
 
     constructor(tracker, settings) {
         this.tracker = tracker;

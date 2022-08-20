@@ -2,6 +2,7 @@ class OfflineTracker {
     static id = 'offline_tracker';
     static displayName = 'Offline Tracker';
     static icon = "<img src='/images/clock.png' alt='Offline Tracker Icon'>";
+    static category = "economy";
 
     constructor(tracker, settings) {
         this.tracker = tracker;

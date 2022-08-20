@@ -2,6 +2,7 @@ class FarmingTracker {
     static id = "farming_tracker"
     static displayName = "Farming Tracker";
     static icon = "<img src='/images/farming/farming_icon.png' alt='Farming Tracker Icon'>";
+    static category = "visual";
 
     seeds = {
         "mysterious-seed-1x1": {img: "/images/farming/mysterious_seed.png",     minLevel: 1 },

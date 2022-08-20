@@ -2,6 +2,7 @@ class CraftingTracker {
     static id = "crafting_tracker"
     static displayName = "Crafting Tracker";
     static icon = "<img src='images/ui/crafting_icon.png' alt='Crafting Tracker Icon'/>";
+    static category = "recipe";
 
     constructor(tracker, settings) {
         this.tracker = tracker;

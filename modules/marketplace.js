@@ -2,6 +2,7 @@ class MarketplaceTracker {
     static id = "marketplace_tracker"
     static displayName = "Marketplace Tracker";
     static icon = "<img src='/images/ui/marketplace_icon.png' alt='Marketplace Tracker Icon'>";
+    static category = "economy";
 
     constructor(tracker, settings) {
         this.tracker = tracker;

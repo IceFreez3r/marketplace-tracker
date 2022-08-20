@@ -96,8 +96,32 @@ class Tracker {
         let setting = document.createElement('div');
         setting.id = 'tracker-settings-area';
         setting.className = 'play-area theme-default tracker';
+
+        let settingCategories = {
+            "economy": {
+                "name": "Economy",
+            },
+            "recipe": {
+                "name": "Recipes",
+            },
+            "visual": {
+                "name": "Visual Changes",
+            }
+        };
         for (let extensionId in this.extensions) {
-            setting.append(this.extensionSettings(extensionId));
+            console.log(extensionId);
+            if (settingCategories[this.extensions[extensionId].category].div === undefined) {
+                console.log("Creating category " + this.extensions[extensionId].category);
+                let category = document.createElement('div');
+                category.className = 'tracker-settings-category';
+                let categoryHeader = document.createElement('div');
+                categoryHeader.className = 'tracker-settings-category-header';
+                categoryHeader.innerText = settingCategories[this.extensions[extensionId].category].name;
+                category.append(categoryHeader);
+                setting.append(category);
+                settingCategories[this.extensions[extensionId].category].div = category;
+            }
+            settingCategories[this.extensions[extensionId].category].div.append(this.extensionSettings(extensionId));
         }
         setting.insertAdjacentHTML('beforeend', `
 <div class="settings-footer">

@@ -2,6 +2,7 @@ class SmithingTracker {
     static id = "smithing_tracker";
     static displayName = "Smithing Tracker";
     static icon = "<img src='/images/smithing/smithing_icon.png' alt='Smithing Tracker Icon'>";
+    static category = "recipe";
 
     constructor(tracker, settings) {
         this.tracker = tracker;
