@@ -178,6 +178,9 @@ class MarketplaceTracker {
     }
 
     iconToIdMap(items) {
+        if (items.childNodes.length === 0) {
+            return;
+        }
         let map = [];
         for (let i = 0; i < items.childNodes.length; i++) {
             const item = items.childNodes[i];
