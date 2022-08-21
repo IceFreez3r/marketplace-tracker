@@ -194,7 +194,6 @@ class MarketplaceTracker {
                 apiId: apiId
             });
         }
-        console.log(map);
         storageRequest({
             type: 'icon-to-id-map',
             map: map
