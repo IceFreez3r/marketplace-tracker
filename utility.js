@@ -185,3 +185,11 @@ function injectCSS(css) {
     document.head.appendChild(style);
     return style;
 }
+
+function getCharacterName() {
+    return document.getElementsByClassName("navbar1-box left drawer-button noselect")[0].childNodes[1].textContent;
+}
+
+function isIronmanCharacter() {
+    return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
+}

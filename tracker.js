@@ -1,4 +1,5 @@
 class Tracker {
+    settingsIdentifier = `TrackerSettings${getCharacterName()}`;
     css = `
 .settings-extension {
     margin-bottom: 1rem;
@@ -147,7 +148,23 @@ class Tracker {
     constructor() {
         this.extensions = {};
         this.activeExtensions = {};
-        this.settings = loadLocalStorage('TrackerSettings', {activeExtensions: {}});
+
+        const defaultSettings = isIronmanCharacter() ? {
+            activeExtensions: {
+                farming_tracker: 1,
+            }
+        } : {
+            activeExtensions: {
+                crafting_tracker: 1,
+                enchanting_tracker: 1,
+                farming_tracker: 1,
+                favorite_tracker: 1,
+                marketplace_tracker: 1,
+                offline_tracker: 1,
+                smithing_tracker: 1,
+            }
+        };
+        this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
         console.log(this.settings);
         injectCSS(this.css);
         this.onGameReady(() => this.settingsSidebar());
@@ -350,7 +367,7 @@ class Tracker {
         }
         // Save settings
         console.log(this.settings);
-        localStorage.setItem('TrackerSettings', JSON.stringify(this.settings));
+        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
     setSetting(settingId, value) {
