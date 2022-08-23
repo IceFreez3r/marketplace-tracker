@@ -3,6 +3,39 @@ class OfflineTracker {
     static displayName = 'Offline Tracker';
     static icon = "<img src='/images/clock.png' alt='Offline Tracker Icon'>";
     static category = "economy";
+    css = `
+.offline-info-box {
+    padding: 10px;
+    text-align: center;
+    font-size: 25px;
+}
+
+.offline-gold-icon {
+    height: 28px;
+    width: 28px;
+    vertical-align: text-top;
+}
+
+.offline-info-value {
+    display: flex;
+    justify-content: center;
+}
+
+.offline-info-value .left-info {
+    flex: 1;
+    text-align: right;
+}
+
+.offline-info-value .center-info {
+    flex: 0;
+    padding: 0 5px;
+}
+
+.offline-info-value .right-info {
+    flex: 1;
+    text-align: left;
+}
+    `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
@@ -10,6 +43,7 @@ class OfflineTracker {
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
+        this.cssNode = injectCSS(this.css);
 
         this.observer = new MutationObserver(mutations => {
             this.offlineTracker();
@@ -23,6 +57,7 @@ class OfflineTracker {
     }
 
     deactivate() {
+        this.cssNode.remove();
         this.observer.disconnect();
     }
 

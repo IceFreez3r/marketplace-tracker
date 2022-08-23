@@ -3,10 +3,51 @@ class FavoriteTracker {
     static displayName = "Favorite Tracker";
     static icon = FavoriteTracker.favoriteTemplate();
     static category = "economy";
+    css = `
+.tracker-favorite-filter-svg {
+    width: 33px;
+    height: 33px;
+    margin-left: 1px;
+    margin-right: 1px;
+    padding: 1px;
+    cursor: pointer;
+}
+
+.filter-active {
+    fill: rgb(255, 255, 0);
+}
+
+.favorite-highlight {
+    border: 3px solid white;
+}
+
+/* identical to vanilla .marketplace-refresh-button */
+.marketplace-favorite-button {
+    margin-top: 8px;
+    color: #fff;
+    height: 45px;
+    width: 100px;
+    background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
+}
+
+.marketplace-favorite-button.is-favorite {
+    fill: rgb(255, 255, 0);
+}
+
+.marketplace-favorite-button:not(.is-favorite) {
+    fill: none;
+}
+
+.marketplace-favorite-button.is-favorite > span {
+    display: none;
+}
+    `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
+        this.cssNode = injectCSS(this.css);
+        
         this.favorites = loadLocalStorage('favorites', []);
         this.filterActive = false;
 
@@ -32,6 +73,7 @@ class FavoriteTracker {
     }
 
     deactivate() {
+        this.cssNode.remove();
         this.observer.disconnect();
     }
 

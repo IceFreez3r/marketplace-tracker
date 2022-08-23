@@ -178,3 +178,10 @@ function loadLocalStorage(key, fallback) {
     }
     return JSON.parse(value);
 }
+
+function injectCSS(css) {
+    let style = document.createElement("style");
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+    return style;
+}

@@ -1,9 +1,155 @@
 class Tracker {
+    css = `
+.settings-extension {
+    margin-bottom: 1rem;
+}
+
+.tracker-settings-category-header {
+    text-align: center;
+    font-size: 2rem;
+    border-bottom: 1px solid #f50057;
+    margin: 5px 50px;
+    padding-bottom: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.settings-extension-header {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.settings-extension-header-title {
+    flex: 1;
+}
+
+.settings-extension-header-toggle-icon {
+    margin-right: 0.5rem;
+}
+
+.settings-extension-header-toggle-icon > :is(img, svg){
+    width: 30px;
+    height: 30px;
+}
+
+.settings-extension-content > :last-child {
+    margin-bottom: -5px;
+}
+
+.settings-footer {
+    display: flex;
+    justify-content: center;
+}
+
+.settings-save {
+    height: 40px;
+    padding: 6px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-size: 100% 100%;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    cursor: pointer;
+}
+
+.settings-save:hover {
+    filter: brightness(1.5);
+}
+
+.tracker-extension-setting {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 50px;
+    align-items: center;
+}
+
+.tracker-extension-setting-name {
+    font-size: 1.2rem;
+}
+
+.settings-checkbox-label {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #fff;
+    border-radius: 2px;
+    margin-bottom: unset;
+}
+
+.settings-checkbox-svg {
+    display: none;
+    fill: #f50057;
+    transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    width: 100%;
+    height: 100%;
+}
+
+.tracker-settings-checkbox:checked + .settings-checkbox-label > .settings-checkbox-svg {
+    display: block;
+}
+
+.tracker-select-menu {
+    position: relative;
+    width: 150px;
+}
+
+.tracker-select-menu:hover>.tracker-options {
+    display: block;
+}
+
+.tracker-select-menu-current {
+    background: #808080;
+    border: 1px solid #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tracker-options {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.tracker-option {
+    background: gray;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.tracker-option:hover {
+    filter: brightness(1.25);
+}
+
+.tracker-selected {
+    background: #2a2c30;
+    color: white;
+}
+
+.arrow-down {
+    float: right;
+    width: 16px;
+    fill: #f50057;
+}
+    `;
+
     constructor() {
         this.extensions = {};
         this.activeExtensions = {};
         this.settings = loadLocalStorage('TrackerSettings', {activeExtensions: {}});
         console.log(this.settings);
+        injectCSS(this.css);
         this.onGameReady(() => this.settingsSidebar());
     }
 
@@ -109,9 +255,7 @@ class Tracker {
             }
         };
         for (let extensionId in this.extensions) {
-            console.log(extensionId);
             if (settingCategories[this.extensions[extensionId].category].div === undefined) {
-                console.log("Creating category " + this.extensions[extensionId].category);
                 let category = document.createElement('div');
                 category.className = 'tracker-settings-category';
                 let categoryHeader = document.createElement('div');
@@ -321,5 +465,5 @@ class Tracker {
         c0,0.176,0.068,0.348,0.196,0.473l9.648,9.646C10.108,15.88,10.53,15.88,10.79,15.617z"/>
 </svg>
         `;
-}
+    }
 }

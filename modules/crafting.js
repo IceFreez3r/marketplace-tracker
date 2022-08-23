@@ -3,6 +3,41 @@ class CraftingTracker {
     static displayName = "Crafting Tracker";
     static icon = "<img src='images/ui/crafting_icon.png' alt='Crafting Tracker Icon'/>";
     static category = "recipe";
+    css = `
+.crafting-item-container {
+    display: flex;
+    flex-direction: column;
+}
+
+body .crafting-container {
+    height: auto;
+    flex: 1 0 auto;
+}
+
+.crafting-info-table {
+    display: grid; /* Grid Layout specified by js */
+    grid-gap: 5px;
+    /* combination of rgba(36, 36, 36, .671) in front of rgba(0, 0, 0, .705) */
+    background: rgba(24.156, 24.156, 24.156, .902945);
+    border: 2px solid gray;
+    padding: 6px;
+    margin-top: 6px;
+    border-radius: 6px;
+}
+
+.crafting-info-table-content {
+    text-align: center;
+}
+
+.crafting-info-table-content:first-child {
+    grid-column: 2;
+}
+
+.text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+}
+    `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
@@ -10,6 +45,7 @@ class CraftingTracker {
         if (!this.settings.profit) {
             this.settings.profit = "none";
         }
+        this.cssNode = injectCSS(this.css);
 
         this.lastCraftedItemId = null;
         this.lastSelectedNavTab = null;
@@ -37,6 +73,7 @@ class CraftingTracker {
     }
 
     deactivate() {
+        this.cssNode.remove();
         this.observer.disconnect();
     }
 

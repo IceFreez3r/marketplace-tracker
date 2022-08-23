@@ -3,6 +3,50 @@ class EnchantingTracker {
     static displayName = "Enchanting Tracker";
     static icon = "<img src='/images/enchanting/enchanting_logo.png' alt='Enchanting Tracker Icon'>";
     static category = "recipe";
+    css = `
+body .scrollcrafting-container {
+    grid-template-rows: 70px 8px auto auto;
+    grid-template-areas: "image title resources button"
+                        "bar bar bar bar"
+                        "totals totals totals totals"
+                        "info info info info";
+}
+
+.enchanting-info-table {
+    display: grid;
+    /* Grid Layout specified by js */
+    grid-gap: 5px;
+    border: 2px solid hsla(0, 0%, 100%, .452);
+    padding: 6px;
+    margin: 6px;
+    border-radius: 10px;
+    grid-area: info;
+}
+
+.enchanting-info-table-content {
+    text-align: center;
+    margin: auto;
+}
+
+.enchanting-info-table-content:first-child {
+    grid-column: 2;
+}
+
+.text-2xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+}
+
+.text-xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+}
+
+.enchanting-item-resource-icon{
+    height: 24px;
+    width: 24px;
+}
+    `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
@@ -10,6 +54,7 @@ class EnchantingTracker {
         if (!this.settings.profit) {
             this.settings.profit = "percent";
         }
+        this.cssNode = injectCSS(this.css);
 
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
@@ -32,6 +77,7 @@ class EnchantingTracker {
     }
 
     deactivate() {
+        this.cssNode.remove();
         this.observer.disconnect();
     }
 
