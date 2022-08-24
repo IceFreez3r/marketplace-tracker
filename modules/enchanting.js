@@ -82,20 +82,20 @@ body .scrollcrafting-container {
     }
 
     settingsMenuContent() {
-        let extensionSetting = document.createElement('div');
-        extensionSetting.classList.add('tracker-extension-setting');
-        extensionSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-extension-setting-name">
+        let moduleSetting = document.createElement('div');
+        moduleSetting.classList.add('tracker-module-setting');
+        moduleSetting.insertAdjacentHTML('beforeend', `
+<div class="tracker-module-setting-name">
     Profit
 </div>
         `);
-        extensionSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
+        moduleSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
             none: "None",
             percent: "Percent",
             flat: "Flat",
             per_hour: "Per Hour",
         }, this.settings.profit));
-        return extensionSetting;
+        return moduleSetting;
     }
 
     enchantingTracker() {

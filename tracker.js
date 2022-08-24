@@ -1,40 +1,44 @@
 class Tracker {
     settingsIdentifier = `TrackerSettings${getCharacterName()}`;
     css = `
-.settings-extension {
+:root {
+    --tracker-red: #f50057;
+}
+
+.settings-module {
     margin-bottom: 1rem;
 }
 
 .tracker-settings-category-header {
     text-align: center;
     font-size: 2rem;
-    border-bottom: 1px solid #f50057;
+    border-bottom: 1px solid var(--tracker-red);
     margin: 5px 50px;
     padding-bottom: 8px;
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.settings-extension-header {
+.settings-module-header {
     display: flex;
     align-items: center;
     font-size: 1.5rem;
     font-weight: bold;
 }
 
-.settings-extension-header-title {
+.settings-module-header-title {
     flex: 1;
 }
 
-.settings-extension-header-toggle-icon {
+.settings-module-header-toggle-icon {
     margin-right: 0.5rem;
 }
 
-.settings-extension-header-toggle-icon > :is(img, svg){
+.settings-module-header-toggle-icon > :is(img, svg){
     width: 30px;
     height: 30px;
 }
 
-.settings-extension-content > :last-child {
+.settings-module-content > :last-child {
     margin-bottom: -5px;
 }
 
@@ -59,14 +63,14 @@ class Tracker {
     filter: brightness(1.5);
 }
 
-.tracker-extension-setting {
+.tracker-module-setting {
     display: flex;
     justify-content: space-between;
     margin: 0 50px;
     align-items: center;
 }
 
-.tracker-extension-setting-name {
+.tracker-module-setting-name {
     font-size: 1.2rem;
 }
 
@@ -80,7 +84,7 @@ class Tracker {
 
 .settings-checkbox-svg {
     display: none;
-    fill: #f50057;
+    fill: var(--tracker-red);
     transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
     width: 100%;
     height: 100%;
@@ -141,61 +145,85 @@ class Tracker {
 .arrow-down {
     float: right;
     width: 16px;
-    fill: #f50057;
+    fill: var(--tracker-red);
+}
+
+.settings-save-checkmark {
+    width: 25px;
+    margin-left: 10px;
+    stroke: white;
+}
+
+.checkmark path {
+    fill: none;
+    stroke-width: 4;
+    stroke-dasharray: 23;
+    stroke-linecap: round;
+    stroke-linejoin: round
 }
     `;
 
     constructor() {
-        this.extensions = {};
-        this.activeExtensions = {};
+        this.modules = {};
+        this.activeModules = {};
+        this.gameReadyTimeout = undefined;
+        this.gameReadyCallbacks = [];
+        this.saveCheckmarkTimeout = undefined;
 
-        const defaultSettings = isIronmanCharacter() ? {
-            activeExtensions: {
-                farming_tracker: 1,
-            }
-        } : {
-            activeExtensions: {
-                crafting_tracker: 1,
-                enchanting_tracker: 1,
-                farming_tracker: 1,
-                favorite_tracker: 1,
-                marketplace_tracker: 1,
-                offline_tracker: 1,
-                smithing_tracker: 1,
-            }
-        };
-        this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
-        console.log(this.settings);
         injectCSS(this.css);
-        this.onGameReady(() => this.settingsSidebar());
+        this.onGameReady(() => {
+            const defaultSettings = isIronmanCharacter() ? {
+                activeModules: {
+                    farming_tracker: 1,
+                }
+            } : {
+                activeModules: {
+                    crafting_tracker: 1,
+                    enchanting_tracker: 1,
+                    farming_tracker: 1,
+                    favorite_tracker: 1,
+                    marketplace_tracker: 1,
+                    offline_tracker: 1,
+                    smithing_tracker: 1,
+                }
+            };
+            this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settingsSidebar();
+        });
     }
 
-    addExtension(extension) {
-        this.extensions[extension.id] = extension;
-        if (this.settings.activeExtensions[extension.id]) {
-            this.activateExtension(extension.id);
-        }
-    }
-
-    activateExtension(extensionId) {
-        if (this.extensions[extensionId] && !this.activeExtensions[extensionId]) {
-            this.settings.activeExtensions[extensionId] = 1;
-            if (!this.settings[extensionId]) {
-                this.settings[extensionId] = {};
+    addModule(module) {
+        this.modules[module.id] = module;
+        this.onGameReady(() => {
+            if (this.settings.activeModules[module.id]) {
+                this.activateModule(module.id);
             }
-            this.activeExtensions[extensionId] = new this.extensions[extensionId](this, this.settings[extensionId]);
-            this.onGameReady(() => this.activeExtensions[extensionId].onGameReady());
-            console.log(`Activated extension ${extensionId}`);
-        }
+        });
     }
 
-    deactivateExtension(extensionId) {
-        if (this.activeExtensions[extensionId]) {
-            this.settings.activeExtensions[extensionId] = 0;
-            this.activeExtensions[extensionId].deactivate();
-            delete this.activeExtensions[extensionId];
-            console.log(`Deactivated extension ${extensionId}`);
+    activateModule(moduleId) {
+        if (this.modules[moduleId] && !this.activeModules[moduleId]) {
+            this.settings.activeModules[moduleId] = 1;
+            if (!this.settings[moduleId]) {
+                this.settings[moduleId] = {};
+            }
+            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId]);
+            this.activeModules[moduleId].onGameReady();
+            console.log(`Activated module ${moduleId}`);
+            return true;
         }
+        return false;
+    }
+
+    deactivateModule(moduleId) {
+        if (this.activeModules[moduleId]) {
+            this.settings.activeModules[moduleId] = 0;
+            this.activeModules[moduleId].deactivate();
+            delete this.activeModules[moduleId];
+            console.log(`Deactivated module ${moduleId}`);
+            return true;    
+        }
+        return false;
     }
 
     settingsSidebar() {
@@ -256,42 +284,63 @@ class Tracker {
             playAreas[i].style.display = "none";
         }
         console.log(this.settings);
-        let setting = document.createElement('div');
-        setting.id = 'tracker-settings-area';
-        setting.className = 'play-area theme-default tracker';
+        let settingsArea = document.createElement('div');
+        settingsArea.id = 'tracker-settings-area';
+        settingsArea.className = 'play-area theme-default tracker';
 
         let settingCategories = {
             "economy": {
                 "name": "Economy",
+                "div": undefined,
             },
             "recipe": {
                 "name": "Recipes",
+                "div": undefined,
             },
             "visual": {
                 "name": "Visual Changes",
+                "div": undefined,
             }
         };
-        for (let extensionId in this.extensions) {
-            if (settingCategories[this.extensions[extensionId].category].div === undefined) {
+        for (let moduleId in this.modules) {
+            const module = this.modules[moduleId];
+            if (settingCategories[module.category].div === undefined) {
                 let category = document.createElement('div');
                 category.className = 'tracker-settings-category';
                 let categoryHeader = document.createElement('div');
                 categoryHeader.className = 'tracker-settings-category-header';
-                categoryHeader.innerText = settingCategories[this.extensions[extensionId].category].name;
+                categoryHeader.innerText = settingCategories[module.category].name;
                 category.append(categoryHeader);
-                setting.append(category);
-                settingCategories[this.extensions[extensionId].category].div = category;
+                settingsArea.append(category);
+                settingCategories[module.category].div = category;
             }
-            settingCategories[this.extensions[extensionId].category].div.append(this.extensionSettings(extensionId));
+            let moduleSettings = document.createElement('div');
+            moduleSettings.className = 'settings-module';
+            saveInsertAdjacentHTML(moduleSettings, 'beforeend', `
+<div class="settings-module-header">
+    <div class="settings-module-header-toggle-icon">
+        ${module.icon}
+    </div>
+    <div class="settings-module-header-title">
+        ${module.displayName}
+    </div>
+    ${this.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
+</div>
+            `);
+            let moduleSettingsContent = document.createElement('div');
+            moduleSettingsContent.className = 'settings-module-content';
+            this.addModuleSettings(moduleId, moduleSettingsContent);
+            moduleSettings.append(moduleSettingsContent);
+            settingCategories[module.category].div.append(moduleSettings);
         }
-        setting.insertAdjacentHTML('beforeend', `
+        settingsArea.insertAdjacentHTML('beforeend', `
 <div class="settings-footer">
     <div id="settings-save" class="settings-save idlescape-button-green">
         Save
     </div>
 </div>
         `);
-        playAreaContainer.append(setting);
+        playAreaContainer.append(settingsArea);
 
         let saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
@@ -305,6 +354,7 @@ class Tracker {
             }
             document.getElementById('tracker-settings-nav-tab').remove();
             document.getElementById('tracker-settings-area').remove();
+            clearTimeout(this.saveCheckmarkTimeout);
             // Stop observing
             resetObserver.disconnect();
         });
@@ -314,60 +364,65 @@ class Tracker {
         });
     }
 
-    extensionSettings(extensionId) {
-        let setting = document.createElement('div');
-        setting.className = 'settings-extension';
-        saveInsertAdjacentHTML(setting, 'beforeend', `
-<div class="settings-extension-header">
-    <div class="settings-extension-header-toggle-icon">
-        ${this.extensions[extensionId].icon}
-    </div>
-    <div class="settings-extension-header-title">
-        ${this.extensions[extensionId].displayName}
-    </div>
-    ${this.checkboxTemplate(extensionId, this.settings.activeExtensions[extensionId])}
-</div>
-        `);
-        if (this.settings.activeExtensions[extensionId]) {
-            let extensionContent = document.createElement('div');
-            extensionContent.className = 'settings-extension-content';
-            const menuContent = this.activeExtensions[extensionId].settingsMenuContent();
+    addModuleSettings(moduleId, element) {
+        if (this.settings.activeModules[moduleId]) {
+            const menuContent = this.activeModules[moduleId].settingsMenuContent();
             if (typeof menuContent === 'string') {
-                saveInsertAdjacentHTML(extensionContent, 'beforeend', menuContent);
+                saveInsertAdjacentHTML(element, 'beforeend', menuContent);
             } else {
-                extensionContent.append(menuContent);
+                element.append(menuContent);
             }
-            setting.append(extensionContent);
         };
-        return setting;
     }
     
     saveSettings() {
         // checkboxes
         const checkboxes = document.getElementsByClassName('tracker-settings-checkbox');
-        for (let i = 0; i < checkboxes.length; i++) {
-            if(checkboxes[i].id.includes('-')) {
+        for (const checkbox of checkboxes) {
+            if(checkbox.id.includes('-')) {
                 // Normal setting
-                this.setSetting(checkboxes[i].id, checkboxes[i].checked ? 1 : 0);
+                this.setSetting(checkbox.id, checkbox.checked ? 1 : 0);
             } else {
-                // Activate/deactivate extension
-                if (checkboxes[i].id in this.extensions) {
-                    if (checkboxes[i].checked) {
-                        this.activateExtension(checkboxes[i].id);
+                // Activate/deactivate module
+                if (checkbox.id in this.modules) {
+                    if (checkbox.checked) {
+                        const changed = this.activateModule(checkbox.id);
+                        if (changed) {
+                            // Add module settings
+                            this.addModuleSettings(checkbox.id, checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0]);
+                        }
                     } else {
-                        this.deactivateExtension(checkboxes[i].id);
+                        const changed = this.deactivateModule(checkbox.id);
+                        if (changed) {
+                            // Remove module settings
+                            checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0].firstChild.remove();
+                        }
                     }
                 }
             }
         }
         // Select menus
         const selectMenus = document.getElementsByClassName('tracker-select-menu-selection');
-        for (let i = 0; i < selectMenus.length; i++) {
-            this.setSetting(selectMenus[i].id, selectMenus[i].dataset.for);
+        for (const selectMenu of selectMenus) {
+            this.setSetting(selectMenu.id, selectMenu.dataset.for);
         }
         // Save settings
         console.log(this.settings);
         localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
+
+        // Visual feedback
+        const saveButton = document.getElementById('settings-save');
+        const checkmark = saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0];
+        if (checkmark) {
+            // Restart animation
+            checkmark.getElementsByTagName('animate')[0].beginElement()
+            clearTimeout(this.saveCheckmarkTimeout);
+        } else {
+            saveButton.insertAdjacentHTML('beforeend', this.checkmarkTemplate("settings-save-checkmark"));
+        }
+        this.saveCheckmarkTimeout = setTimeout(() => {
+            saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0].remove();
+        }, 5000);
     }
 
     setSetting(settingId, value) {
@@ -379,19 +434,33 @@ class Tracker {
         setting[idArray[idArray.length - 1]] = value;
     }
 
+    /**
+     * Queue callback functions until the game is ready.
+     * 
+     * @param {callback} callback The callback function to call when the game has finished loading. Ommited in recursive calls.
+     */
     onGameReady(callback) {
+        // Manual call -> reset existing timer and add callback to the queue
+        if (callback) {
+            clearTimeout(this.gameReadyTimeout);
+            this.gameReadyCallbacks.push(callback);
+        }
         const gameContainer = document.getElementsByClassName("play-area-container")[0];
         if (!gameContainer) {
-            setTimeout(() => this.onGameReady(callback), 250);
+            this.gameReadyTimeout = setTimeout(() => this.onGameReady(), 250);
         } else {
-            callback();
+            this.gameReadyTimeout = undefined;
+            for (const callback of this.gameReadyCallbacks) {
+                callback();
+            }
+            this.gameReadyCallbacks = [];
         }
     }
 
     trackerLogoTemplate(classes = "") {
         return `
 <svg class="${classes}" viewBox="0 0 119.24264 119.24264">
-    <path id="Arrow" fill="green" stroke="green" stroke-width="1" d="M7, 67 L37, 37 A8.48528 8.48528 0 0 1 49 37 L69 57 L99 27 L79, 27 A3.62132 3.62132 0 0 1 79 19.75736 L105 19.75736 A8.48528 8.48528 0 0 1 112.24264 27 L112.24264 53 A3.62132 3.62132 0 0 1 105 53 L105 33 L75 63 A8.48528 8.48528 0 0 1 63 63 L43 43 L13 73 A4.24264 4.24264 0 0 1 7 67 Z" />
+    <path fill="green" stroke="green" stroke-width="1" d="M7, 67 L37, 37 A8.48528 8.48528 0 0 1 49 37 L69 57 L99 27 L79, 27 A3.62132 3.62132 0 0 1 79 19.75736 L105 19.75736 A8.48528 8.48528 0 0 1 112.24264 27 L112.24264 53 A3.62132 3.62132 0 0 1 105 53 L105 33 L75 63 A8.48528 8.48528 0 0 1 63 63 L43 43 L13 73 A4.24264 4.24264 0 0 1 7 67 Z" />
 </svg>
     `;
     }
@@ -480,6 +549,16 @@ class Tracker {
         c-0.125-0.127-0.295-0.195-0.472-0.195h-4.682c-0.18,0-0.348,0.068-0.473,0.195l-4.48,4.479l-4.48-4.479
         C5.711,4.886,5.54,4.818,5.366,4.818H0.684c-0.182,0-0.349,0.068-0.475,0.195L0.196,5.025C0.068,5.148,0,5.322,0,5.498
         c0,0.176,0.068,0.348,0.196,0.473l9.648,9.646C10.108,15.88,10.53,15.88,10.79,15.617z"/>
+</svg>
+        `;
+    }
+
+    checkmarkTemplate(classes = "") {
+        return `
+<svg class="checkmark ${classes}" viewBox="0 0 24 24">
+    <path d="M4.1 12.7L9 17.6 20.3 6.3" fill="none">
+        <animate attributeType="XML" attributeName="stroke-dashoffset" from="24" to="0" dur="1s" restart="always"/>
+    </path>
 </svg>
         `;
     }

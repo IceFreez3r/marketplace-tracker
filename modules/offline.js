@@ -63,8 +63,8 @@ class OfflineTracker {
 
     settingsMenuContent() {
         return `
-<div class="tracker-extension-setting">
-    <div class="tracker-extension-setting-name">
+<div class="tracker-module-setting">
+    <div class="tracker-module-setting-name">
         Include Gold
     </div>
     ${this.tracker.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}

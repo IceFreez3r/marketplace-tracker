@@ -5,10 +5,10 @@ window.addEventListener('beforeunload', function () {
 });
 
 let tracker = new Tracker();
-tracker.addExtension(MarketplaceTracker);
-tracker.addExtension(FavoriteTracker);
-tracker.addExtension(OfflineTracker);
-tracker.addExtension(EnchantingTracker);
-tracker.addExtension(SmithingTracker);
-tracker.addExtension(CraftingTracker);
-tracker.addExtension(FarmingTracker);
+tracker.addModule(MarketplaceTracker);
+tracker.addModule(FavoriteTracker);
+tracker.addModule(OfflineTracker);
+tracker.addModule(EnchantingTracker);
+tracker.addModule(SmithingTracker);
+tracker.addModule(CraftingTracker);
+tracker.addModule(FarmingTracker);
