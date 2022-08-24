@@ -199,8 +199,8 @@ class SmithingTracker {
         // Profit includes 5% market fee
         if (this.settings.profit !== "none") {
             profitHeaderHTML = `<span class="smithing-info-table-content"><img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit"></span>`;
-            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, 1)))}</span>`; // TODO
-            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, 1)))}</span>`; // Get Time
+            minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, 1)))}</span>`; // TODO
+            maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, 1)))}</span>`; // Get Time
         }
         return `
 <div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">

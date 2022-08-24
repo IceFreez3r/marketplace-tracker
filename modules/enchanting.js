@@ -180,8 +180,8 @@ body .scrollcrafting-container {
         // Profit includes 5% market fee
         if (this.settings.profit !== "none") {
             profitHeaderHTML = `<span class="enchanting-info-table-content"><img src="/images/money_icon.png" class="enchanting-item-resource-icon" alt="Profit"></span>`;
-            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, 1))}</span>`; // TODO
-            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, 1))}</span>`; // Get Time
+            minProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, 1))}</span>`; // TODO
+            maxProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, 1))}</span>`; // Get Time
         }
         return `
 <div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
@@ -203,7 +203,7 @@ body .scrollcrafting-container {
     <span class="enchanting-info-table-content">
         ${numberWithSeparators(totalResourceMinPrice)}
     </span>
-    <span class="crafting-info-table-content">
+    <span class="enchanting-info-table-content">
         ${numberWithSeparators(craftedItemMinPrice)}
     </span>
     ${minProfitHTML}
