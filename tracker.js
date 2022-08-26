@@ -1,5 +1,4 @@
 class Tracker {
-    settingsIdentifier = `TrackerSettings${getCharacterName()}`;
     css = `
 :root {
     --tracker-red: #f50057;
@@ -172,6 +171,7 @@ class Tracker {
 
         injectCSS(this.css);
         this.onGameReady(() => {
+            this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
             const defaultSettings = isIronmanCharacter() ? {
                 activeModules: {
                     farming_tracker: 1,
