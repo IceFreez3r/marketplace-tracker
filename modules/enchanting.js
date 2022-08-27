@@ -21,11 +21,11 @@ body .scrollcrafting-container {
     margin: 6px;
     border-radius: 10px;
     grid-area: info;
+    place-items: center;
 }
 
 .enchanting-info-table-content {
-    text-align: center;
-    margin: auto;
+    display: flex;
 }
 
 .enchanting-info-table-content:first-child {
@@ -106,7 +106,8 @@ body .scrollcrafting-container {
     }
 
     processEnchantment(recipe) {
-        if (recipe.getElementsByClassName("enchanting-info-table").length !== 0) {
+        // Table already exists
+        if (recipe.getElementsByClassName("enchanting-info-table")[0]) {
             return;
         }
         const scrollId = convertItemId(recipe.firstChild.src);
@@ -130,13 +131,15 @@ body .scrollcrafting-container {
                                                                                 response.resourceItemMaxPrices,
                                                                                 resourceItemCounts,
                                                                                 resourceItemIcons,
-                                                                                standardResources.chance));
+                                                                                standardResources.chance,
+                                                                                standardResources.timePerAction));
     }
 
     getStandardResources(node) {
         return {
             scrolls: this.getResource(node.childNodes[3].firstChild).amount,
-            chance: parseFloat(this.getResource(node.childNodes[2].firstChild).amount) / 100
+            chance: parseFloat(this.getResource(node.childNodes[2].firstChild).amount) / 100,
+            timePerAction: parseFloat(this.getResource(node.childNodes[1].firstChild).amount)
         };
     }
 
@@ -163,7 +166,8 @@ body .scrollcrafting-container {
                             resourceItemMaxPrices,
                             resourceItemCounts,
                             resourceItemIcons,
-                            chance) {
+                            chance,
+                            timePerAction) {
         const resourceImgs = resourceItemIcons.map(icon => `
             <div class="enchanting-info-table-content">
                 <img class="enchanting-item-resource-icon" src="${icon}">
@@ -179,9 +183,13 @@ body .scrollcrafting-container {
         let maxProfitHTML = ""
         // Profit includes 5% market fee
         if (this.settings.profit !== "none") {
-            profitHeaderHTML = `<span class="enchanting-info-table-content"><img src="/images/money_icon.png" class="enchanting-item-resource-icon" alt="Profit"></span>`;
-            minProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, 1))}</span>`; // TODO
-            maxProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, 1))}</span>`; // Get Time
+            profitHeaderHTML = `
+<span class="enchanting-info-table-content">
+    <img src="/images/money_icon.png" class="enchanting-item-resource-icon" alt="Profit">
+    ${this.settings.profit === "per_hour" ? "<span class='text-xl'>/h</span>" : ""}
+</span>`;
+            minProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, timePerAction))}</span>`;
+            maxProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, timePerAction))}</span>`;
         }
         return `
 <div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">

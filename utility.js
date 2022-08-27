@@ -144,7 +144,7 @@ function profit(type, buyPrice, sellPrice, decimalPlaces = 2, secondsPerAction =
         case "percent":
             return cleanToFixed(((sellPrice * 0.95 - buyPrice) / buyPrice * 100), decimalPlaces) + "%";
         case "flat":
-            return (sellPrice * 0.95 - buyPrice).toString();
+            return (sellPrice * 0.95 - buyPrice).toFixed(0);
         case "per_hour":
             return cleanToFixed(((sellPrice * 0.95 - buyPrice) * (60 * 60 / secondsPerAction)), decimalPlaces);
         default:

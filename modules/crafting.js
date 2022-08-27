@@ -23,10 +23,7 @@ body .crafting-container {
     padding: 6px;
     margin-top: 6px;
     border-radius: 6px;
-}
-
-.crafting-info-table-content {
-    text-align: center;
+    place-items: center;
 }
 
 .crafting-info-table-content:first-child {

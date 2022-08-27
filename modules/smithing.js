@@ -61,11 +61,10 @@ class SmithingTracker {
     border-radius: 10px;
     clear: both;
     font-size: 13px;
+    place-items: center;
 }
 
 .smithing-info-table-content {
-    text-align: center;
-    margin: auto;
     display: flex;
 }
 
@@ -143,6 +142,8 @@ class SmithingTracker {
         const barId = convertItemId(recipe.getElementsByClassName('resource-container-image')[0].src);
         const barIcon = recipe.getElementsByClassName('resource-container-image')[0].src;
         let resourceNodes = recipe.getElementsByClassName('resource-node-time-tooltip');
+        // Parse time per action
+        let timePerAction = parseFloat(resourceNodes[1].lastChild.innerText);
         let resourceIds = [];
         let resourceIcons = [];
         let resourceCounts = [];
@@ -171,7 +172,8 @@ class SmithingTracker {
                                                                                     response.resourceItemMinPrices,
                                                                                     response.resourceItemMaxPrices,
                                                                                     resourceCounts,
-                                                                                    resourceIcons));
+                                                                                    resourceIcons,
+                                                                                    timePerAction));
     }
 
     smithingInfoTemplate(barMinPrice,
@@ -180,7 +182,8 @@ class SmithingTracker {
                             resourceMinPrices,
                             resourceMaxPrices,
                             resourceCounts,
-                            resourceIcons) {
+                            resourceIcons,
+                            timePerAction) {
         let resourceImgs = "";
         for (let i = 0; i < resourceIcons.length; i++) {
             resourceImgs += `
@@ -198,9 +201,13 @@ class SmithingTracker {
         let maxProfitHTML = "";
         // Profit includes 5% market fee
         if (this.settings.profit !== "none") {
-            profitHeaderHTML = `<span class="smithing-info-table-content"><img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit"></span>`;
-            minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, 1)))}</span>`; // TODO
-            maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, 1)))}</span>`; // Get Time
+            profitHeaderHTML = `
+<span class="smithing-info-table-content">
+    <img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit">
+    ${this.settings.profit === "per_hour" ? "<span class='text-xl'>/h</span>" : ""}
+</span>`;
+            minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, timePerAction)))}</span>`;
+            maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, timePerAction)))}</span>`;
         }
         return `
 <div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
@@ -215,7 +222,7 @@ class SmithingTracker {
     ${profitHeaderHTML}
 
     <!-- min prices -->
-    <span class="enchanting-info-table-content">
+    <span class="smithing-info-table-content">
         Min
     </span>
     ${resourceMinHTML}
@@ -228,7 +235,7 @@ class SmithingTracker {
     ${minProfitHTML}
     
     <!-- max prices -->
-    <span class="enchanting-info-table-content">
+    <span class="smithing-info-table-content">
         Max
     </span>
     ${resourceMaxHTML}
