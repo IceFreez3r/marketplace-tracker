@@ -1,9 +1,3 @@
-window.addEventListener('beforeunload', function () {
-    storageRequest({
-        type: 'close'
-    });
-});
-
 let tracker = new Tracker();
 tracker.addModule(MarketplaceTracker);
 tracker.addModule(FavoriteTracker);
