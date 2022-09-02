@@ -103,7 +103,7 @@ class OfflineTracker {
         const lastLogin = storageRequest({
             type: 'get-last-login',
         });
-        const [totalMinValue, totalMaxValue] = totalRecipePrice(itemValues.itemMinPrices, itemValues.itemMaxPrices, itemCounts);
+        const [totalMinValue, totalMaxValue] = totalRecipePrices(itemValues.minPrices, itemValues.maxPrices, itemCounts);
 
         /* Offline Time
             - Offline Tracker:
@@ -142,12 +142,8 @@ class OfflineTracker {
     }
 
     offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
-        let minPerHour = 0;
-        let maxPerHour = 0;
-        if (offlineTime > 0) {
-            minPerHour = Math.floor(totalMinValue * 1000 * 60 * 60 / offlineTime);
-            maxPerHour = Math.floor(totalMaxValue * 1000 * 60 * 60 / offlineTime);
-        }
+        const minPerHour = (totalMinValue * 1000 * 60 * 60 / offlineTime).toFixed(0);
+        const maxPerHour = (totalMaxValue * 1000 * 60 * 60 / offlineTime).toFixed(0);
         return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">
@@ -156,7 +152,7 @@ class OfflineTracker {
     <div class="offline-info-value">
         <div class="left-info">
             <span>
-                ${numberWithSeparators(limitDecimalPlaces(totalMinValue, 0))}
+                ${numberWithSeparators(totalMinValue.toFixed(0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
@@ -171,7 +167,7 @@ class OfflineTracker {
         </div>
         <div class="right-info">
             <span>
-                ${numberWithSeparators(limitDecimalPlaces(totalMaxValue, 0))}
+                ${numberWithSeparators(totalMaxValue.toFixed(0))}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>

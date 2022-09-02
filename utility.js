@@ -11,17 +11,9 @@ function numberWithSeparators(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function limitDecimalPlaces(number, decimalPlaces = 0) {
-    if (number === "?") {
-        return "?";
-    }
-    return Math.round(number * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
-}
-
 // Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
 function shortenNumber(number) {
     const suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
-    number = parseFloat(number);
     const isNegative = number < 0;
     number = Math.abs(number);
     if (number < 10000) {
@@ -107,9 +99,7 @@ function parseTimeString(timeString, returnScale = false) {
     return time;
 }
 
-function totalRecipePrice(resourceMinPrices,
-                            resourceMaxPrices,
-                            resourceCounts) {
+function totalRecipePrices(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
     let totalResourceMinPrice = 0;
     let totalResourceMaxPrice = 0;
     for (let i = 0; i < resourceCounts.length; i++) {
@@ -123,30 +113,34 @@ function totalRecipePrice(resourceMinPrices,
             }
         }
     }
-    return [totalResourceMinPrice, totalResourceMaxPrice];
+    return [totalResourceMinPrice / chance, totalResourceMaxPrice / chance];
+}
+
+function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
+    // dot product of prices and counts divided by chance
+    return resourcePrices.map((price, index) => price !== "?" ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
 }
 
 /**
  * Returns the profit including market fee as a string
  * 
  * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
- * @param {number} buyPrice 
- * @param {number} sellPrice 
- * @param {number=} decimalPlaces ignored when type is `flat`
+ * @param {number|string} buyPrice "?" or the buy price
+ * @param {number|string} sellPrice "?" or the sell price
  * @param {number=} secondsPerAction only required if type is `per_hour`
- * @returns {string} 
+ * @returns {number|string} "?" or the profit
  */
-function profit(type, buyPrice, sellPrice, decimalPlaces = 2, secondsPerAction = null) {
+function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
     if (buyPrice === "?" || sellPrice === "?") {
         return "?";
     }
     switch (type) {
         case "percent":
-            return cleanToFixed(((sellPrice * 0.95 - buyPrice) / buyPrice * 100), decimalPlaces) + "%";
+            return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100);
         case "flat":
-            return (sellPrice * 0.95 - buyPrice).toFixed(0);
+            return sellPrice * 0.95 - buyPrice;
         case "per_hour":
-            return cleanToFixed(((sellPrice * 0.95 - buyPrice) * (60 * 60 / secondsPerAction)), decimalPlaces);
+            return ((sellPrice * 0.95 - buyPrice) * (60 * 60 / secondsPerAction));
         default:
             console.error("Unknown profit type: " + type);
     }
@@ -192,4 +186,133 @@ function getCharacterName() {
 
 function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
+}
+
+/**
+ * 
+ * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
+ * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
+ * @param {Object} product icon, count, minPrice and maxPrice of the product
+ * @param {string} profitType options are `none`, `percent`, `flat` and `per_hour`
+ * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
+ * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
+ * @param {Number=} secondsPerAction only required if profitType is `per_hour`
+ * @param {Number=} chance chance to successfully craft the product
+ * @returns {string} html string
+ */
+function infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1) {
+    const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
+    const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice } = product;
+    // Ingredients
+    let header = "";
+    for (let i = 0; i < ingredientIcons.length; i++) {
+        header += `
+<div class="${classId}-info-table-content">
+    <img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
+    ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}
+</div>
+            `;
+    }
+    // Total crafting cost
+    header += `
+<div class="${classId}-info-table-content">
+    <span class="${classId}-info-table-font">
+        &Sigma;
+    </span>
+</div>
+    `;
+    // Product
+    header += `
+<div class="${classId}-info-table-content">
+    <img class="${classId}-info-table-icon" src="${productIcon}">
+</div>
+    `;
+    if (productCount > 1) {
+        header += `
+<div class="${classId}-info-table-content">
+    <span class="${classId}-info-table-font">
+        &Sigma;
+    </span>
+</div>
+        `;
+    }
+    // Profit
+    if (profitType !== "none") {
+        header += `
+<div class="${classId}-info-table-content">
+    <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
+    ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
+</div>
+        `;
+    }
+
+    const minPrice = priceRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    const maxPrice = priceRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    return `
+<div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
+    ${header}
+    <div class="${classId}-info-table-content">
+        ${compactDisplay ? "Min" : "Minimal Marketprice"}
+    </div>
+    ${minPrice}
+    <div class="${classId}-info-table-content">
+        ${compactDisplay ? "Max" : "Maximal Marketprice"}
+    </div>
+    ${maxPrice}
+</div>
+    `;
+}
+
+function priceRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
+    let row = "";
+    // Ingredients
+    row += ingredientPrices.map(price => `
+<div class="${classId}-info-table-content">
+    ${formatNumber(price)}
+</div>
+    `).join("");
+    // Total crafting cost
+    const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
+    const totalProductPrice = productPrice * productCount;
+    row += `
+<div class="${classId}-info-table-content">
+    ${formatNumber(totalIngredientPrice, compactDisplay)}
+</div>
+    `;
+    // Product
+    row += `
+<div class="${classId}-info-table-content">
+    ${formatNumber(productPrice, compactDisplay) }
+</div>
+    `;
+    if (productCount > 1) {
+        row += `
+<div class="${classId}-info-table-content">
+    ${formatNumber(totalProductPrice, compactDisplay)}
+</div>
+        `;
+    }
+    // Profit
+    if (profitType !== "none") {
+        row += `
+<div class="${classId}-info-table-content">
+    ${formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType)}
+    ${profitType === "percent" ? "%" : ""}
+</div>
+        `;
+    }
+    return row;
+}
+
+function formatNumber(number, compactDisplay, profitType = null) {
+    if (number === "?") {
+        return "?";
+    }
+    if (compactDisplay) {
+        return numberWithSeparators(shortenNumber(number));
+    } else if (profitType === "percent") {
+        return numberWithSeparators(cleanToFixed(number, 2));
+    } else {
+        return numberWithSeparators(cleanToFixed(number, 0));
+    }
 }
