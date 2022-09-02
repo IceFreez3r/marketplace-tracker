@@ -204,7 +204,7 @@ class SmithingTracker {
             profitHeaderHTML = `
 <span class="smithing-info-table-content">
     <img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit">
-    ${this.settings.profit === "per_hour" ? "<span class='text-xl'>/h</span>" : ""}
+    ${this.settings.profit === "per_hour" ? "<span>/h</span>" : ""}
 </span>`;
             minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, timePerAction)))}</span>`;
             maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, timePerAction)))}</span>`;
