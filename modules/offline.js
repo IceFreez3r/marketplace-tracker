@@ -135,7 +135,7 @@ class OfflineTracker {
             return Math.min(12 * 60 * 60 * 1000, scrapped);
         }
         // background and scale differ by more than one time unit (second/minute/hour/day)
-        if (((background / scale) - (scrapped / scale)) > 1) {
+        if (background - scrapped > scale) {
             return Math.min(12 * 60 * 60 * 1000, scrapped);
         }
         return Math.min(12 * 60 * 60 * 1000, background);

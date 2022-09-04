@@ -31,7 +31,7 @@ function shortenNumber(number) {
 /**
  * 
  * @param {number} number number to format
- * @param {number | undefined} decimalPlaces maximum number of decimal places to round to
+ * @param {number=} decimalPlaces maximum number of decimal places to round to
  * @returns {number} number with at most `decimalPlaces` decimal places	and no trailing 0's
  */
 function cleanToFixed(number, decimalPlaces) {
@@ -40,63 +40,32 @@ function cleanToFixed(number, decimalPlaces) {
 
 function parseNumberString(numberString) {
     const baseNumber = parseFloat(numberString.replace(localNumberSeparators['group'], '').replace(localNumberSeparators['decimal'], '.'));
-    let scale = 0;
-    switch (numberString.slice(-1)) {
-        case 'K':
-            scale = 3;
-            break;
-        case 'M':
-            scale = 6;
-            break;
-        case 'B':
-            scale = 9;
-            break;
-        case 'T':
-            scale = 12;
-            break;
-        case 'P':
-            scale = 15;
-            break;
-        case 'E':
-            scale = 18;
-            break;
+    const parseScale = {
+        'K': 3,
+        'M': 6,
+        'B': 9,
+        'T': 12,
+        'P': 15,
+        'E': 18,
     }
+    const scale = parseScale[numberString.slice(-1)] || 0;
     return Math.round(baseNumber * Math.pow(10, scale));
 }
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    timeString.replace("s ", "");
-    const secondRegex = /(\d+) second/;
-    const minuteRegex = /(\d+) minute/;
-    const hourRegex = /(\d+) hour/;
-    const dayRegex = /(\d+) day/;
-    const secondMatch = secondRegex.exec(timeString);
-    const minuteMatch = minuteRegex.exec(timeString);
-    const hourMatch = hourRegex.exec(timeString);
-    const dayMatch = dayRegex.exec(timeString);
-    let time = 0;
-    let scale;
-    if (secondMatch) {
-        time += parseInt(secondMatch[1]) * 1000;
-        scale = 1000;
+    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*$/;
+    const match = timeString.match(regex);
+    const days = match.groups.days ? parseInt(match.groups.days) : 0;
+    const hours = match.groups.hours ? parseInt(match.groups.hours) : 0;
+    const minutes = match.groups.minutes ? parseInt(match.groups.minutes) : 0;
+    const seconds = match.groups.seconds ? parseInt(match.groups.seconds) : 0;
+    const time = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+    if (!returnScale) {
+        return time;
     }
-    if (minuteMatch) {
-        time += parseInt(minuteMatch[1]) * 60 * 1000;
-        scale = 60 * 1000;
-    }
-    if (hourMatch) {
-        time += parseInt(hourMatch[1]) * 60 * 60 * 1000;
-        scale = 60 * 60 * 1000;
-    }
-    if (dayMatch) {
-        time += parseInt(dayMatch[1]) * 24 * 60 * 60 * 1000;
-        scale = 24 * 60 * 60 * 1000;
-    }
-    if (returnScale) {
-        return [time, scale];
-    }
-    return time;
+    const scaleOptions = [1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1];
+    return [time, scaleOptions.find(scale => time >= scale)];
 }
 
 function totalRecipePrices(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
@@ -246,8 +215,8 @@ function infoTableTemplate(classId, ingredients, product, profitType, compactDis
         `;
     }
 
-    const minPrice = priceRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
-    const maxPrice = priceRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    const minPrice = infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    const maxPrice = infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
     return `
 <div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
     ${header}
@@ -263,45 +232,34 @@ function infoTableTemplate(classId, ingredients, product, profitType, compactDis
     `;
 }
 
-function priceRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
+function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
     let row = "";
     // Ingredients
-    row += ingredientPrices.map(price => `
-<div class="${classId}-info-table-content">
-    ${formatNumber(price)}
-</div>
-    `).join("");
+    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price))).join("");
     // Total crafting cost
     const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
     const totalProductPrice = productPrice * productCount;
-    row += `
-<div class="${classId}-info-table-content">
-    ${formatNumber(totalIngredientPrice, compactDisplay)}
-</div>
-    `;
+    row += infoTableCell(classId, formatNumber(totalIngredientPrice, compactDisplay));
     // Product
-    row += `
-<div class="${classId}-info-table-content">
-    ${formatNumber(productPrice, compactDisplay) }
-</div>
-    `;
+    row += infoTableCell(classId, formatNumber(productPrice, compactDisplay));
     if (productCount > 1) {
-        row += `
-<div class="${classId}-info-table-content">
-    ${formatNumber(totalProductPrice, compactDisplay)}
-</div>
-        `;
+        row += infoTableCell(classId, formatNumber(totalProductPrice, compactDisplay));
     }
     // Profit
     if (profitType !== "none") {
-        row += `
-<div class="${classId}-info-table-content">
-    ${formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType)}
-    ${profitType === "percent" ? "%" : ""}
-</div>
-        `;
+        row += infoTableCell(classId, 
+            formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType) +
+             profitType === "percent" ? "%" : "");
     }
     return row;
+}
+
+function infoTableCell(classId, content) {
+    return `
+<div class="${classId}-info-table-content">
+    ${content}
+</div>
+    `;
 }
 
 function formatNumber(number, compactDisplay, profitType = null) {
