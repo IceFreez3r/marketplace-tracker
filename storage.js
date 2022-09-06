@@ -127,9 +127,9 @@ function sortObj(obj) {
 function analyzeItem(itemId) {
     if (!(itemId in idMap)) {
         return {
-            minPrice: "?",
-            medianPrice: "?",
-            maxPrice: "?",
+            minPrice: NaN,
+            medianPrice: NaN,
+            maxPrice: NaN,
         }
     }
     const apiId = idMap[itemId];

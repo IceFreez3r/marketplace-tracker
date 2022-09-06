@@ -169,13 +169,13 @@ body .marketplace-table-cell-div {
         Maximum
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.minPrice)}
+        ${formatNumber(analysis.minPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.medianPrice)}
+        ${formatNumber(analysis.medianPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.maxPrice)}
+        ${formatNumber(analysis.maxPrice)}
     </div>
 </div>
         `;

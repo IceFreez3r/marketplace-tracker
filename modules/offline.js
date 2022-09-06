@@ -142,8 +142,8 @@ class OfflineTracker {
     }
 
     offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
-        const minPerHour = (totalMinValue * 1000 * 60 * 60 / offlineTime).toFixed(0);
-        const maxPerHour = (totalMaxValue * 1000 * 60 * 60 / offlineTime).toFixed(0);
+        const minPerHour = (totalMinValue * 1000 * 60 * 60 / offlineTime);
+        const maxPerHour = (totalMaxValue * 1000 * 60 * 60 / offlineTime);
         return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">
@@ -152,12 +152,12 @@ class OfflineTracker {
     <div class="offline-info-value">
         <div class="left-info">
             <span>
-                ${numberWithSeparators(totalMinValue.toFixed(0))}
+                ${formatNumber(totalMinValue)}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${numberWithSeparators(minPerHour)}/h
+                ${formatNumber(minPerHour)}/h
             </span>
         </div>
         <div class="center-info">
@@ -167,12 +167,12 @@ class OfflineTracker {
         </div>
         <div class="right-info">
             <span>
-                ${numberWithSeparators(totalMaxValue.toFixed(0))}
+                ${formatNumber(totalMaxValue)}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${numberWithSeparators(maxPerHour)}/h
+                ${formatNumber(maxPerHour)}/h
             </span>
         </div>
     </div>

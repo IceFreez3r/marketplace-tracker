@@ -72,7 +72,7 @@ function totalRecipePrices(resourceMinPrices, resourceMaxPrices, resourceCounts,
     let totalResourceMinPrice = 0;
     let totalResourceMaxPrice = 0;
     for (let i = 0; i < resourceCounts.length; i++) {
-        if (resourceMinPrices[i] !== "?") {
+        if (!isNaN(resourceMinPrices[i])) {
             if (resourceCounts[i] > 0) {
                 totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
                 totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
@@ -87,22 +87,19 @@ function totalRecipePrices(resourceMinPrices, resourceMaxPrices, resourceCounts,
 
 function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
     // dot product of prices and counts divided by chance
-    return resourcePrices.map((price, index) => price !== "?" ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
+    return resourcePrices.map((price, index) => !isNaN(price) ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
 }
 
 /**
  * Returns the profit including market fee as a string
  * 
  * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
- * @param {number|string} buyPrice "?" or the buy price
- * @param {number|string} sellPrice "?" or the sell price
+ * @param {number} buyPrice
+ * @param {number} sellPrice
  * @param {number=} secondsPerAction only required if type is `per_hour`
- * @returns {number|string} "?" or the profit
+ * @returns {number|string}
  */
 function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
-    if (buyPrice === "?" || sellPrice === "?") {
-        return "?";
-    }
     switch (type) {
         case "percent":
             return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100);
@@ -175,44 +172,32 @@ function infoTableTemplate(classId, ingredients, product, profitType, compactDis
     // Ingredients
     let header = "";
     for (let i = 0; i < ingredientIcons.length; i++) {
-        header += `
-<div class="${classId}-info-table-content">
-    <img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
-    ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}
-</div>
-            `;
+        header += infoTableCell(classId, `
+<img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
+${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}
+        `);
     }
     // Total crafting cost
-    header += `
-<div class="${classId}-info-table-content">
-    <span class="${classId}-info-table-font">
-        &Sigma;
-    </span>
-</div>
-    `;
+    header += infoTableCell(classId, `
+<span class="${classId}-info-table-font">
+    &Sigma;
+</span>
+    `);
     // Product
-    header += `
-<div class="${classId}-info-table-content">
-    <img class="${classId}-info-table-icon" src="${productIcon}">
-</div>
-    `;
+    header += infoTableCell(classId, `<img class="${classId}-info-table-icon" src="${productIcon}">`);
     if (productCount > 1) {
-        header += `
-<div class="${classId}-info-table-content">
-    <span class="${classId}-info-table-font">
-        &Sigma;
-    </span>
-</div>
-        `;
+        header += infoTableCell(classId, `
+<span class="${classId}-info-table-font">
+    &Sigma;
+</span>
+        `);
     }
     // Profit
     if (profitType !== "none") {
-        header += `
-<div class="${classId}-info-table-content">
-    <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
-    ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
-</div>
-        `;
+        header += infoTableCell(classId, `
+<img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
+${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
+        `);
     }
 
     const minPrice = infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
@@ -220,13 +205,9 @@ function infoTableTemplate(classId, ingredients, product, profitType, compactDis
     return `
 <div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
     ${header}
-    <div class="${classId}-info-table-content">
-        ${compactDisplay ? "Min" : "Minimal Marketprice"}
-    </div>
+    ${infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
     ${minPrice}
-    <div class="${classId}-info-table-content">
-        ${compactDisplay ? "Max" : "Maximal Marketprice"}
-    </div>
+    ${infoTableCell(classId, compactDisplay ? "Max" : "Maximal Marketprice")}
     ${maxPrice}
 </div>
     `;
@@ -235,7 +216,7 @@ function infoTableTemplate(classId, ingredients, product, profitType, compactDis
 function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
     let row = "";
     // Ingredients
-    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price))).join("");
+    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price, compactDisplay))).join("");
     // Total crafting cost
     const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
     const totalProductPrice = productPrice * productCount;
@@ -247,9 +228,7 @@ function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice,
     }
     // Profit
     if (profitType !== "none") {
-        row += infoTableCell(classId, 
-            formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType) +
-             profitType === "percent" ? "%" : "");
+        row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType));
     }
     return row;
 }
@@ -262,15 +241,20 @@ function infoTableCell(classId, content) {
     `;
 }
 
-function formatNumber(number, compactDisplay, profitType = null) {
-    if (number === "?") {
+function formatNumber(number, compactDisplay = false, profitType = null) {
+    if (isNaN(number)) {
         return "?";
     }
+    let formattedNumber;
     if (compactDisplay) {
-        return numberWithSeparators(shortenNumber(number));
+        formattedNumber = numberWithSeparators(shortenNumber(number));
     } else if (profitType === "percent") {
-        return numberWithSeparators(cleanToFixed(number, 2));
+        formattedNumber = numberWithSeparators(cleanToFixed(number, 2));
     } else {
-        return numberWithSeparators(cleanToFixed(number, 0));
+        formattedNumber = numberWithSeparators(cleanToFixed(number, 0));
     }
+    if (profitType === "percent") {
+        formattedNumber += "%";
+    }
+    return formattedNumber;
 }
