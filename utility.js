@@ -6,38 +6,6 @@ function convertItemId(itemName) {
     return itemName;
 }
 
-// Add thousands separator to number
-function numberWithSeparators(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-// Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
-function shortenNumber(number) {
-    const suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
-    const isNegative = number < 0;
-    number = Math.abs(number);
-    if (number < 10000) {
-        return (isNegative ? -1 : 1) * cleanToFixed(number, 1) + suffix;
-    }
-    const SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E'];
-    let index = 0;
-    while (number >= 1000) {
-        number /= 1000;
-        index++;
-    }
-    return (isNegative ? -1 : 1) * cleanToFixed(number, 1) + SYMBOL[index] + suffix;
-}
-
-/**
- * 
- * @param {number} number number to format
- * @param {number=} decimalPlaces maximum number of decimal places to round to
- * @returns {number} number with at most `decimalPlaces` decimal places	and no trailing 0's
- */
-function cleanToFixed(number, decimalPlaces) {
-    return parseFloat(number.toFixed(decimalPlaces));
-}
-
 function parseNumberString(numberString) {
     const baseNumber = parseFloat(numberString.replace(localNumberSeparators['group'], '').replace(localNumberSeparators['decimal'], '.'));
     const parseScale = {
@@ -102,7 +70,7 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
 function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
     switch (type) {
         case "percent":
-            return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100);
+            return (sellPrice * 0.95 - buyPrice) / buyPrice;
         case "flat":
             return sellPrice * 0.95 - buyPrice;
         case "per_hour":
@@ -245,16 +213,15 @@ function formatNumber(number, compactDisplay = false, profitType = null) {
     if (isNaN(number)) {
         return "?";
     }
-    let formattedNumber;
-    if (compactDisplay) {
-        formattedNumber = numberWithSeparators(shortenNumber(number));
-    } else if (profitType === "percent") {
-        formattedNumber = numberWithSeparators(cleanToFixed(number, 2));
-    } else {
-        formattedNumber = numberWithSeparators(cleanToFixed(number, 0));
-    }
+    let options = {
+        maximumFractionDigits: 0,
+    };
     if (profitType === "percent") {
-        formattedNumber += "%";
+        Object.assign(options, { maximumFractionDigits: 2, style: "percent" });
     }
-    return formattedNumber;
+    if (compactDisplay) {
+        Object.assign(options, { maximumFractionDigits: 1, notation: "compact" });
+    }
+    const formatter = new Intl.NumberFormat("en-US", options);
+    return formatter.format(number);
 }
