@@ -97,6 +97,7 @@ body .crafting-container {
             return;
         }
         const craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
+        let craftingAmount = 1;
         // prevent repeated calls
         if (craftedItemId === this.lastCraftedItemId) {
             // for items with multiple recipes
@@ -108,6 +109,8 @@ body .crafting-container {
                 return;
             }
             this.lastSelectedNavTab = selectedNavTab.innerText;
+            // amount of crafts might be higher than one when only switching recipes for the same item
+            craftingAmount = document.getElementById('craftCount').value;
         }
         this.lastCraftedItemId = craftedItemId;
 
@@ -131,7 +134,7 @@ body .crafting-container {
             }
             resourceItemIds.push(resourceItemId);
             resourceItemIcons.push(resourceItemNodes[i].childNodes[1].src);
-            resourceItemCounts.push(parseInt(resourceItemNodes[i].firstChild.textContent.replace(/\./g, '')));
+            resourceItemCounts.push(parseInt(resourceItemNodes[i].firstChild.textContent.replace(/\./g, '')) / craftingAmount);
         }
 
         let response = storageRequest({
