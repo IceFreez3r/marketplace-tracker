@@ -1,9 +1,53 @@
 class CraftingTracker {
-    constructor() {
+    static id = "crafting_tracker"
+    static displayName = "Crafting Tracker";
+    static icon = "<img src='images/ui/crafting_icon.png' alt='Crafting Tracker Icon'/>";
+    static category = "recipe";
+    css = `
+.crafting-item-container {
+    display: flex;
+    flex-direction: column;
+}
+
+body .crafting-container {
+    height: auto;
+    flex: 1 0 auto;
+}
+
+.crafting-info-table {
+    display: grid; /* Grid Layout specified by js */
+    grid-gap: 5px;
+    /* combination of rgba(36, 36, 36, .671) in front of rgba(0, 0, 0, .705) */
+    background: rgba(24.156, 24.156, 24.156, .902945);
+    border: 2px solid gray;
+    padding: 6px;
+    margin-top: 6px;
+    border-radius: 6px;
+    place-items: center;
+}
+
+.crafting-info-table-content:first-child {
+    grid-column: 2;
+}
+
+.text-4xl {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+}
+    `;
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        if (!this.settings.profit) {
+            this.settings.profit = "none";
+        }
+        this.cssNode = injectCSS(this.css);
+
         this.lastCraftedItemId = null;
         this.lastSelectedNavTab = null;
 
-        this.observer = new MutationObserver((mutations) => {
+        this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -13,6 +57,9 @@ class CraftingTracker {
             }
             this.craftingTracker();
         });
+    }
+
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             attributes: true,
@@ -20,6 +67,27 @@ class CraftingTracker {
             childList: true,
             subtree: true,
         });
+    }
+
+    deactivate() {
+        this.cssNode.remove();
+        this.observer.disconnect();
+    }
+
+    settingsMenuContent() {
+        let moduleSetting = document.createElement('div');
+        moduleSetting.classList.add('tracker-module-setting');
+        moduleSetting.insertAdjacentHTML('beforeend',`
+<div class="tracker-module-setting-name">
+    Profit
+</div>
+        `);
+        moduleSetting.append(this.tracker.selectMenu(CraftingTracker.id + "-profit", {
+                none: "None",
+                percent: "Percent",
+                flat: "Flat",
+            }, this.settings.profit));
+        return moduleSetting;
     }
 
     craftingTracker(){
@@ -112,8 +180,17 @@ class CraftingTracker {
             totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
             totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;
         }
+        let profitHeaderHTML = "";
+        let minProfitHTML = ""
+        let maxProfitHTML = ""
+        // Profit includes 5% market fee
+        if (this.settings.profit !== "none") {
+            profitHeaderHTML = `<span class="crafting-info-table-content"><img src="/images/money_icon.png" class="crafting-item-resource-icon" alt="Profit"></span>`;
+            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice))}</span>`;
+            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice))}</span>`;
+        }
         return `
-<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1)}, 1fr)">
+<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1) + (this.settings.profit !== "none")}, 1fr)">
     <!-- header -->
     ${resourceImgs}
     <span class="crafting-info-table-content text-4xl">
@@ -123,6 +200,7 @@ class CraftingTracker {
         <img class="crafting-info-table-content crafting-item-resource-icon" src="${craftedItemIcon}">
     </div>
     ${totalCraftedItemHeaderHTML}
+    ${profitHeaderHTML}
 
     <!-- min -->
     <span class="crafting-info-table-content">
@@ -136,6 +214,7 @@ class CraftingTracker {
         ${numberWithSeparators(limitDecimalPlaces(craftedItemMinPrice, 2))}
     </span>
     ${totalCraftedItemMinHTML}
+    ${minProfitHTML}
 
     <!-- max -->
     <span class="crafting-info-table-content">
@@ -149,6 +228,7 @@ class CraftingTracker {
         ${numberWithSeparators(limitDecimalPlaces(craftedItemMaxPrice, 2))}
     </span>
     ${totalCraftedItemMaxHTML}
+    ${maxProfitHTML}
 </div>
         `;
     }

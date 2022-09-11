@@ -1,5 +1,91 @@
 class SmithingTracker {
-    constructor() {
+    static id = "smithing_tracker";
+    static displayName = "Smithing Tracker";
+    static icon = "<img src='/images/smithing/smithing_icon.png' alt='Smithing Tracker Icon'>";
+    static category = "recipe";
+    css = `
+.theme-smithing .resource-list {
+    grid-template-columns: repeat(auto-fill, 300px);
+}
+
+.theme-smithing .resource-wrapper {
+    position: unset;
+    height: unset;
+    width: unset;
+    overflow: unset;
+}
+
+.theme-smithing .resource-container {
+    width: 100%;
+    height: unset;
+}
+
+.theme-smithing .resource-required-resources {
+    position: unset;
+    display: flex;
+    flex-direction: column;
+    height: 6rem;
+    width: min-content;
+    float: left;
+    justify-content: flex-end;
+}
+
+.theme-smithing .resource-property {
+    width: fit-content;
+    margin-top: 3px;
+    margin-bottom: unset;
+}
+
+.theme-smithing .resource-container-image {
+    height: 6rem;
+    margin: 0 5px 5px 0;
+    float: right;
+}
+
+.theme-smithing .resource-container-progress[aria-valuenow="0"] {
+    display: none;
+}
+
+.theme-smithing .resource-container-button {
+    position: unset;
+}
+
+.smithing-info-table {
+    display: grid;
+    /* Grid Layout specified by js */
+    grid-gap: 3px;
+    margin: 5px;
+    padding: 5px;
+    background-color: rgba(66, 66, 66, .2);
+    border: 2px solid rgba(99, 99, 99, .2);
+    border-radius: 10px;
+    clear: both;
+    font-size: 13px;
+    place-items: center;
+}
+
+.smithing-info-table-content {
+    display: flex;
+}
+
+.smithing-info-table-content:first-child {
+    grid-column: 2;
+}
+
+.smithing-item-resource-icon {
+    height: 16px;
+    padding-right: 2px;
+}
+    `;
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        if (!this.settings.profit) {
+            this.settings.profit = "percent";
+        }
+        this.cssNode = injectCSS(this.css);
+
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
@@ -10,11 +96,36 @@ class SmithingTracker {
             }
             this.smithingTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+    }
+
+    deactivate() {
+        this.cssNode.remove();
+        this.observer.disconnect();
+    }
+
+    settingsMenuContent() {
+        let moduleSetting = document.createElement('div');
+        moduleSetting.classList.add('tracker-module-setting');
+        moduleSetting.insertAdjacentHTML('beforeend', `
+<div class="tracker-module-setting-name">
+    Profit
+</div>
+        `);
+        moduleSetting.append(this.tracker.selectMenu(SmithingTracker.id + "-profit", {
+            none: "None",
+            percent: "Percent",
+            flat: "Flat",
+            per_hour: "Per Hour",
+        }, this.settings.profit));
+        return moduleSetting;
     }
 
    smithingTracker() {
@@ -31,6 +142,8 @@ class SmithingTracker {
         const barId = convertItemId(recipe.getElementsByClassName('resource-container-image')[0].src);
         const barIcon = recipe.getElementsByClassName('resource-container-image')[0].src;
         let resourceNodes = recipe.getElementsByClassName('resource-node-time-tooltip');
+        // Parse time per action
+        let timePerAction = parseFloat(resourceNodes[1].lastChild.innerText);
         let resourceIds = [];
         let resourceIcons = [];
         let resourceCounts = [];
@@ -59,7 +172,8 @@ class SmithingTracker {
                                                                                     response.resourceItemMinPrices,
                                                                                     response.resourceItemMaxPrices,
                                                                                     resourceCounts,
-                                                                                    resourceIcons));
+                                                                                    resourceIcons,
+                                                                                    timePerAction));
     }
 
     smithingInfoTemplate(barMinPrice,
@@ -68,7 +182,8 @@ class SmithingTracker {
                             resourceMinPrices,
                             resourceMaxPrices,
                             resourceCounts,
-                            resourceIcons) {
+                            resourceIcons,
+                            timePerAction) {
         let resourceImgs = "";
         for (let i = 0; i < resourceIcons.length; i++) {
             resourceImgs += `
@@ -81,10 +196,21 @@ class SmithingTracker {
         const resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
         const resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
         const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
-        const minProfit = profitPercent(totalResourceMinPrice, barMinPrice);
-        const maxProfit = profitPercent(totalResourceMaxPrice, barMaxPrice);
+        let profitHeaderHTML = "";
+        let minProfitHTML = "";
+        let maxProfitHTML = "";
+        // Profit includes 5% market fee
+        if (this.settings.profit !== "none") {
+            profitHeaderHTML = `
+<span class="smithing-info-table-content">
+    <img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit">
+    ${this.settings.profit === "per_hour" ? "<span>/h</span>" : ""}
+</span>`;
+            minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, timePerAction)))}</span>`;
+            maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, timePerAction)))}</span>`;
+        }
         return `
-<div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 3}, 1fr)">
+<div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
     <!-- header -->
     ${resourceImgs}
     <span class="smithing-info-table-content">
@@ -93,12 +219,10 @@ class SmithingTracker {
     <div class="smithing-info-table-content">
         <img class="smithing-info-table-content smithing-item-resource-icon" src="${barIcon}">
     </div>
-    <div class="smithing-info-table-content">
-        <img class="smithing-item-resource-icon" src="/images/money_icon.png">
-    </div>
+    ${profitHeaderHTML}
 
     <!-- min prices -->
-    <span class="enchanting-info-table-content">
+    <span class="smithing-info-table-content">
         Min
     </span>
     ${resourceMinHTML}
@@ -108,12 +232,10 @@ class SmithingTracker {
     <span class="smithing-info-table-content">
         ${numberWithSeparators(shortenNumber(barMinPrice))}
     </span>
-    <span class="smithing-info-table-content">
-        ${minProfit}
-    </span>
+    ${minProfitHTML}
     
     <!-- max prices -->
-    <span class="enchanting-info-table-content">
+    <span class="smithing-info-table-content">
         Max
     </span>
     ${resourceMaxHTML}
@@ -123,9 +245,7 @@ class SmithingTracker {
     <span class="smithing-info-table-content">
         ${numberWithSeparators(shortenNumber(barMaxPrice))}
     </span>
-    <span class="smithing-info-table-content">
-        ${maxProfit}
-    </span>
+    ${maxProfitHTML}
 </div>
         `;
     }

@@ -1,5 +1,98 @@
 class MarketplaceTracker {
-    constructor() {
+    static id = "marketplace_tracker"
+    static displayName = "Marketplace Tracker";
+    static icon = "<img src='/images/ui/marketplace_icon.png' alt='Marketplace Tracker Icon'>";
+    static category = "economy";
+    css = `
+body .marketplace-table {
+    overflow: unset;
+}
+
+body .marketplace-table-cell-div {
+    display: flex;
+    padding-top: 0;
+    flex-direction: column;
+    height: auto;
+}
+
+.marketplace-offer-low {
+    background-image: linear-gradient(270deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%);
+}
+.marketplace-offer-medium {
+    background-image: linear-gradient(270deg, rgba(128, 128, 0, .938), rgba(128, 128, 0, 0) 70%);
+}
+.marketplace-offer-high {
+    background-image: linear-gradient(270deg, rgba(128, 0, 0, .938), rgba(128, 0, 0, 0) 70%);
+}
+
+.marketplace-own-listing.marketplace-offer-low {
+    background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%)
+}
+.marketplace-own-listing.marketplace-offer-medium {
+    background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(128, 128, 0, .938), rgba(128, 128, 0, 0) 70%);
+}
+.marketplace-own-listing.marketplace-offer-high {
+    background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(128, 0, 0, .938), rgba(128, 0, 0, 0) 70%);
+}
+
+.marketplace-offer-price-tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 0%;
+    left: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.marketplace-offer-price {
+    position: relative;
+}
+
+.marketplace-offer-price:hover .marketplace-offer-price-tooltip {
+    visibility: visible;
+}
+
+.heat-highlight {
+    border: 3px solid red;
+}
+
+/* Overwrite when both highlights are active */
+.favorite-highlight.heat-highlight {
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px red;
+}
+
+.marketplace-analysis-table {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5px;
+    border: 2px solid hsla(0, 0%, 100%, .452);
+    padding: 6px;
+    margin: 6px;
+    border-radius: 10px;
+    width: 90%;
+    margin: 10px auto 10px auto;
+    box-shadow: inset 0 8px 8px -10px #ccc, inset 0 -8px 8px -10px #ccc;
+}
+
+.marketplace-analysis-table-content {
+    justify-self: center;
+}
+
+.text-green {
+    color: rgb(0, 128, 0);
+}
+
+.text-red {
+    color: rgb(128, 0, 0);
+}
+    `;
+
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        this.cssNode = injectCSS(this.css);
+
         this.createMap = true;
 
         this.observer = new MutationObserver(mutations => {
@@ -12,11 +105,23 @@ class MarketplaceTracker {
             }
             this.marketplaceTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+    }
+
+    deactivate() {
+        this.cssNode.remove();
+        this.observer.disconnect();
+    }
+
+    settingsMenuContent() {
+        return "";
     }
 
     marketplaceTracker() {

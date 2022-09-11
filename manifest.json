@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Idlescape Marketplace Tracker",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Automatically tracks prices of items on the Idlescape Marketplace",
     "content_scripts": [
         {
@@ -9,26 +9,18 @@
                 "https://idlescape.com/game"
             ],
             "js": [
-                "crafting_tracker.js",
-                "enchanting_tracker.js",
-                "farming_tracker.js",
-                "favorite_tracker.js",
-                "marketplace_tracker.js",
-                "offline_tracker.js",
-                "smithing_tracker.js",
+                "modules/crafting.js",
+                "modules/enchanting.js",
+                "modules/farming.js",
+                "modules/favorite.js",
+                "modules/marketplace.js",
+                "modules/offline.js",
+                "modules/smithing.js",
                 "storage.js",
                 "utility.js",
                 "external/DOMpurify.min.js",
+                "tracker.js",
                 "main.js"
-            ],
-            "css": [
-                "css/crafting_info.css",
-                "css/enchanting_info.css",
-                "css/farming_info.css",
-                "css/favorite_info.css",
-                "css/marketplace_info.css",
-                "css/offline_info.css",
-                "css/smithing_info.css"
             ]
         }
     ]
