@@ -93,6 +93,10 @@ body .scrollcrafting-container {
         return moduleSetting;
     }
 
+    settingChanged(settingId, value) {
+        return;
+    }
+
     enchantingTracker() {
         let recipes = document.getElementsByClassName("scrollcrafting-container");
         for (let i = 0; i < recipes.length; i++) {

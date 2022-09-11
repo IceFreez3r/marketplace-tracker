@@ -97,6 +97,10 @@ body .crafting-container {
         return moduleSetting;
     }
 
+    settingChanged(settingId, value) {
+        return;
+    }
+
     craftingTracker(){
         let recipeNode = document.getElementsByClassName("crafting-container")[0];
         if (!recipeNode) {

@@ -128,6 +128,10 @@ class SmithingTracker {
         return moduleSetting;
     }
 
+    settingChanged(settingId, value) {
+        return;
+    }
+
    smithingTracker() {
         let recipes = document.getElementsByClassName('resource-container');
         for (let i = 0; i < recipes.length; i++) {

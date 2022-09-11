@@ -72,6 +72,10 @@ class OfflineTracker {
         `;
     }
 
+    settingChanged(settingId, value) {
+        return;
+    }
+
     offlineTracker(){
         let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
         if (!offlineProgressBox) {

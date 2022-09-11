@@ -86,7 +86,8 @@ body .marketplace-table-cell-div {
 .text-red {
     color: rgb(128, 0, 0);
 }
-
+    `;
+    historyCss = `
 .tracker-history {
     display: grid;
     grid-template-columns: repeat(2, max-content) 1fr repeat(3, minmax(max-content, 0.4fr));
@@ -171,7 +172,12 @@ body .marketplace-table-cell-div {
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
+        if (this.settings.history === undefined) {
+            this.settings.history = 1;
+        }
         this.cssNode = injectCSS(this.css);
+        this.historyCssNode = undefined;
+        this.settingChanged('history', this.settings.history);
 
         this.createMap = true;
         this.lastHistoryPage = 0;
@@ -202,13 +208,34 @@ body .marketplace-table-cell-div {
     }
 
     settingsMenuContent() {
-        return "";
+        return `
+<div class="tracker-module-setting">
+    <div class="tracker-module-setting-name">
+        More infos in history
+    </div>
+    ${this.tracker.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
+</div>
+        `;
+    }
+
+    settingChanged(setting, value) {
+        switch (setting) {
+            case 'history':
+                if (value) {
+                    this.historyCssNode = injectCSS(this.historyCss);
+                } else {
+                    this.historyCssNode?.remove();
+                }
+                break;
+        }
     }
 
     marketplaceTracker() {
         this.scanMarketplaceLists();
         this.scanOfferList();
-        this.initMarketHistory();
+        if (this.settings.history) {
+            this.initMarketHistory();
+        }
     }
 
     scanOfferList() {
