@@ -86,6 +86,86 @@ body .marketplace-table-cell-div {
 .text-red {
     color: rgb(128, 0, 0);
 }
+
+.tracker-history {
+    display: grid;
+    grid-template-columns: repeat(2, max-content) 1fr repeat(3, minmax(max-content, 0.4fr));
+    overflow-y: auto;
+    flex: 1 1;
+    border-radius: 6px 6px 0 0;
+}
+
+.tracker-history > :not(.marketplace-history-item-price, .marketplace-history-item-icon) {
+    border-right: 2px solid #2c2c2c;
+}
+
+.tracker-history > * {
+    background: #494949;
+}
+
+/* Alternating background */
+.tracker-history > :nth-child(12n-6), 
+.tracker-history > :nth-child(12n-5), 
+.tracker-history > :nth-child(12n-4), 
+.tracker-history > :nth-child(12n-3), 
+.tracker-history > :nth-child(12n-2), 
+.tracker-history > :nth-child(12n-1) {
+    background: #3b3b3b;
+}
+
+.tracker-history > :not(.tracker-history-header) {
+    padding: 15px 10px;
+}
+
+.tracker-history-header {
+    text-align: center;
+    line-height: 22px;
+}
+
+.marketplace-history-item-date {
+    width: 110px;
+}
+
+.marketplace-history-item-date-i {
+    flex: unset;
+}
+
+.marketplace-history-item-icon {
+    margin-left: unset;
+    padding-left: 10px !important; /* Important is necessary to overwrite the !important flag of the original class */
+}
+
+.marketplace-history-item-date,
+.marketplace-history-item-icon,
+.marketplace-history-item-name,
+.marketplace-history-item-amount {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marketplace-history-item-name {
+    justify-content: start;
+}
+
+.marketplace-history-item-per-item {
+    text-align: right;
+}
+
+.marketplace-history-item-per-item.purchase {
+    color: #fa4d4d;
+}
+
+.marketplace-history-item-per-item.sale {
+    color: #4eff4e;
+}
+
+.marketplace-history-item-price-tax {
+    margin-left: 5px;
+    margin-top: -3px;
+    width: 16px;
+    height: 16px;
+}
     `;
 
     constructor(tracker, settings) {
@@ -94,6 +174,7 @@ body .marketplace-table-cell-div {
         this.cssNode = injectCSS(this.css);
 
         this.createMap = true;
+        this.lastHistoryPage = 0;
 
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
@@ -127,6 +208,7 @@ body .marketplace-table-cell-div {
     marketplaceTracker() {
         this.scanMarketplaceLists();
         this.scanOfferList();
+        this.initMarketHistory();
     }
 
     scanOfferList() {
@@ -320,5 +402,106 @@ body .marketplace-table-cell-div {
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
             }
         });
+    }
+
+    initMarketHistory() {
+        // Return if current page isn't the market history page
+        let history = document.getElementsByClassName('marketplace-history')[0];
+        if (!history) {
+            return;
+        }
+        // Return if the header isn't loaded yet
+        const header = document.getElementsByClassName('marketplace-history-header')[0];
+        if (!header) {
+            return;
+        }
+        this.marketHistory(history);
+        // Hide vanilla table
+        history.classList.add('hidden');
+        // Add observer to the original table
+        const observer = new MutationObserver((mutations) => {
+            this.marketHistory(history);
+        });
+        observer.observe(history, {
+            characterData: true,
+            subtree: true,
+        });
+    }
+
+    marketHistory(history) {
+        const oldTrackerHistory = document.getElementsByClassName('tracker-history')[0]; // might be undefined
+        const currentHistoryPage = document.getElementsByClassName('marketplace-history-page selected')[0].textContent;
+        // Return if the custom history already exists and the user has not changed the page
+        if (oldTrackerHistory && currentHistoryPage === this.lastHistoryPage) {
+            return;
+        }
+        // Delete old history if it exists
+        oldTrackerHistory?.remove();
+        // Create new table
+        history.insertAdjacentHTML('afterend', `
+<div class="tracker-history">
+    <div class="tracker-history-header">
+        DATE
+    </div>
+    <div class="tracker-history-header" style="grid-area: 1 / 2 / 2 / 4;">
+        ITEM
+    </div>
+    <div class="tracker-history-header">
+        QUANTITY
+    </div>
+    <div class="tracker-history-header">
+        PER ITEM
+    </div>
+    <div class="tracker-history-header">
+        TOTAL
+    </div>
+</div>
+        `);
+        let trackerHistory = history.nextElementSibling;
+        // Copy and modify rows
+        let historyItems = history.getElementsByClassName('marketplace-history-item');
+        for (let item of historyItems) {
+            // Copy date, icon, name and quantity
+            for (let i = 0; i < 4; i++) {
+                trackerHistory.insertAdjacentElement('beforeend', item.childNodes[i].cloneNode(true));
+            }
+            // Build new price per item and total
+            const itemId = convertItemId(item.childNodes[1].firstChild.src);
+            let itemQuantity = parseInt(item.childNodes[3].textContent.replace(/\./g, ''));
+            if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
+                itemQuantity *= 2;
+            }
+            const totalDiv = item.childNodes[4];
+            const total = parseInt(totalDiv.textContent.replace(/\./g, ''));
+            const type = totalDiv.classList[1]; // "purchase" or "sale"
+            saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
+<div class="marketplace-history-item-per-item ${type}">
+    <div>
+        ${formatNumber(total / itemQuantity, { showSign: true })}
+        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
+    </div>
+    ${type === "sale" ? `
+    <div>
+        ~ ${formatNumber(profit("flat", 0, total / itemQuantity), { showSign: true })}
+        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
+    </div>
+    ` : ''}
+</div>
+<div class="marketplace-history-item-price ${type}">
+    <div>
+        ${formatNumber(total, { showSign: true })}
+        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
+    </div>
+    ${type === "sale" ? `
+    <div>
+        ${formatNumber(profit("flat", 0, total), { showSign: true })}
+        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
+    </div>
+    ` : ''}
+</div>
+            `);
+        }
+        // Save current history page
+        this.lastHistoryPage = currentHistoryPage;
     }
 }
