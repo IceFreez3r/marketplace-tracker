@@ -103,7 +103,7 @@ class OfflineTracker {
         const lastLogin = storageRequest({
             type: 'get-last-login',
         });
-        const [totalMinValue, totalMaxValue] = totalRecipePrices(itemValues.minPrices, itemValues.maxPrices, itemCounts);
+        const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, itemCounts);
 
         /* Offline Time
             - Offline Tracker:
@@ -142,8 +142,8 @@ class OfflineTracker {
     }
 
     offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
-        const minPerHour = (totalMinValue * 1000 * 60 * 60 / offlineTime);
-        const maxPerHour = (totalMaxValue * 1000 * 60 * 60 / offlineTime);
+        const minPerHour = totalMinValue * 1000 * 60 * 60 / offlineTime;
+        const maxPerHour = totalMaxValue * 1000 * 60 * 60 / offlineTime;
         return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">

@@ -36,21 +36,21 @@ function parseTimeString(timeString, returnScale = false) {
     return [time, scaleOptions.find(scale => time >= scale)];
 }
 
-function totalRecipePrices(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
-    let totalResourceMinPrice = 0;
-    let totalResourceMaxPrice = 0;
+function totalValue(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
+    let totalMinValue = 0;
+    let totalMaxValue = 0;
     for (let i = 0; i < resourceCounts.length; i++) {
         if (!isNaN(resourceMinPrices[i])) {
             if (resourceCounts[i] > 0) {
-                totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
-                totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
+                totalMinValue += resourceMinPrices[i] * resourceCounts[i];
+                totalMaxValue += resourceMaxPrices[i] * resourceCounts[i];
             } else {
-                totalResourceMinPrice += resourceMaxPrices[i] * resourceCounts[i];
-                totalResourceMaxPrice += resourceMinPrices[i] * resourceCounts[i];
+                totalMinValue += resourceMaxPrices[i] * resourceCounts[i];
+                totalMaxValue += resourceMinPrices[i] * resourceCounts[i];
             }
         }
     }
-    return [totalResourceMinPrice / chance, totalResourceMaxPrice / chance];
+    return [totalMinValue / chance, totalMaxValue / chance];
 }
 
 function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
@@ -65,7 +65,7 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
  * @param {number} buyPrice
  * @param {number} sellPrice
  * @param {number=} secondsPerAction only required if type is `per_hour`
- * @returns {number|string}
+ * @returns {number}
  */
 function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
     switch (type) {
