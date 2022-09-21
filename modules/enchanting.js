@@ -32,19 +32,14 @@ body .scrollcrafting-container {
     grid-column: 2;
 }
 
-.text-2xl {
-    font-size: 1.5rem;
-    line-height: 2rem;
-}
-
-.text-xl {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-}
-
-.enchanting-item-resource-icon{
+.enchanting-info-table-icon{
     height: 24px;
     width: 24px;
+}
+
+.enchanting-info-table-font {
+    font-size: 1.5rem;
+    line-height: 2rem;    
 }
     `;
 
@@ -124,15 +119,9 @@ body .scrollcrafting-container {
             scrollId: scrollId,
             resourceItemIds: resourceItemIds
         });
-        saveInsertAdjacentHTML(recipe, 'beforeend', this.enchantingInfoTemplate(response.craftedItemMinPrice,
-                                                                                response.craftedItemMaxPrice,
-                                                                                scrollIcon,
-                                                                                response.resourceItemMinPrices,
-                                                                                response.resourceItemMaxPrices,
-                                                                                resourceItemCounts,
-                                                                                resourceItemIcons,
-                                                                                standardResources.chance,
-                                                                                standardResources.timePerAction));
+        const ingredients = Object.assign(response.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
+        const product = Object.assign(response.product, { icon: scrollIcon, count: 1 });
+        saveInsertAdjacentHTML(recipe, 'beforeend', infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
     }
 
     getStandardResources(node) {
@@ -157,78 +146,5 @@ body .scrollcrafting-container {
             icon: node.childNodes[0].src,
             amount: node.childNodes[1].innerText
         };
-    }
-
-    enchantingInfoTemplate(craftedItemMinPrice,
-                            craftedItemMaxPrice,
-                            craftedItemIcon,
-                            resourceItemMinPrices,
-                            resourceItemMaxPrices,
-                            resourceItemCounts,
-                            resourceItemIcons,
-                            chance,
-                            timePerAction) {
-        const resourceImgs = resourceItemIcons.map(icon => `
-            <div class="enchanting-info-table-content">
-                <img class="enchanting-item-resource-icon" src="${icon}">
-            </div>`).join("");
-        const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
-        const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="enchanting-info-table-content">${numberWithSeparators(price)}</span>`).join("");
-        let [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
-        // Total effective price is higher if the chance is < 100%
-        totalResourceMinPrice = Math.round((totalResourceMinPrice / chance));
-        totalResourceMaxPrice = Math.round((totalResourceMaxPrice / chance));
-        let profitHeaderHTML = "";
-        let minProfitHTML = ""
-        let maxProfitHTML = ""
-        // Profit includes 5% market fee
-        if (this.settings.profit !== "none") {
-            profitHeaderHTML = `
-<span class="enchanting-info-table-content">
-    <img src="/images/money_icon.png" class="enchanting-item-resource-icon" alt="Profit">
-    ${this.settings.profit === "per_hour" ? "<span class='text-xl'>/h</span>" : ""}
-</span>`;
-            minProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice, 2, timePerAction))}</span>`;
-            maxProfitHTML = `<span class="enchanting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice, 2, timePerAction))}</span>`;
-        }
-        return `
-<div class="enchanting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
-    <!-- header -->
-    ${resourceImgs}
-    <span class="enchanting-info-table-content text-2xl">
-        &Sigma;
-    </span>
-    <div class="enchanting-info-table-content">
-        <img class="enchanting-item-resource-icon" src="${craftedItemIcon}">
-    </div>
-    ${profitHeaderHTML}
-
-    <!-- min prices -->
-    <span class="enchanting-info-table-content">
-        Minimal Marketprice
-    </span>
-    ${resourceMinHTML}
-    <span class="enchanting-info-table-content">
-        ${numberWithSeparators(totalResourceMinPrice)}
-    </span>
-    <span class="enchanting-info-table-content">
-        ${numberWithSeparators(craftedItemMinPrice)}
-    </span>
-    ${minProfitHTML}
-
-    <!-- max -->
-    <span class="enchanting-info-table-content">
-        Maximal Marketprice
-    </span>
-    ${resourceMaxHTML}
-    <span class="enchanting-info-table-content">
-        ${numberWithSeparators(totalResourceMaxPrice)}
-    </span>
-    <span class="enchanting-info-table-content">
-        ${numberWithSeparators(craftedItemMaxPrice)}
-    </span>
-    ${maxProfitHTML}
-</div>
-        `;
     }
 }

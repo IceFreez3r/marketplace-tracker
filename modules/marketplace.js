@@ -169,13 +169,13 @@ body .marketplace-table-cell-div {
         Maximum
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.minPrice)}
+        ${formatNumber(analysis.minPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.medianPrice)}
+        ${formatNumber(analysis.medianPrice)}
     </div>
     <div class="marketplace-analysis-table-content">
-        ${numberWithSeparators(analysis.maxPrice)}
+        ${formatNumber(analysis.maxPrice)}
     </div>
 </div>
         `;
@@ -228,7 +228,7 @@ body .marketplace-table-cell-div {
                 <br>
             </span>
             <span>
-                Maximum price: ${numberWithSeparators(maxPrice)}
+                Maximum price: ${formatNumber(maxPrice)}
             </span>
             <span>
                 <hr>
@@ -242,19 +242,19 @@ body .marketplace-table-cell-div {
                     (
                 </span>
                 <span class="text-green">
-                    ${numberWithSeparators(maxPrice)}
+                    ${formatNumber(maxPrice)}
                 </span>
                 <span>
                     * 0.95 - 
                 </span>
                 <span class="text-red">
-                    ${numberWithSeparators(price)}
+                    ${formatNumber(price)}
                 </span>
                 <span>
-                    ) * ${numberWithSeparators(amount)} =
+                    ) * ${formatNumber(amount)} =
                 </span>
                 <span class="${color}">
-                    ${numberWithSeparators(profit)}
+                    ${formatNumber(profit)}
                 </span>
                 <br>
             </span>

@@ -103,7 +103,7 @@ class OfflineTracker {
         const lastLogin = storageRequest({
             type: 'get-last-login',
         });
-        const [totalMinValue, totalMaxValue] = totalRecipePrice(itemValues.itemMinPrices, itemValues.itemMaxPrices, itemCounts);
+        const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, itemCounts);
 
         /* Offline Time
             - Offline Tracker:
@@ -135,19 +135,15 @@ class OfflineTracker {
             return Math.min(12 * 60 * 60 * 1000, scrapped);
         }
         // background and scale differ by more than one time unit (second/minute/hour/day)
-        if (((background / scale) - (scrapped / scale)) > 1) {
+        if (background - scrapped > scale) {
             return Math.min(12 * 60 * 60 * 1000, scrapped);
         }
         return Math.min(12 * 60 * 60 * 1000, background);
     }
 
     offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
-        let minPerHour = 0;
-        let maxPerHour = 0;
-        if (offlineTime > 0) {
-            minPerHour = Math.floor(totalMinValue * 1000 * 60 * 60 / offlineTime);
-            maxPerHour = Math.floor(totalMaxValue * 1000 * 60 * 60 / offlineTime);
-        }
+        const minPerHour = totalMinValue * 1000 * 60 * 60 / offlineTime;
+        const maxPerHour = totalMaxValue * 1000 * 60 * 60 / offlineTime;
         return `
 <div class="offline-progress-box offline-info-box">
     <div class="offline-info-title">
@@ -156,12 +152,12 @@ class OfflineTracker {
     <div class="offline-info-value">
         <div class="left-info">
             <span>
-                ${numberWithSeparators(limitDecimalPlaces(totalMinValue, 0))}
+                ${formatNumber(totalMinValue)}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${numberWithSeparators(minPerHour)}/h
+                ${formatNumber(minPerHour)}/h
             </span>
         </div>
         <div class="center-info">
@@ -171,12 +167,12 @@ class OfflineTracker {
         </div>
         <div class="right-info">
             <span>
-                ${numberWithSeparators(limitDecimalPlaces(totalMaxValue, 0))}
+                ${formatNumber(totalMaxValue)}
                 <img src="/images/money_icon.png" class="offline-gold-icon">
             </span>
             <br>
             <span>
-                ${numberWithSeparators(maxPerHour)}/h
+                ${formatNumber(maxPerHour)}/h
             </span>
         </div>
     </div>

@@ -72,7 +72,7 @@ class SmithingTracker {
     grid-column: 2;
 }
 
-.smithing-item-resource-icon {
+.smithing-info-table-icon {
     height: 16px;
     padding-right: 2px;
 }
@@ -166,87 +166,8 @@ class SmithingTracker {
             barId: barId,
             resourceIds: resourceIds
         });
-        saveInsertAdjacentHTML(craftingImage, 'afterend', this.smithingInfoTemplate(response.craftedItemMinPrice,
-                                                                                    response.craftedItemMaxPrice,
-                                                                                    barIcon,
-                                                                                    response.resourceItemMinPrices,
-                                                                                    response.resourceItemMaxPrices,
-                                                                                    resourceCounts,
-                                                                                    resourceIcons,
-                                                                                    timePerAction));
-    }
-
-    smithingInfoTemplate(barMinPrice,
-                            barMaxPrice,
-                            barIcon,
-                            resourceMinPrices,
-                            resourceMaxPrices,
-                            resourceCounts,
-                            resourceIcons,
-                            timePerAction) {
-        let resourceImgs = "";
-        for (let i = 0; i < resourceIcons.length; i++) {
-            resourceImgs += `
-<div class="smithing-info-table-content">
-    <img class="smithing-item-resource-icon" src="${resourceIcons[i]}">
-    <span>${resourceCounts[i]}</span>
-</div>
-            `;
-        }
-        const resourceMinHTML = resourceMinPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        const resourceMaxHTML = resourceMaxPrices.map(price => `<span class="smithing-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceMinPrices, resourceMaxPrices, resourceCounts);
-        let profitHeaderHTML = "";
-        let minProfitHTML = "";
-        let maxProfitHTML = "";
-        // Profit includes 5% market fee
-        if (this.settings.profit !== "none") {
-            profitHeaderHTML = `
-<span class="smithing-info-table-content">
-    <img src="/images/money_icon.png" class="smithing-item-resource-icon" alt="Profit">
-    ${this.settings.profit === "per_hour" ? "<span>/h</span>" : ""}
-</span>`;
-            minProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMinPrice, barMinPrice, 2, timePerAction)))}</span>`;
-            maxProfitHTML = `<span class="smithing-info-table-content">${numberWithSeparators(shortenNumber(profit(this.settings.profit, totalResourceMaxPrice, barMaxPrice, 2, timePerAction)))}</span>`;
-        }
-        return `
-<div class="smithing-info-table" style="grid-template-columns: max-content repeat(${resourceMinPrices.length + 2 + (this.settings.profit !== "none")}, 1fr)">
-    <!-- header -->
-    ${resourceImgs}
-    <span class="smithing-info-table-content">
-        &Sigma;
-    </span>
-    <div class="smithing-info-table-content">
-        <img class="smithing-info-table-content smithing-item-resource-icon" src="${barIcon}">
-    </div>
-    ${profitHeaderHTML}
-
-    <!-- min prices -->
-    <span class="smithing-info-table-content">
-        Min
-    </span>
-    ${resourceMinHTML}
-    <span class="smithing-info-table-content">
-        ${numberWithSeparators(shortenNumber(totalResourceMinPrice))}
-    </span>
-    <span class="smithing-info-table-content">
-        ${numberWithSeparators(shortenNumber(barMinPrice))}
-    </span>
-    ${minProfitHTML}
-    
-    <!-- max prices -->
-    <span class="smithing-info-table-content">
-        Max
-    </span>
-    ${resourceMaxHTML}
-    <span class="smithing-info-table-content">
-        ${numberWithSeparators(shortenNumber(totalResourceMaxPrice))}
-    </span>
-    <span class="smithing-info-table-content">
-        ${numberWithSeparators(shortenNumber(barMaxPrice))}
-    </span>
-    ${maxProfitHTML}
-</div>
-        `;
+        const ingredients = Object.assign(response.ingredients, {icons: resourceIcons, counts: resourceCounts});
+        const product = Object.assign(response.product, {icon: barIcon, count: 1});
+        saveInsertAdjacentHTML(craftingImage, 'afterend', infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
     }
 }

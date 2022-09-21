@@ -30,7 +30,14 @@ body .crafting-container {
     grid-column: 2;
 }
 
-.text-4xl {
+.crafting-info-table-icon {
+    margin: 4px 10px;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.crafting-info-table-font {
     font-size: 2.25rem;
     line-height: 2.5rem;
 }
@@ -147,92 +154,8 @@ body .crafting-container {
             document.getElementsByClassName("crafting-info-table")[0].remove();
         }
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        saveInsertAdjacentHTML(craftingContainer, 'beforeend', this.craftingInfoTemplate(response.craftedItemMinPrice,
-                                                                                            response.craftedItemMaxPrice,
-                                                                                            craftedItemCount,
-                                                                                            craftedItemIcon,
-                                                                                            response.resourceItemMinPrices,
-                                                                                            response.resourceItemMaxPrices,
-                                                                                            resourceItemCounts,
-                                                                                            resourceItemIcons));
-    }
-
-    craftingInfoTemplate(craftedItemMinPrice,
-                            craftedItemMaxPrice,
-                            craftedItemCount,
-                            craftedItemIcon,
-                            resourceItemMinPrices,
-                            resourceItemMaxPrices,
-                            resourceItemCounts,
-                            resourceItemIcons) {
-        const resourceImgs = resourceItemIcons.map(icon => `
-            <div class="crafting-info-table-content">
-                <img class="crafting-item-resource-icon" src="${icon}">
-            </div>`).join("");
-        const resourceMinHTML = resourceItemMinPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        const resourceMaxHTML = resourceItemMaxPrices.map(price => `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(price, 2))}</span>`).join("");
-        const [totalResourceMinPrice, totalResourceMaxPrice] = totalRecipePrice(resourceItemMinPrices, resourceItemMaxPrices, resourceItemCounts);
-
-        let totalCraftedItemHeaderHTML = "";
-        let totalCraftedItemMinHTML = "";
-        let totalCraftedItemMaxHTML = "";
-        if (craftedItemCount > 1) {
-            const totalCraftedItemMinPrice = (craftedItemMinPrice !== "?") ? craftedItemMinPrice * craftedItemCount : "?";
-            const totalCraftedItemMaxPrice = (craftedItemMinPrice !== "?") ? craftedItemMaxPrice * craftedItemCount : "?";
-            totalCraftedItemHeaderHTML = `<span class="crafting-info-table-content text-4xl">&Sigma;</span>`;
-            totalCraftedItemMinHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMinPrice, 2))}</span>`;
-            totalCraftedItemMaxHTML = `<span class="crafting-info-table-content">${numberWithSeparators(limitDecimalPlaces(totalCraftedItemMaxPrice, 2))}</span>`;
-        }
-        let profitHeaderHTML = "";
-        let minProfitHTML = ""
-        let maxProfitHTML = ""
-        // Profit includes 5% market fee
-        if (this.settings.profit !== "none") {
-            profitHeaderHTML = `<span class="crafting-info-table-content"><img src="/images/money_icon.png" class="crafting-item-resource-icon" alt="Profit"></span>`;
-            minProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMinPrice, craftedItemMinPrice))}</span>`;
-            maxProfitHTML = `<span class="crafting-info-table-content">${numberWithSeparators(profit(this.settings.profit, totalResourceMaxPrice, craftedItemMaxPrice))}</span>`;
-        }
-        return `
-<div class="crafting-info-table" style="grid-template-columns: 150px repeat(${resourceItemMinPrices.length + 2 + (craftedItemCount > 1) + (this.settings.profit !== "none")}, 1fr)">
-    <!-- header -->
-    ${resourceImgs}
-    <span class="crafting-info-table-content text-4xl">
-        &Sigma;
-    </span>
-    <div class="crafting-info-table-content">
-        <img class="crafting-info-table-content crafting-item-resource-icon" src="${craftedItemIcon}">
-    </div>
-    ${totalCraftedItemHeaderHTML}
-    ${profitHeaderHTML}
-
-    <!-- min -->
-    <span class="crafting-info-table-content">
-        Minimal Marketprice
-    </span>
-    ${resourceMinHTML}
-    <span class="crafting-info-table-content">
-        ${numberWithSeparators(limitDecimalPlaces(totalResourceMinPrice, 2))}
-    </span>
-    <span class="crafting-info-table-content">
-        ${numberWithSeparators(limitDecimalPlaces(craftedItemMinPrice, 2))}
-    </span>
-    ${totalCraftedItemMinHTML}
-    ${minProfitHTML}
-
-    <!-- max -->
-    <span class="crafting-info-table-content">
-        Maximal Marketprice
-    </span>
-    ${resourceMaxHTML}
-    <span class="crafting-info-table-content">
-        ${numberWithSeparators(limitDecimalPlaces(totalResourceMaxPrice, 2))}
-    </span>
-    <span class="crafting-info-table-content">
-        ${numberWithSeparators(limitDecimalPlaces(craftedItemMaxPrice, 2))}
-    </span>
-    ${totalCraftedItemMaxHTML}
-    ${maxProfitHTML}
-</div>
-        `;
+        const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
+        const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
+        saveInsertAdjacentHTML(craftingContainer, 'beforeend', infoTableTemplate('crafting', ingredients, product, this.settings.profit));
     }
 }
