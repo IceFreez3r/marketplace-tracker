@@ -61,6 +61,9 @@ body .crafting-container {
         if (!this.settings.profit) {
             this.settings.profit = "none";
         }
+        if (this.settings.goldPerXP === undefined) {
+            this.settings.goldPerXP = 1;
+        }
         this.cssNode = injectCSS(this.css);
 
         this.lastCraftedItemId = null;
@@ -106,7 +109,16 @@ body .crafting-container {
                 percent: "Percent",
                 flat: "Flat",
             }, this.settings.profit));
-        return moduleSetting;
+
+        const goldPerXP = `
+<div class="tracker-module-setting">
+    <div class="tracker-module-setting-name">
+        Show Gold Per Experience
+    </div>
+    ${this.tracker.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
+</div>
+        `;
+        return [moduleSetting, goldPerXP];
     }
 
     craftingTracker(){
@@ -169,8 +181,10 @@ body .crafting-container {
         const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
         const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
         saveInsertAdjacentHTML(craftingContainer, 'beforeend', infoTableTemplate('crafting', ingredients, product, this.settings.profit));
-    
-        this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
+        
+        if (this.settings.goldPerXP) {
+            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
+        }
     }
     
     goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {

@@ -65,7 +65,7 @@ class Tracker {
 .tracker-module-setting {
     display: flex;
     justify-content: space-between;
-    margin: 0 50px;
+    margin: 5px 50px;
     align-items: center;
 }
 
@@ -310,6 +310,7 @@ class Tracker {
         };
         for (let moduleId in this.modules) {
             const module = this.modules[moduleId];
+            // Create new category block if the category doesn't exist yet
             if (settingCategories[module.category].div === undefined) {
                 let category = document.createElement('div');
                 category.className = 'tracker-settings-category';
@@ -375,8 +376,16 @@ class Tracker {
             const menuContent = this.activeModules[moduleId].settingsMenuContent();
             if (typeof menuContent === 'string') {
                 saveInsertAdjacentHTML(element, 'beforeend', menuContent);
-            } else {
+            } else if (menuContent instanceof HTMLElement) {
                 element.append(menuContent);
+            } else if (menuContent instanceof Array) {
+                for (let content of menuContent) {
+                    if (typeof content === 'string') {
+                        saveInsertAdjacentHTML(element, 'beforeend', content);
+                    } else if (content instanceof HTMLElement) {
+                        element.append(content);
+                    }
+                }
             }
         };
     }
