@@ -109,15 +109,8 @@ class FavoriteTracker {
     }
 
     filterFavoritesButton() {
-        let filter = document.getElementById('tracker-favorite-filter');
-        if (filter) {
-            const daelsFilter = document.querySelector('.daelis-marketplace-filter:not(.recognized)');
-            if (daelsFilter) {
-                filter.remove();
-                daelsFilter.classList.add('recognized');
-            } else {
-                return;
-            }
+        if (document.getElementById('tracker-favorite-filter')) {
+            return;
         }
         const sortingContainer = document.getElementsByClassName('market-sorting-container')[0];
         saveInsertAdjacentHTML(sortingContainer.firstChild, 'afterend', `
@@ -125,7 +118,7 @@ class FavoriteTracker {
     ${FavoriteTracker.favoriteTemplate("tracker-favorite-filter-svg")}
 </div>
         `);
-        filter = document.getElementById('tracker-favorite-filter');
+        const filter = document.getElementById('tracker-favorite-filter');
         filter.addEventListener('click', () => {
             filter.classList.toggle('filter-active');
             this.filterActive = !this.filterActive;
