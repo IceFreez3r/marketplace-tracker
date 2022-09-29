@@ -87,8 +87,7 @@ class OfflineTracker {
         }
         const title = document.getElementsByClassName('MuiTypography-root MuiTypography-h6')[0].innerText;
         const isDaelsTracker = title === 'Resources Tracker';
-        let itemIds = [];
-        let itemCounts = [];
+        const items = {};
         for (let itemNode of offlineProgressBox.childNodes) {
             const itemId = convertItemId(itemNode.firstChild.src);
             if (itemId.includes('essence')) {
@@ -97,17 +96,16 @@ class OfflineTracker {
             if (!this.settings.include_gold && itemId.includes('money_icon')) {
                 continue;
             }
-            itemIds.push(itemId);
-            itemCounts.push(parseNumberString(itemNode.childNodes[1].innerText));
+            const itemCount = parseNumberString(itemNode.childNodes[1].innerText);
+            // adds to existing count if itemId already occured
+            items[itemId] ??= 0;
+            items[itemId] += itemCount;
         }
         const itemValues = storageRequest({
             type: 'get-item-values',
-            itemIds: itemIds,
+            itemIds: Object.keys(items),
         });
-        const lastLogin = storageRequest({
-            type: 'get-last-login',
-        });
-        const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, itemCounts);
+        const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, Object.values(items));
 
         /* Offline Time
             - Offline Tracker:
@@ -124,6 +122,9 @@ class OfflineTracker {
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
         if (!isDaelsTracker) {
+            const lastLogin = storageRequest({
+                type: 'get-last-login',
+            });
             const offlineTimeBackground = Date.now() - lastLogin;
             offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
         } else {
