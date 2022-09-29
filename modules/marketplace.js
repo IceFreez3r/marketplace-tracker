@@ -169,15 +169,30 @@ body .marketplace-table-cell-div {
 }
     `;
 
+    hideBorderCss = `
+.marketplace-sell-items-sort {
+    border: none;
+}
+
+.marketplace-my-auctions {
+    border: none;
+}
+    `;
+
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
         if (this.settings.history === undefined) {
             this.settings.history = 1;
         }
+        if (this.settings.hideBorder === undefined) {
+            this.settings.hideBorder = 0;
+        }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged('history', this.settings.history);
+        this.hideBorderCssNode = undefined;
+        this.settingChanged('hideBorder', this.settings.hideBorder);
 
         this.createMap = true;
         this.lastHistoryPage = 0;
@@ -208,7 +223,7 @@ body .marketplace-table-cell-div {
     }
 
     settingsMenuContent() {
-        return `
+        const history = `
 <div class="tracker-module-setting">
     <div class="tracker-module-setting-name">
         More infos in history
@@ -216,6 +231,18 @@ body .marketplace-table-cell-div {
     ${this.tracker.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
 </div>
         `;
+        const hideBorder = `
+<div class="tracker-module-setting">
+    <div class="tracker-module-setting-name">
+        Remove border on sell page
+        <div class="tracker-module-setting-description">
+            prevents filter from moving by 2 pixels when switching between sell and buy
+        </div>
+    </div>
+    ${this.tracker.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
+</div>
+        `;
+        return history + hideBorder;
     }
 
     settingChanged(setting, value) {
@@ -225,6 +252,13 @@ body .marketplace-table-cell-div {
                     this.historyCssNode = injectCSS(this.historyCss);
                 } else {
                     this.historyCssNode?.remove();
+                }
+                break;
+            case 'hideBorder':
+                if (value) {
+                    this.hideBorderCssNode = injectCSS(this.hideBorderCss);
+                } else {
+                    this.hideBorderCssNode?.remove();
                 }
                 break;
         }
