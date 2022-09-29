@@ -32,7 +32,7 @@ The history shows prices per item and tax-free prices for sold items.
 <img src="./images/readme/marketplace_history.png" alt="Marketplace Buy" width="600">
 
 ### Crafting
-Shows the cost for buying all ingredients for a recipe compared to the cost of buying the crafted item directly.
+Shows the cost for buying all ingredients for a recipe compared to the cost of buying the crafted item directly. Also calculates the amount of gold you would need per XP when crafting the selected item.
 
 <img src="./images/readme/crafting_tracker.png" alt="Crafting Tracker" width="600">
 
