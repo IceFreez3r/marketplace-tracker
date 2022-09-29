@@ -41,6 +41,18 @@ body .crafting-container {
     font-size: 2.25rem;
     line-height: 2.5rem;
 }
+
+/* Gold per experience */
+.crafting-gold-per-exp {
+    text-align: center;
+    font-size: 16px;
+}
+
+.crafting-gold-per-exp-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
     `;
 
     constructor(tracker, settings) {
@@ -48,6 +60,9 @@ body .crafting-container {
         this.settings = settings;
         if (!this.settings.profit) {
             this.settings.profit = "none";
+        }
+        if (this.settings.goldPerXP === undefined) {
+            this.settings.goldPerXP = 1;
         }
         this.cssNode = injectCSS(this.css);
 
@@ -94,7 +109,16 @@ body .crafting-container {
                 percent: "Percent",
                 flat: "Flat",
             }, this.settings.profit));
-        return moduleSetting;
+
+        const goldPerXP = `
+<div class="tracker-module-setting">
+    <div class="tracker-module-setting-name">
+        Show Gold Per Experience
+    </div>
+    ${this.tracker.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
+</div>
+        `;
+        return [moduleSetting, goldPerXP];
     }
 
     settingChanged(settingId, value) {
@@ -153,13 +177,39 @@ body .crafting-container {
             craftedItemId: craftedItemId,
             resourceItemIds: resourceItemIds
         });
-        // remove existing table
-        if (document.getElementsByClassName("crafting-info-table").length !== 0) {
-            document.getElementsByClassName("crafting-info-table")[0].remove();
-        }
+        // TODO: use vendor price where appropriate
+
+        // crafting info table
+        document.getElementsByClassName("crafting-info-table")[0]?.remove();
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
         const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
         const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
         saveInsertAdjacentHTML(craftingContainer, 'beforeend', infoTableTemplate('crafting', ingredients, product, this.settings.profit));
+        
+        if (this.settings.goldPerXP) {
+            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
+        }
+    }
+    
+    goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {
+        document.getElementsByClassName('crafting-gold-per-exp')[0]?.remove();
+        const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
+        const experience = parseInt(experienceNode.childNodes[0].textContent.replace(/\./g, ''));
+        let minCost = - profit('flat', totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
+        let maxCost = - profit('flat', totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
+        // swap min and max if min is higher than max
+        if (minCost > maxCost) {
+            [minCost, maxCost] = [maxCost, minCost];
+        }
+        saveInsertAdjacentHTML(experienceNode, 'afterend', `
+<div class="crafting-gold-per-exp">
+    <span>
+        ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
+    </span>
+    <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
+    <span>/</span>
+    <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
+</div>
+        `);
     }
 }
