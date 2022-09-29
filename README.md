@@ -27,20 +27,22 @@ There is also a popup when hovering entries, which shows you the theoretical pro
 
 <img src="./images/readme/marketplace_buy.png" alt="Marketplace Buy" width="600">
 
+The history shows prices per item and tax-free prices for sold items.
+
+<img src="./images/readme/marketplace_history.png" alt="Marketplace Buy" width="600">
+
 ### Crafting
 Shows the cost for buying all ingredients for a recipe compared to the cost of buying the crafted item directly.
 
 <img src="./images/readme/crafting_tracker.png" alt="Crafting Tracker" width="600">
 
-We decided against a profit column here, since most of the recipes aren't profitable.
-
 ### Enchanting
-Shows the cost for buying all ingredients for crafting a scroll compared to the cost of buying the scroll directly. The crafting costs also include the chance of success. Additionally there is a profit column, which already includes the 5% market fee.
+Shows the cost for buying all ingredients for crafting a scroll compared to the cost of buying the scroll directly. The crafting costs also includes the chance of success.
 
 <img src="./images/readme/enchanting_tracker.png" alt="Enchanting Tracker" width="600">
 
 ### Smithing
-Same thing once again. The last column is the profit, which includes the 5% market fee.
+Same thing once again. Compact prices to fit into the small space.
 
 <img src="./images/readme/smithing_tracker.png" alt="Smithing Tracker" width="600">
 
@@ -59,9 +61,19 @@ Adds up the value of all the items you acquired while offline and displays total
 
 <img src="./images/readme/offline_tracker.png" alt="Offline Tracker" width="600">
 
-Note that the per hour information is only accurate if you are offline for a longer time and will always only be an estimate.
-
 The Offline tracker also works with the Resource Tracker from [ISscripts](https://github.com/daelidle/ISscripts).
+
+### Settings menu
+
+All shown modules can be activated and deactivated through an additional settings menu. It is added into the sidebar, from where you have full control over all the modules.
+
+<img src="./images/readme/settings_sidebar.png" alt="Offline Tracker" width="200">
+
+Just as an example you can decide how profits are displayed in each module or deactivate them all together. (Profits always already include the market fee. No need to bring a calculator.)
+
+<img src="./images/readme/settings_menu.png" alt="Offline Tracker" width="600">
+
+In contrast to other userscripts you don't need to reload the page to apply changes.
 
 ### Other
 
@@ -71,17 +83,15 @@ When ever the minimum or maximum price is shown, it is actually the 5%/95% quant
 
 The data is stored on your computer in the `localStorage` of the browser. There is no exchange of data with any server.
 
-To make sure, that the data of the extension isn't outdated, every API call is only stored for two weeks.
+API calls are only stored for two weeks, to make sure, that the data of the extension isn't outdated.
 
 ## Planned Features
 (without any particular order)
 - Marketplace
     - Highlight items with a very low price in the last API call on the market overview page 📉
         - below current minPrice or below vendor price
+    - Scan the trade chat channel for cheap offers
     - Warning when selling items with less profit than the vendor price :warning:
-    - new columns in the history
-        - price per item
-        - effective profit for sold items
     - Display gold/heat for heat items 🔥
     - Continous colors for low price items instead of categories and update the crappy popup 🌈
 - Farming 🌽
@@ -89,12 +99,9 @@ To make sure, that the data of the extension isn't outdated, every API call is o
     - Collect data for mysterious seeds and crack the algorithm behind them
         - It is already known, that the algorithm will change with the coming big update. Therefore low prio for now.
 - Crafting
-    - Show XP/Gold when selling on market or to vendor
     - store recipes to be able to highlight the best XP/Gold recipe
 - Offline Tracker 😴
     - Improve offline time tracking
-- Settings
-    - Add a settings page 🔧
 
 ## Contact
 If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).
