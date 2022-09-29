@@ -81,6 +81,11 @@ class Tracker {
     font-size: 1.2rem;
 }
 
+.tracker-module-setting-description {
+    font-size: 1rem;
+    margin-left: 20px;
+}
+
 .settings-checkbox-label {
     width: 1.5rem;
     height: 1.5rem;
