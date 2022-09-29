@@ -437,7 +437,13 @@ class Tracker {
         for (let j = 0; j < idArray.length - 1; j++) {
             setting = setting[idArray[j]];
         }
-        setting[idArray[idArray.length - 1]] = value;
+        if (setting[idArray[idArray.length - 1]] !== value) {
+            setting[idArray[idArray.length - 1]] = value;
+            const module = this.activeModules[idArray[0]];
+            if (module) {
+                module.settingChanged(settingId.slice(settingId.indexOf('-') + 1), value);
+            }
+        }
     }
 
     /**

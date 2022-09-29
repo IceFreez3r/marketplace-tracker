@@ -70,11 +70,11 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
 function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
     switch (type) {
         case "percent":
-            return (sellPrice * 0.95 - buyPrice) / buyPrice;
+            return (Math.floor(sellPrice * 0.95) - buyPrice) / buyPrice;
         case "flat":
-            return sellPrice * 0.95 - buyPrice;
+            return Math.floor(sellPrice * 0.95) - buyPrice;
         case "per_hour":
-            return ((sellPrice * 0.95 - buyPrice) * (60 * 60 / secondsPerAction));
+            return ((Math.floor(sellPrice * 0.95) - buyPrice) * (60 * 60 / secondsPerAction));
         default:
             console.error("Unknown profit type: " + type);
     }
@@ -184,19 +184,19 @@ ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span
 function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
     let row = "";
     // Ingredients
-    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price, compactDisplay))).join("");
+    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay }))).join("");
     // Total crafting cost
     const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
     const totalProductPrice = productPrice * productCount;
-    row += infoTableCell(classId, formatNumber(totalIngredientPrice, compactDisplay));
+    row += infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
     // Product
-    row += infoTableCell(classId, formatNumber(productPrice, compactDisplay));
+    row += infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay }));
     if (productCount > 1) {
-        row += infoTableCell(classId, formatNumber(totalProductPrice, compactDisplay));
+        row += infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
     }
     // Profit
     if (profitType !== "none") {
-        row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), compactDisplay, profitType));
+        row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), { compactDisplay: compactDisplay, profitType: profitType }));
     }
     return row;
 }
@@ -209,19 +209,23 @@ function infoTableCell(classId, content) {
     `;
 }
 
-function formatNumber(number, compactDisplay = false, profitType = null) {
+function formatNumber(number, options = {}) {
+    const {compactDisplay, profitType, showSign} = options;
     if (isNaN(number)) {
         return "?";
     }
-    let options = {
+    let formatterOptions = {
         maximumFractionDigits: 0,
     };
     if (profitType === "percent") {
-        Object.assign(options, { maximumFractionDigits: 2, style: "percent" });
+        Object.assign(formatterOptions, { maximumFractionDigits: 2, style: "percent" });
     }
     if (compactDisplay) {
-        Object.assign(options, { maximumFractionDigits: 1, notation: "compact" });
+        Object.assign(formatterOptions, { maximumFractionDigits: 1, notation: "compact" });
     }
-    const formatter = new Intl.NumberFormat("en-US", options);
+    if (showSign) {
+        Object.assign(formatterOptions, { signDisplay: "always" });
+    }
+    const formatter = new Intl.NumberFormat("en-US", formatterOptions);
     return formatter.format(number);
 }
