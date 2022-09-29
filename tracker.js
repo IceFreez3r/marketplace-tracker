@@ -4,6 +4,14 @@ class Tracker {
     --tracker-red: #f50057;
 }
 
+.drawer-item {
+    justify-content: space-between;
+}
+
+.drawer-item-left {
+    width: 100%;
+}
+
 .settings-module {
     margin-bottom: 1rem;
 }
