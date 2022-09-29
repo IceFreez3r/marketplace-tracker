@@ -423,7 +423,10 @@ class Tracker {
                         const changed = this.deactivateModule(checkbox.id);
                         if (changed) {
                             // Remove module settings
-                            checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0].firstChild.remove();
+                            const settingsModuleContent = checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0];
+                            while (settingsModuleContent.firstChild) {
+                                settingsModuleContent.lastChild.remove();
+                            }
                         }
                     }
                 }
