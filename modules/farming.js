@@ -1,4 +1,92 @@
 class FarmingTracker {
+    static id = "farming_tracker"
+    static displayName = "Farming Tracker";
+    static icon = "<img src='/images/farming/farming_icon.png' alt='Farming Tracker Icon'>";
+    static category = "visual";
+    css = `
+body .farming-info > p {
+    max-height: unset;
+}
+
+body .farming-center-container {
+    position: sticky;
+    height: fit-content;
+    top: 0;
+}
+
+body .farming-seed-settings {
+    position: unset;
+}
+
+body .farming-seeds .all-items {
+    grid-template-areas: "seed-header-mysterious seed-header-mysterious seed-header-mysterious seed-header-mysterious"
+                        "seed-header-mysterious-border seed-header-mysterious-border seed-header-mysterious-border seed-header-mysterious-border"
+                        "mysterious-seed-1x1 mysterious-seed-2x1 mysterious-seed-3x1 mysterious-seed-4x1"
+                        "mysterious-seed-1x2 mysterious-seed-2x2 mysterious-seed-3x2 mysterious-seed-4x2"
+                        "mysterious-seed-1x3 mysterious-seed-2x3 mysterious-seed-3x3 mysterious-seed-4x3"
+                        "mysterious-seed-1x4 mysterious-seed-2x4 mysterious-seed-3x4 mysterious-seed-4x4"
+                        "seed-header-single seed-header-single seed-header-single seed-header-single"
+                        "seed-header-single-border seed-header-single-border seed-header-single-border seed-header-single-border"
+                        "carrot-seed potato-seed wheat-seed tomato-seed"
+                        "mushroom-spore sugarcane-seed chili-pepper-seed rice-seed"
+                        "pumpkin-seed peppercorn-seed . ."
+                        "seed-header-multi seed-header-multi seed-header-multi seed-header-multi"
+                        "seed-header-multi-border seed-header-multi-border seed-header-multi-border seed-header-multi-border"
+                        "wildberry-bush-seed sageberry-bush-seed tree-seed oak-tree-seed"
+                        "willow-tree-seed banana-tree-seed apple-tree-seed maple-tree-seed"
+                        "yew-tree-seed elder-tree-seed . .";
+    grid-template-columns: repeat(4, 60px);
+    max-height: unset;
+}
+
+.seed-header-mysterious {
+    grid-area: seed-header-mysterious;
+}
+
+.seed-header-mysterious-border {
+    grid-area: seed-header-mysterious-border;
+}
+
+.seed-header-single {
+    grid-area: seed-header-single;
+}
+
+.seed-header-single-border {
+    grid-area: seed-header-single-border;
+}
+
+.seed-header-multi {
+    grid-area: seed-header-multi;
+}
+
+.seed-header-multi-border {
+    grid-area: seed-header-multi-border;
+}
+
+.high-level-seed {
+    background-image: linear-gradient(180deg, rgba(13, 64, 12, 0.6), rgba(13, 64, 12, .6)), url(/images/ui/frame_icon.png);
+}
+
+.high-level-seed > img {
+    opacity: 0.6;
+}
+
+.fake-item {
+    height: 60px;
+    width: 60px;
+    border: 1px solid gray;
+    border-radius: 8px;
+}
+
+.fake-item > img {
+    height: 100%;
+    width: 85%;
+    object-fit: contain;
+    margin-left: 3px;
+    margin-right: 5px;
+    opacity: 0.3;
+}
+    `;
 
     seeds = {
         "mysterious-seed-1x1": {img: "/images/farming/mysterious_seed.png",     minLevel: 1 },
@@ -40,7 +128,11 @@ class FarmingTracker {
     }
     numGridElements = 42; // seeds (36) + headers (3) + borders (3)
 
-    constructor() {
+    constructor(tracker, settings) {
+        this.tracker = tracker;
+        this.settings = settings;
+        this.cssNode = injectCSS(this.css);
+
         // setup mutation observer
         this.observer = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
@@ -52,6 +144,9 @@ class FarmingTracker {
             }
             this.farmingTracker();
         });
+    }
+    
+    onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.observer.observe(playAreaContainer, {
             childList: true,
@@ -59,24 +154,21 @@ class FarmingTracker {
         });
     }
 
+    deactivate() {
+        this.cssNode.remove();
+        this.observer.disconnect();
+    }
+
+    settingsMenuContent() {
+        return "";
+    }
+
     farmingTracker() {
         let seedContainer = document.getElementsByClassName("all-items")[0];
         if (seedContainer.childElementCount === this.numGridElements) {
             return;
         }
-        // remove old headers, borders, fake-items
-        let titles = seedContainer.parentNode.getElementsByClassName("farming-seeds-title");
-        for (let i = titles.length; i > 0; i--) {
-            titles[i - 1].remove();
-        }
-        let borders = seedContainer.parentNode.getElementsByClassName("farming-seeds-title-border");
-        for (let i = borders.length; i > 0; i--) {
-            borders[i - 1].remove();
-        }
-        let fakeItems = seedContainer.getElementsByClassName("fake-item");
-        for (let i = fakeItems.length; i > 0; i--) {
-            fakeItems[i - 1].remove();
-        }
+        this.clearMetaElements(seedContainer);
 
         const farmingLevel = this.getFarmingLevel();
         let existingSeeds = {};
@@ -122,6 +214,22 @@ class FarmingTracker {
             <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
             <div class="farming-seeds-title-border seed-header-multi-border"></div>
             `);
+    }
+
+    clearMetaElements(seedContainer) {
+        // remove old headers, borders, fake-items
+        let titles = seedContainer.parentNode.getElementsByClassName("farming-seeds-title");
+        for (let i = titles.length; i > 0; i--) {
+            titles[i - 1].remove();
+        }
+        let borders = seedContainer.parentNode.getElementsByClassName("farming-seeds-title-border");
+        for (let i = borders.length; i > 0; i--) {
+            borders[i - 1].remove();
+        }
+        let fakeItems = seedContainer.getElementsByClassName("fake-item");
+        for (let i = fakeItems.length; i > 0; i--) {
+            fakeItems[i - 1].remove();
+        }
     }
 
     getFarmingLevel() {

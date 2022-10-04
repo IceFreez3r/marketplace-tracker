@@ -5,8 +5,6 @@ function storageRequest(request) {
         case "close":
             handleClose();
             break;
-        case "analyze-item":
-            return analyzeItem(request.itemId);
         case "get-best-heat-item":
             return itemList[heatValue(timestamp).apiId].itemId;
         case "market-api-data":
@@ -15,16 +13,18 @@ function storageRequest(request) {
         case "icon-to-id-map":
             updateIdMap(request.map);
             break;
+        case "analyze-item":
+            return analyzeItem(request.itemId);
         case "get-item-values":
-            return getItemValues(request.itemIds);
+            return analyzeItems(request.itemIds);
         case "get-last-login":
             return lastLogin;
         case "crafting-recipe":
-            return handleRecipe(request.craftedItemId, request.resourceItemIds);
+            return handleRecipe(request.resourceItemIds, request.craftedItemId);
         case "enchanting-recipe":
-            return handleRecipe(request.scrollId, request.resourceItemIds);
+            return handleRecipe(request.resourceItemIds, request.scrollId);
         case "smithing-recipe":
-            return handleRecipe(request.barId, request.resourceIds);
+            return handleRecipe(request.resourceIds, request.barId);
         default:
             console.log("Unknown request: " + request);
     }
@@ -100,15 +100,10 @@ function updateIdMap(map) {
     storeIdMap();
 }
 
-function handleRecipe(craftedItemId, resourceItemIds) {
-    const craftedApiId = idMap[craftedItemId];
-    const resourceItemPrices = getItemValues(resourceItemIds);
+function handleRecipe(ingredientItemIds, productItemId) {
     return {
-        type: "recipe-analysis",
-        craftedItemMinPrice: minPrice(craftedApiId),
-        craftedItemMaxPrice: maxPrice(craftedApiId),
-        resourceItemMinPrices: resourceItemPrices.itemMinPrices,
-        resourceItemMaxPrices: resourceItemPrices.itemMaxPrices,
+        ingredients: analyzeItems(ingredientItemIds),
+        product: analyzeItem(productItemId),
     };
 }
 
@@ -130,6 +125,13 @@ function sortObj(obj) {
 }
 
 function analyzeItem(itemId) {
+    if (!(itemId in idMap)) {
+        return {
+            minPrice: NaN,
+            medianPrice: NaN,
+            maxPrice: NaN,
+        }
+    }
     const apiId = idMap[itemId];
     // Sort the price tuples by price
     itemList[apiId]["prices"].sort(function (a, b) {
@@ -145,14 +147,12 @@ function analyzeItem(itemId) {
     }
 }
 
-function getItemValues(itemIds) {
+function analyzeItems(itemIds) {
+    const analysisArray = itemIds.map(itemId => analyzeItem(itemId));
     return {
-        itemMinPrices: itemIds.map(function (itemId) {
-            return minPrice(idMap[itemId]);
-        }),
-        itemMaxPrices: itemIds.map(function (itemId) {
-            return maxPrice(idMap[itemId]);
-        }),
+        minPrices: analysisArray.map(analysis => analysis.minPrice),
+        medianPrices: analysisArray.map(analysis => analysis.medianPrice),
+        maxPrices: analysisArray.map(analysis => analysis.maxPrice),
     }
 }
 
@@ -187,30 +187,6 @@ function addHardcodedItems() {
             "prices": []
         };
     }
-}
-
-function minPrice(apiId) {
-    if (!(apiId in itemList)) {
-        return "?";
-    }
-    // Sort the price tuples by price
-    itemList[apiId]["prices"].sort(function (a, b) {
-        return a[1] - b[1];
-    });
-    const quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
-    return itemList[apiId]["prices"][quantile][1];
-}
-
-function maxPrice(apiId) {
-    if (!(apiId in itemList)) {
-        return "?";
-    }
-    // Sort the price tuples by price
-    itemList[apiId]["prices"].sort(function (a, b) {
-        return a[1] - b[1];
-    });
-    const quantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
-    return itemList[apiId]["prices"][quantile][1];
 }
 
 function fetchAPI() {
@@ -256,6 +232,4 @@ if (!lastLogin) {
 // stores last timestamp at which API date arrived
 let timestamp = 0;
 fetchAPI();
-let apiFetch = setInterval(() => {
-    fetchAPI();
-}, 1000 * 60 * 10); // 10 minutes
+let apiFetch = setInterval(() => fetchAPI(), 1000 * 60 * 10); // 10 minutes

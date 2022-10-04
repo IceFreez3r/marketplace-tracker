@@ -6,120 +6,78 @@ function convertItemId(itemName) {
     return itemName;
 }
 
-// Add thousands separator to number
-function numberWithSeparators(price) {
-    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function limitDecimalPlaces(number, decimalPlaces = 0) {
-    if (number === "?") {
-        return "?";
-    }
-    return Math.round(number * Math.pow(10, decimalPlaces)) / Math.pow(10, decimalPlaces);
-}
-
-// Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L22
-function shortenNumber(number) {
-    const suffix = number.toString().replace(/[\+\-0-9\.]/g, '');
-    number = parseFloat(number);
-    if (number < 10000) {
-        return number.toFixed(1).replace('.0', '') + suffix;
-    }
-    const SYMBOL = ['', 'K', 'M', 'B', 'T', 'P', 'E'];
-    let index = 0;
-    while (number >= 1000) {
-        number /= 1000;
-        index++;
-    }
-    return number.toFixed(1).replace('.0', '') + SYMBOL[index] + suffix;
-}
-
 function parseNumberString(numberString) {
     const baseNumber = parseFloat(numberString.replace(localNumberSeparators['group'], '').replace(localNumberSeparators['decimal'], '.'));
-    let scale = 0;
-    switch (numberString.slice(-1)) {
-        case 'K':
-            scale = 3;
-            break;
-        case 'M':
-            scale = 6;
-            break;
-        case 'B':
-            scale = 9;
-            break;
-        case 'T':
-            scale = 12;
-            break;
-        case 'P':
-            scale = 15;
-            break;
-        case 'E':
-            scale = 18;
-            break;
+    const parseScale = {
+        'K': 3,
+        'M': 6,
+        'B': 9,
+        'T': 12,
+        'P': 15,
+        'E': 18,
     }
+    const scale = parseScale[numberString.slice(-1)] || 0;
     return Math.round(baseNumber * Math.pow(10, scale));
 }
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    timeString.replace("s ", "");
-    const secondRegex = /(\d+) second/;
-    const minuteRegex = /(\d+) minute/;
-    const hourRegex = /(\d+) hour/;
-    const dayRegex = /(\d+) day/;
-    const secondMatch = secondRegex.exec(timeString);
-    const minuteMatch = minuteRegex.exec(timeString);
-    const hourMatch = hourRegex.exec(timeString);
-    const dayMatch = dayRegex.exec(timeString);
-    let time = 0;
-    let scale;
-    if (secondMatch) {
-        time += parseInt(secondMatch[1]) * 1000;
-        scale = 1000;
+    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*$/;
+    const match = timeString.match(regex);
+    const days = match.groups.days ? parseInt(match.groups.days) : 0;
+    const hours = match.groups.hours ? parseInt(match.groups.hours) : 0;
+    const minutes = match.groups.minutes ? parseInt(match.groups.minutes) : 0;
+    const seconds = match.groups.seconds ? parseInt(match.groups.seconds) : 0;
+    const time = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
+    if (!returnScale) {
+        return time;
     }
-    if (minuteMatch) {
-        time += parseInt(minuteMatch[1]) * 60 * 1000;
-        scale = 60 * 1000;
-    }
-    if (hourMatch) {
-        time += parseInt(hourMatch[1]) * 60 * 60 * 1000;
-        scale = 60 * 60 * 1000;
-    }
-    if (dayMatch) {
-        time += parseInt(dayMatch[1]) * 24 * 60 * 60 * 1000;
-        scale = 24 * 60 * 60 * 1000;
-    }
-    if (returnScale) {
-        return [time, scale];
-    }
-    return time;
+    const scaleOptions = [1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1];
+    return [time, scaleOptions.find(scale => time >= scale)];
 }
 
-function totalRecipePrice(resourceMinPrices,
-                            resourceMaxPrices,
-                            resourceCounts) {
-    let totalResourceMinPrice = 0;
-    let totalResourceMaxPrice = 0;
+function totalValue(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
+    let totalMinValue = 0;
+    let totalMaxValue = 0;
     for (let i = 0; i < resourceCounts.length; i++) {
-        if (resourceMinPrices[i] !== "?") {
+        if (!isNaN(resourceMinPrices[i])) {
             if (resourceCounts[i] > 0) {
-                totalResourceMinPrice += resourceMinPrices[i] * resourceCounts[i];
-                totalResourceMaxPrice += resourceMaxPrices[i] * resourceCounts[i];
+                totalMinValue += resourceMinPrices[i] * resourceCounts[i];
+                totalMaxValue += resourceMaxPrices[i] * resourceCounts[i];
             } else {
-                totalResourceMinPrice += resourceMaxPrices[i] * resourceCounts[i];
-                totalResourceMaxPrice += resourceMinPrices[i] * resourceCounts[i];
+                totalMinValue += resourceMaxPrices[i] * resourceCounts[i];
+                totalMaxValue += resourceMinPrices[i] * resourceCounts[i];
             }
         }
     }
-    return [totalResourceMinPrice, totalResourceMaxPrice];
+    return [totalMinValue / chance, totalMaxValue / chance];
 }
 
-// Returns the profit including market fee in percent as a string
-function profitPercent(buyPrice, sellPrice, decimalPlaces = 2) {
-    if (buyPrice === "?" || sellPrice === "?") {
-        return "?";
+function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
+    // dot product of prices and counts divided by chance
+    return resourcePrices.map((price, index) => !isNaN(price) ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
+}
+
+/**
+ * Returns the profit including market fee as a string
+ * 
+ * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
+ * @param {number} buyPrice
+ * @param {number} sellPrice
+ * @param {number=} secondsPerAction only required if type is `per_hour`
+ * @returns {number}
+ */
+function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
+    switch (type) {
+        case "percent":
+            return (Math.floor(sellPrice * 0.95) - buyPrice) / buyPrice;
+        case "flat":
+            return Math.floor(sellPrice * 0.95) - buyPrice;
+        case "per_hour":
+            return ((Math.floor(sellPrice * 0.95) - buyPrice) * (60 * 60 / secondsPerAction));
+        default:
+            console.error("Unknown profit type: " + type);
     }
-    return ((sellPrice * 0.95 - buyPrice) / buyPrice * 100).toFixed(decimalPlaces) + "%";
 }
 
 function saveInsertAdjacentHTML(element, position, html) {
@@ -136,3 +94,138 @@ function getLocalNumberSeparators() {
 }
 
 const localNumberSeparators = getLocalNumberSeparators();
+
+function loadLocalStorage(key, fallback) {
+    const value = localStorage.getItem(key);
+    if (value === null) {
+        // if fallback is a function, call it
+        if (typeof fallback === "function") {
+            return fallback();
+        }
+        return fallback;
+    }
+    return JSON.parse(value);
+}
+
+function injectCSS(css) {
+    let style = document.createElement("style");
+    style.appendChild(document.createTextNode(css));
+    document.head.appendChild(style);
+    return style;
+}
+
+function getCharacterName() {
+    return document.getElementsByClassName("navbar1-box left drawer-button noselect")[0].childNodes[1].textContent;
+}
+
+function isIronmanCharacter() {
+    return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
+}
+
+/**
+ * 
+ * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
+ * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
+ * @param {Object} product icon, count, minPrice and maxPrice of the product
+ * @param {string} profitType options are `none`, `percent`, `flat` and `per_hour`
+ * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
+ * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
+ * @param {Number=} secondsPerAction only required if profitType is `per_hour`
+ * @param {Number=} chance chance to successfully craft the product
+ * @returns {string} html string
+ */
+function infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1) {
+    const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
+    const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice } = product;
+    // Ingredients
+    let header = "";
+    for (let i = 0; i < ingredientIcons.length; i++) {
+        header += infoTableCell(classId, `
+<img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
+${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}
+        `);
+    }
+    // Total crafting cost
+    header += infoTableCell(classId, `
+<span class="${classId}-info-table-font">
+    &Sigma;
+</span>
+    `);
+    // Product
+    header += infoTableCell(classId, `<img class="${classId}-info-table-icon" src="${productIcon}">`);
+    if (productCount > 1) {
+        header += infoTableCell(classId, `
+<span class="${classId}-info-table-font">
+    &Sigma;
+</span>
+        `);
+    }
+    // Profit
+    if (profitType !== "none") {
+        header += infoTableCell(classId, `
+<img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
+${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
+        `);
+    }
+
+    const minPrice = infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    const maxPrice = infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+    return `
+<div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
+    ${header}
+    ${infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
+    ${minPrice}
+    ${infoTableCell(classId, compactDisplay ? "Max" : "Maximal Marketprice")}
+    ${maxPrice}
+</div>
+    `;
+}
+
+function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
+    let row = "";
+    // Ingredients
+    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay }))).join("");
+    // Total crafting cost
+    const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
+    const totalProductPrice = productPrice * productCount;
+    row += infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
+    // Product
+    row += infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay }));
+    if (productCount > 1) {
+        row += infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
+    }
+    // Profit
+    if (profitType !== "none") {
+        row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), { compactDisplay: compactDisplay, profitType: profitType }));
+    }
+    return row;
+}
+
+function infoTableCell(classId, content) {
+    return `
+<div class="${classId}-info-table-content">
+    ${content}
+</div>
+    `;
+}
+
+function formatNumber(number, options = {}) {
+    const {compactDisplay, profitType, showSign} = options;
+    if (isNaN(number)) {
+        return "?";
+    }
+    let formatterOptions = {
+        maximumFractionDigits: 0,
+    };
+    if (profitType === "percent") {
+        Object.assign(formatterOptions, { maximumFractionDigits: 2, style: "percent" });
+    }
+    if (compactDisplay) {
+        Object.assign(formatterOptions, { maximumFractionDigits: 1, notation: "compact" });
+    }
+    if (showSign) {
+        Object.assign(formatterOptions, { signDisplay: "always" });
+    }
+    const formatter = new Intl.NumberFormat("en-US", formatterOptions);
+    return formatter.format(number);
+}
