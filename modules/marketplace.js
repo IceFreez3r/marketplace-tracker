@@ -329,7 +329,7 @@ body .marketplace-table-cell-div {
             let offer = offers[i];
             offer.classList.remove('marketplace-offer-low', 'marketplace-offer-medium', 'marketplace-offer-high');
             let offerPrice = offer.childNodes[3].innerText
-            offerPrice = parseInt(offerPrice.replace(/\./g, '').replace(/\,/g, ''));
+            offerPrice = parseNumberString(offerPrice);
             if (offerPrice < maxPrice * 0.6) {
                 offer.classList.add('marketplace-offer-low');
             }
@@ -348,9 +348,9 @@ body .marketplace-table-cell-div {
             if (priceCell.getElementsByClassName('marketplace-offer-price-tooltip').length > 0) {
                 continue;
             }
-            const amount = parseInt(offer.childNodes[2].innerText.replace(/\./g, '').replace(/\,/g, ''));
+            const amount = parseNumberString(offer.childNodes[2].innerText);
             priceCell.classList.add('marketplace-offer-price');
-            const price = parseInt(priceCell.innerText.replace(/\./g, '').replace(/\,/g, ''));
+            const price = parseNumberString(priceCell.innerText);
             let tooltip = this.priceTooltipTemplate(maxPrice, price, amount);
             saveInsertAdjacentHTML(priceCell, 'beforeend', tooltip);    
         }
@@ -528,12 +528,12 @@ body .marketplace-table-cell-div {
             }
             // Build new price per item and total
             const itemId = convertItemId(item.childNodes[1].firstChild.src);
-            let itemQuantity = parseInt(item.childNodes[3].textContent.replace(/\./g, ''));
+            let itemQuantity = parseNumberString(item.childNodes[3].textContent);
             if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
                 itemQuantity *= 2;
             }
             const totalDiv = item.childNodes[4];
-            const total = parseInt(totalDiv.textContent.replace(/\./g, ''));
+            const total = parseNumberString(totalDiv.textContent);
             const type = totalDiv.classList[1]; // "purchase" or "sale"
             saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
 <div class="marketplace-history-item-per-item ${type}">

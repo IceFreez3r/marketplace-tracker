@@ -7,7 +7,11 @@ function convertItemId(itemName) {
 }
 
 function parseNumberString(numberString) {
-    const baseNumber = parseFloat(numberString.replace(localNumberSeparators['group'], '').replace(localNumberSeparators['decimal'], '.'));
+    return parseFloat(numberString.replace(localNumberSeparators['group'], '').replace(localNumberSeparators['decimal'], '.'));
+}
+
+function parseCompactNumberString(numberString) {
+    const baseNumber = parseNumberString(numberString);
     const parseScale = {
         'K': 3,
         'M': 6,
