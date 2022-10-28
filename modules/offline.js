@@ -96,7 +96,7 @@ class OfflineTracker {
             if (!this.settings.include_gold && itemId.includes('money_icon')) {
                 continue;
             }
-            const itemCount = parseNumberString(itemNode.childNodes[1].innerText);
+            const itemCount = parseCompactNumberString(itemNode.childNodes[1].innerText);
             // adds to existing count if itemId already occured
             items[itemId] ??= 0;
             items[itemId] += itemCount;

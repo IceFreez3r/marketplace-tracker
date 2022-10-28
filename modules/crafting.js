@@ -169,7 +169,7 @@ body .crafting-container {
             }
             resourceItemIds.push(resourceItemId);
             resourceItemIcons.push(resourceItemNodes[i].childNodes[1].src);
-            resourceItemCounts.push(parseInt(resourceItemNodes[i].firstChild.textContent.replace(/\./g, '')) / craftingAmount);
+            resourceItemCounts.push(parseNumberString(resourceItemNodes[i].firstChild.textContent) / craftingAmount);
         }
 
         let response = storageRequest({
@@ -194,7 +194,7 @@ body .crafting-container {
     goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {
         document.getElementsByClassName('crafting-gold-per-exp')[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
-        const experience = parseInt(experienceNode.childNodes[0].textContent.replace(/\./g, ''));
+        const experience = parseNumberString(experienceNode.childNodes[0].textContent);
         let minCost = - profit('flat', totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
         let maxCost = - profit('flat', totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
         // swap min and max if min is higher than max
