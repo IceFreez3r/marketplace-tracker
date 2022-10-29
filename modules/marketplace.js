@@ -52,16 +52,6 @@ body .marketplace-table-cell-div {
     visibility: visible;
 }
 
-.heat-highlight {
-    border: 3px solid red;
-}
-
-/* Overwrite when both highlights are active */
-.favorite-highlight.heat-highlight {
-    border: 3px solid white;
-    box-shadow: 0 0 0 3px red;
-}
-
 .marketplace-analysis-table {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -422,7 +412,6 @@ body .marketplace-table-cell-div {
                 }
             }
         }
-        this.highlightBestHeatItem(items);
     }
 
     iconToIdMap(items) {
@@ -447,22 +436,6 @@ body .marketplace-table-cell-div {
             map: map
         });
         this.createMap = false;
-    }
-
-    highlightBestHeatItem(items) {
-        const bestHeatItem = storageRequest({
-            type: 'get-best-heat-item',
-        });
-        items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.add("heat-highlight");
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
-            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.remove("heat-highlight");
-                itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
-            }
-        });
     }
 
     initMarketHistory() {

@@ -200,7 +200,7 @@ class Tracker {
                     crafting_tracker: 1,
                     enchanting_tracker: 1,
                     farming_tracker: 1,
-                    favorite_tracker: 1,
+                    market_highlights: 1,
                     marketplace_tracker: 1,
                     offline_tracker: 1,
                     smithing_tracker: 1,

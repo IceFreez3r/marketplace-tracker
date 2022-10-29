@@ -12,7 +12,7 @@
                 "modules/crafting.js",
                 "modules/enchanting.js",
                 "modules/farming.js",
-                "modules/favorite.js",
+                "modules/highlight.js",
                 "modules/marketplace.js",
                 "modules/offline.js",
                 "modules/smithing.js",

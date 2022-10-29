@@ -25,6 +25,8 @@ function storageRequest(request) {
             return handleRecipe(request.resourceItemIds, request.scrollId);
         case "smithing-recipe":
             return handleRecipe(request.resourceIds, request.barId);
+        case "latest-price-quantiles":
+            return latestPriceQuantiles();
         default:
             console.log("Unknown request: " + request);
     }
@@ -133,10 +135,7 @@ function analyzeItem(itemId) {
         }
     }
     const apiId = idMap[itemId];
-    // Sort the price tuples by price
-    itemList[apiId]["prices"].sort(function (a, b) {
-        return a[1] - b[1];
-    });
+    sortPriceList();
     const minQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
     const medianQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.5);
     const maxQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
@@ -154,6 +153,37 @@ function analyzeItems(itemIds) {
         medianPrices: analysisArray.map(analysis => analysis.medianPrice),
         maxPrices: analysisArray.map(analysis => analysis.maxPrice),
     }
+}
+
+/**
+ * 
+ * @returns {Object} Object with pairs of itemIds and their latest price quantiles
+ */
+function latestPriceQuantiles() {
+    const quantiles = {};
+    for (let itemId in idMap) {
+        quantiles[itemId] = ((itemId) => {
+            if (!(itemId in idMap)) {
+                return 1;
+            }
+            const apiId = idMap[itemId]; 
+            sortPriceList(apiId);
+            const index = itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[0] === timestamp);
+            if (index === -1) {
+                return 1;
+            }
+            const quantile = index / (itemList[apiId]["prices"].length - 1);
+            return quantile;
+        })(itemId);
+    }
+    return quantiles;
+}
+
+function sortPriceList(apiId) {
+    // Sort the price tuples by price
+    itemList[apiId]["prices"].sort(function (a, b) {
+        return a[1] - b[1];
+    });
 }
 
 function filterItemList() {
