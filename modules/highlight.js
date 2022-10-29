@@ -73,18 +73,18 @@ class MarketHighlights {
 }
     `;
     overwriteItemBackgroundCss = `
-.marketplace-content .cookedFish, 
-.marketplace-content .cooking-ingredient, 
-.marketplace-content .elite-scroll, 
-.marketplace-content .enchanted-scroll, 
-.marketplace-content .equipment, 
-.marketplace-content .fish, 
-.marketplace-content .gem, 
-.marketplace-content .key, 
-.marketplace-content .log, 
-.marketplace-content .ore, 
-.marketplace-content .rune, 
-.marketplace-content .seed {
+.marketplace-content > :not(.marketplace-sell-container) .cookedFish, 
+.marketplace-content > :not(.marketplace-sell-container) .cooking-ingredient, 
+.marketplace-content > :not(.marketplace-sell-container) .elite-scroll, 
+.marketplace-content > :not(.marketplace-sell-container) .enchanted-scroll, 
+.marketplace-content > :not(.marketplace-sell-container) .equipment, 
+.marketplace-content > :not(.marketplace-sell-container) .fish, 
+.marketplace-content > :not(.marketplace-sell-container) .gem, 
+.marketplace-content > :not(.marketplace-sell-container) .key, 
+.marketplace-content > :not(.marketplace-sell-container) .log, 
+.marketplace-content > :not(.marketplace-sell-container) .ore, 
+.marketplace-content > :not(.marketplace-sell-container) .rune, 
+.marketplace-content > :not(.marketplace-sell-container) .seed {
     background-image: url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024);
 }
     `;
