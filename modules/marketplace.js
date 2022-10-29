@@ -400,16 +400,11 @@ body .marketplace-table-cell-div {
     // ###########################################################################
 
     scanMarketplaceLists() {
-        let items = document.getElementsByClassName('marketplace-sell-items')[0]; // Sell page
-        if (!items) {
-            items = document.getElementsByClassName('marketplace-content')[0]; // Overview page
-            if (!items) {
-                return;
-            } else {
+        if (this.createMap) {
+            let items = document.getElementsByClassName('marketplace-content')[0]; // Overview page
+            if (items) {
                 items = items.firstChild;
-                if (this.createMap) {
-                    this.iconToIdMap(items);
-                }
+                this.iconToIdMap(items);
             }
         }
     }

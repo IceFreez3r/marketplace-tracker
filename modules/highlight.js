@@ -72,6 +72,22 @@ class MarketHighlights {
     stroke: hsl(0, 100%, 50%);
 }
     `;
+    overwriteItemBackgroundCss = `
+.marketplace-content .cookedFish, 
+.marketplace-content .cooking-ingredient, 
+.marketplace-content .elite-scroll, 
+.marketplace-content .enchanted-scroll, 
+.marketplace-content .equipment, 
+.marketplace-content .fish, 
+.marketplace-content .gem, 
+.marketplace-content .key, 
+.marketplace-content .log, 
+.marketplace-content .ore, 
+.marketplace-content .rune, 
+.marketplace-content .seed {
+    background-image: url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024);
+}
+    `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
@@ -80,12 +96,17 @@ class MarketHighlights {
             this.settings.priceColors = true;
         }
         this.cssNode = injectCSS(this.css);
+        this.overwriteItemBackgroundCssNode = undefined;
         
         this.favorites = loadLocalStorage('favorites', []);
         this.favoriteFilterActive = false;
         this.priceColorsActive = false;
 
         this.observer = new MutationObserver(mutations => {
+            if (mutations[0].target.classList.contains("price")) {
+                // prevent infinite loop when user also uses inventory prices from Dael
+                return;
+            }
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -135,7 +156,7 @@ class MarketHighlights {
             this.filterFavorites();
             this.priceColorsButton();
             this.priceColors();
-            this.highlightBestHeatItem();
+            this.highlightBestHeatItem(items);
             return;
         }
         // Buy page
@@ -195,6 +216,11 @@ class MarketHighlights {
             filter.classList.toggle('svg-inactive');
             this.priceColorsActive = !this.priceColorsActive;
             this.priceColors();
+            if (this.priceColorsActive) {
+                this.overwriteItemBackgroundCssNode = injectCSS(this.overwriteItemBackgroundCss);
+            } else {
+                this.overwriteItemBackgroundCssNode?.remove();
+            }
         });
     }
 
@@ -218,7 +244,7 @@ class MarketHighlights {
 
     getHSLColor(quantile) {
         const hue = 120 * (1 - quantile);
-        return `hsl(${hue}, 70%, 35%)`;
+        return `hsl(${hue}, 80%, 40%)`;
     }
 
     toggleFavoriteButton(buyContainer) {
