@@ -165,8 +165,7 @@ function latestPriceQuantiles() {
             if (!(itemId in idMap)) {
                 return 1;
             }
-            const apiId = idMap[itemId]; 
-            sortPriceList(apiId);
+            const apiId = idMap[itemId];
             const index = itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] == itemList[apiId]["latestPrice"]);
             if (index === -1) {
                 return 1;

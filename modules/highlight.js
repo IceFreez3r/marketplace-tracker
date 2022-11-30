@@ -26,11 +26,11 @@ class MarketHighlights {
 }
 
 /* Handling multiple highlights at once */
-.price-colors .favorite-highlight {
+.quantile-borders .favorite-highlight {
     box-shadow: 0 0 0 3px white;
 }
 
-.price-colors .heat-highlight {
+.quantile-borders .heat-highlight {
     box-shadow: 0 0 0 3px red;
 }
 
@@ -39,7 +39,7 @@ class MarketHighlights {
     box-shadow: 0 0 0 3px red;
 }
 
-.price-colors .favorite-highlight.heat-highlight {
+.quantile-borders .favorite-highlight.heat-highlight {
     box-shadow: 0 0 0 3px white, 0 0 0 6px red;
 }
 
@@ -60,52 +60,40 @@ class MarketHighlights {
     stroke: #fff;
 }
 
-#tracker-price-colors:not(.svg-inactive) .rect-third {
+#tracker-quantile-colors:not(.svg-inactive) .rect-third {
     stroke: hsl(120, 100%, 50%);
 }
 
-#tracker-price-colors:not(.svg-inactive) .rect-second {
+#tracker-quantile-colors:not(.svg-inactive) .rect-second {
     stroke: hsl(60, 100%, 50%);
 }
 
-#tracker-price-colors:not(.svg-inactive) .rect-first {
+#tracker-quantile-colors:not(.svg-inactive) .rect-first {
     stroke: hsl(0, 100%, 50%);
-}
-    `;
-    overwriteItemBackgroundCss = `
-.marketplace-content > :not(.marketplace-sell-container) .cookedFish, 
-.marketplace-content > :not(.marketplace-sell-container) .cooking-ingredient, 
-.marketplace-content > :not(.marketplace-sell-container) .elite-scroll, 
-.marketplace-content > :not(.marketplace-sell-container) .enchanted-scroll, 
-.marketplace-content > :not(.marketplace-sell-container) .equipment, 
-.marketplace-content > :not(.marketplace-sell-container) .fish, 
-.marketplace-content > :not(.marketplace-sell-container) .gem, 
-.marketplace-content > :not(.marketplace-sell-container) .key, 
-.marketplace-content > :not(.marketplace-sell-container) .log, 
-.marketplace-content > :not(.marketplace-sell-container) .ore, 
-.marketplace-content > :not(.marketplace-sell-container) .rune, 
-.marketplace-content > :not(.marketplace-sell-container) .seed {
-    background-image: url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024);
 }
     `;
 
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
-        if (this.settings.priceColors === undefined) {
-            this.settings.priceColors = true;
+        if (this.settings.quantileDisplay === undefined) {
+            this.settings.quantileDisplay = "dot";
         }
         this.cssNode = injectCSS(this.css);
-        this.overwriteItemBackgroundCssNode = undefined;
         
         this.favorites = loadLocalStorage('favorites', []);
         this.favoriteFilterActive = false;
-        this.priceColorsActive = false;
+        this.quantileColorsActive = false;
 
         this.observer = new MutationObserver(mutations => {
             if (mutations[0].target.classList.contains("price")) {
                 // prevent infinite loop when user also uses inventory prices from Dael
                 return;
+            }
+            for (let addedNode of mutations[0].addedNodes) {
+                if (addedNode.classList && (addedNode.classList.contains("heat-highlight") || addedNode.classList.contains("quantile-dot"))) {
+                    return;
+                }
             }
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
@@ -113,7 +101,7 @@ class MarketHighlights {
             }
             if (selectedSkill.innerText !== 'Marketplace') {
                 this.favoriteFilterActive = false;
-                this.priceColorsActive = false;
+                this.quantileColorsActive = false;
                 return;
             }
             this.highlight();
@@ -134,7 +122,24 @@ class MarketHighlights {
     }
 
     settingsMenuContent() {
-        return "";
+        let moduleSetting = document.createElement('div');
+        moduleSetting.classList.add('tracker-module-setting');
+        moduleSetting.insertAdjacentHTML('beforeend', `
+<div class="tracker-module-setting-name">
+    Quantile display
+</div>
+        `);
+        moduleSetting.append(this.tracker.selectMenu(MarketHighlights.id + "-quantileDisplay", {
+            off: "Off",
+            border: "Border",
+            dot: "Dot",
+            party: "Let my eyes bleed",
+        }, this.settings.quantileDisplay));
+        return moduleSetting;
+    }
+
+    settingChanged(settingId, value) {
+        return;
     }
 
     // Determines current subpage of the marketplace
@@ -154,8 +159,10 @@ class MarketHighlights {
             this.highlightFavorites(items);
             this.filterFavoritesButton();
             this.filterFavorites();
-            this.priceColorsButton();
-            this.priceColors();
+            if (this.settings.quantileDisplay !== "off") {
+                this.quantileColorsButton();
+                this.quantileColors();
+            }
             this.highlightBestHeatItem(items);
             return;
         }
@@ -201,45 +208,51 @@ class MarketHighlights {
         });
     }
 
-    priceColorsButton() {
-        if (document.getElementById('tracker-price-colors')) {
+    quantileColorsButton() {
+        if (document.getElementById('tracker-quantile-colors')) {
             return;
         }
         const sortingContainer = document.getElementsByClassName('market-sorting-container')[0];
         saveInsertAdjacentHTML(sortingContainer.firstChild, 'afterend', `
-<div id="tracker-price-colors" class="${this.priceColorsActive ? "" : "svg-inactive"}">
+<div id="tracker-quantile-colors" class="${this.quantileColorsActive ? "" : "svg-inactive"}">
     ${MarketHighlights.colorTemplate("tracker-highlight-button")}
 </div>
         `);
-        const filter = document.getElementById('tracker-price-colors');
+        const filter = document.getElementById('tracker-quantile-colors');
         filter.addEventListener('click', () => {
             filter.classList.toggle('svg-inactive');
-            this.priceColorsActive = !this.priceColorsActive;
-            this.priceColors();
-            if (this.priceColorsActive) {
-                this.overwriteItemBackgroundCssNode = injectCSS(this.overwriteItemBackgroundCss);
-            } else {
-                this.overwriteItemBackgroundCssNode?.remove();
-            }
+            this.quantileColorsActive = !this.quantileColorsActive;
+            this.quantileColors();
         });
     }
 
-    priceColors() {
+    quantileColors() {
         let items = document.querySelectorAll('.marketplace-content .item');
-        if (this.priceColorsActive) {
+        if (this.quantileColorsActive) {
             const priceQuantiles = storageRequest({
                 type: "latest-price-quantiles"
             });
-            for (let item of items) { // correct for loop type?
+            for (let item of items) {
                 const itemId = convertItemId(item.firstChild.src);
-                item.style.border = `3px solid ${this.getHSLColor(priceQuantiles[itemId])}`;
+                item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
+                if (this.settings.quantileDisplay === "border" || this.settings.quantileDisplay === "party") {
+                    item.style.border = `3px solid ${this.getHSLColor(priceQuantiles[itemId])}`;
+                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
+                }
+                if (this.settings.quantileDisplay === "dot" || this.settings.quantileDisplay === "party") {
+                    item.insertAdjacentHTML('beforeend', `
+<svg class="quantile-dot" style="position: absolute; bottom: 0px; right: 0px; width: 24px; height: 24px;">
+    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(priceQuantiles[itemId])}" />
+</svg>`);
+                }
             }
         } else {
             for (let item of items) {
-                item.style.border = '';
+                item.style.backgroundImage = "";
+                item.style.border = "";
+                item.getElementsByClassName('quantile-dot')[0]?.remove();
             }
         }
-        document.getElementsByClassName('all-items')[0].classList.toggle('price-colors', this.priceColorsActive);
     }
 
     getHSLColor(quantile) {
