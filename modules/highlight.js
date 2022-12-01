@@ -86,6 +86,7 @@ class MarketHighlights {
         this.quantileColorsActive = false;
 
         this.observer = new MutationObserver(mutations => {
+            // TODO: define global detectInfiniteLoop function in utility.js
             if (mutations[0].target.classList.contains("price")) {
                 // prevent infinite loop when user also uses inventory prices from Dael
                 return;
@@ -133,6 +134,7 @@ class MarketHighlights {
             off: "Off",
             border: "Border",
             dot: "Dot",
+            shadow: "Shadow",
             party: "Let my eyes bleed",
         }, this.settings.quantileDisplay));
         return moduleSetting;
@@ -228,28 +230,45 @@ class MarketHighlights {
 
     quantileColors() {
         let items = document.querySelectorAll('.marketplace-content .item');
+        if (items.length === 0) {
+            return;
+        }
         if (this.quantileColorsActive) {
             const priceQuantiles = storageRequest({
                 type: "latest-price-quantiles"
             });
             for (let item of items) {
                 const itemId = convertItemId(item.firstChild.src);
+                const quantile = priceQuantiles[itemId];
                 item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
-                if (this.settings.quantileDisplay === "border" || this.settings.quantileDisplay === "party") {
-                    item.style.border = `3px solid ${this.getHSLColor(priceQuantiles[itemId])}`;
-                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
-                }
-                if (this.settings.quantileDisplay === "dot" || this.settings.quantileDisplay === "party") {
+                if (this.settings.quantileDisplay === "dot") {
+                    // TODO: Adjust dot size with setting
                     item.insertAdjacentHTML('beforeend', `
 <svg class="quantile-dot" style="position: absolute; bottom: 0px; right: 0px; width: 24px; height: 24px;">
-    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(priceQuantiles[itemId])}" />
+    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(quantile)}" />
 </svg>`);
+                }
+                else if (this.settings.quantileDisplay === "border") {
+                    item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
+                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
+                }
+                else if (this.settings.quantileDisplay === "shadow") {
+                    item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
+                }
+                else if (this.settings.quantileDisplay === "party") {
+                    item.insertAdjacentHTML('beforeend', `
+<svg class="quantile-dot" style="position: absolute; bottom: 0px; right: 0px; width: 24px; height: 24px;">
+    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(quantile)}" />
+</svg>`);
+                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
+                    this.partyMode(item, quantile);
                 }
             }
         } else {
             for (let item of items) {
                 item.style.backgroundImage = "";
                 item.style.border = "";
+                item.getElementsByClassName('item-icon')[0].style.filter = "";
                 item.getElementsByClassName('quantile-dot')[0]?.remove();
             }
         }
@@ -258,6 +277,16 @@ class MarketHighlights {
     getHSLColor(quantile) {
         const hue = 120 * (1 - quantile);
         return `hsl(${hue}, 80%, 40%)`;
+    }
+
+    partyMode(item, quantile) {
+        item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
+        item.getElementsByClassName('quantile-dot')[0].firstElementChild.style.fill = this.getHSLColor(quantile);
+        item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
+        quantile = (quantile + 0.05) % 3;
+        setTimeout(() => {
+            this.partyMode(item, quantile);
+        }, 100);
     }
 
     toggleFavoriteButton(buyContainer) {

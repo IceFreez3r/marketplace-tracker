@@ -162,10 +162,10 @@ function latestPriceQuantiles() {
     const quantiles = {};
     for (let itemId in idMap) {
         quantiles[itemId] = ((itemId) => {
-            if (!(itemId in idMap)) {
+            const apiId = idMap[itemId];
+            if (!(apiId in itemList)) {
                 return 1;
             }
-            const apiId = idMap[itemId];
             const index = itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] == itemList[apiId]["latestPrice"]);
             if (index === -1) {
                 return 1;
