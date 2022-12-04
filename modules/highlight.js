@@ -71,6 +71,28 @@ class MarketHighlights {
 #tracker-quantile-colors:not(.svg-inactive) .rect-first {
     stroke: hsl(0, 100%, 50%);
 }
+
+.quantile-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 2px;
+}
+
+.marker-size-slider {
+    position: relative;
+}
+
+.marker-size-preview {
+    display: none;
+}
+
+.marker-size-slider:hover .marker-size-preview {
+    display: block;
+    position: absolute;
+    top: 80%;
+    right: 0;
+}
     `;
 
     constructor(tracker, settings) {
@@ -78,6 +100,9 @@ class MarketHighlights {
         this.settings = settings;
         if (this.settings.quantileDisplay === undefined) {
             this.settings.quantileDisplay = "dot";
+        }
+        if (this.settings.markerSize === undefined) {
+            this.settings.markerSize = "40%";
         }
         this.cssNode = injectCSS(this.css);
         
@@ -123,25 +148,52 @@ class MarketHighlights {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement('div');
-        moduleSetting.classList.add('tracker-module-setting');
-        moduleSetting.insertAdjacentHTML('beforeend', `
+        let quantileDisplay = document.createElement('div');
+        quantileDisplay.classList.add('tracker-module-setting');
+        quantileDisplay.insertAdjacentHTML('beforeend', `
 <div class="tracker-module-setting-name">
     Quantile display
 </div>
         `);
-        moduleSetting.append(this.tracker.selectMenu(MarketHighlights.id + "-quantileDisplay", {
+        quantileDisplay.append(this.tracker.selectMenu(MarketHighlights.id + "-quantileDisplay", {
             off: "Off",
             border: "Border",
             dot: "Dot",
             shadow: "Shadow",
             party: "Let my eyes bleed",
         }, this.settings.quantileDisplay));
-        return moduleSetting;
+        let markerSize = document.createElement('div');
+        markerSize.classList.add('tracker-module-setting');
+        markerSize.insertAdjacentHTML('beforeend', `
+<div class="tracker-module-setting-name">
+    Marker size
+</div>
+<div class="marker-size-slider">
+    ${this.tracker.sliderTemplate(MarketHighlights.id + "-markerSize", [15, 70], this.settings.markerSize)}
+    <div class="marker-size-preview item gem" data-tip="true" data-for="marketplaceBuyItemTooltip50" style="background-image: url('/images/ui/frame_icon.png'), linear-gradient(rgb(28, 32, 36), rgb(28, 32, 36));">
+        <img class="item-icon" src="/images/misc/book.png" alt="Book">
+        ${MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot")}
+    </div>
+</div>
+        `);
+        // add onchange listener to slider
+        let slider = markerSize.querySelector("input");
+        slider.addEventListener("input", this.updatePreview.bind(this));
+        return [quantileDisplay, markerSize];
     }
 
     settingChanged(settingId, value) {
         return;
+    }
+
+    updatePreview() {
+        const preview = document.getElementsByClassName("quantile-dot")[0];
+        console.log(preview);
+        if (preview) {
+            const size = document.getElementById(MarketHighlights.id + "-markerSize").value;
+            preview.style.width = size + "%";
+            preview.style.height = size + "%";
+        }
     }
 
     // Determines current subpage of the marketplace
@@ -243,10 +295,7 @@ class MarketHighlights {
                 item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
                 if (this.settings.quantileDisplay === "dot") {
                     // TODO: Adjust dot size with setting
-                    item.insertAdjacentHTML('beforeend', `
-<svg class="quantile-dot" style="position: absolute; bottom: 0px; right: 0px; width: 24px; height: 24px;">
-    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(quantile)}" />
-</svg>`);
+                    item.insertAdjacentHTML('beforeend', MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
                 }
                 else if (this.settings.quantileDisplay === "border") {
                     item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
@@ -256,10 +305,7 @@ class MarketHighlights {
                     item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
                 }
                 else if (this.settings.quantileDisplay === "party") {
-                    item.insertAdjacentHTML('beforeend', `
-<svg class="quantile-dot" style="position: absolute; bottom: 0px; right: 0px; width: 24px; height: 24px;">
-    <circle cx="12" cy="12" r="8" fill="${this.getHSLColor(quantile)}" />
-</svg>`);
+                    item.insertAdjacentHTML('beforeend', MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
                     document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
                     this.partyMode(item, quantile);
                 }
@@ -323,7 +369,7 @@ class MarketHighlights {
             const itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.add("heat-highlight");
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
+                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`);
             } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.remove("heat-highlight");
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
@@ -345,6 +391,14 @@ class MarketHighlights {
     <rect class="rect-third" x="5" y="8" width="50" height="50" rx="5" ry="5"/>
     <rect class="rect-second" x="34" y="18" width="50" height="50" rx="5" ry="5"/>
     <rect class="rect-first" x="12" y="38" width="50" height="50" rx="5" ry="5"/>
+</svg>
+        `;
+    }
+
+    static dotTemplate(size, classes = "", color = "hsl(40, 80%, 40%)") {
+        return `
+<svg class="${classes}" viewbox="0 0 100 100" style="width: ${size}; height: ${size}; fill: ${color};">
+    <circle cx="50" cy="50" r="50"/>
 </svg>
         `;
     }

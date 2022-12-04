@@ -1,7 +1,8 @@
 class Tracker {
     css = `
 :root {
-    --tracker-red: #f50057;
+    --tracker-red: rgb(245, 0, 87);
+    --tracker-red-transparent: rgba(245, 0, 87, 0.3);
 }
 
 .drawer-item {
@@ -124,6 +125,39 @@ class Tracker {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.tracker-slider[type="range"] {
+    width: 150px;
+    border: unset;
+    color: var(--tracker-red);
+    box-shadow: unset;
+}
+
+/* styling the slider thumb needs browser specific prefixes */
+.tracker-slider[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: var(--tracker-red);
+}
+
+.tracker-slider[type="range"]::-moz-range-thumb {
+    background: var(--tracker-red);
+}
+
+.tracker-slider[type="range"]::-ms-thumb {
+    background: var(--tracker-red);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-webkit-slider-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-moz-range-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-ms-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
 }
 
 .tracker-options {
@@ -437,6 +471,11 @@ class Tracker {
         for (const selectMenu of selectMenus) {
             this.setSetting(selectMenu.id, selectMenu.dataset.for);
         }
+        // Slider
+        const sliders = document.getElementsByClassName('tracker-slider');
+        for (const slider of sliders) {
+            this.setSetting(slider.id, slider.value);
+        }
         // Save settings
         console.log(this.settings);
         localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
@@ -577,6 +616,25 @@ class Tracker {
             });
         }
         return menu;
+    }
+
+    /**
+     * Creates a template for a slider
+     *
+     * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
+     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at 
+     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of 
+     *                    the corresponding module if it's not set.
+     *                    !! This will not check if the path exists in the settings !!
+     * @param {Array} range minimum and maximum value of the slider, a third value can be provided to set the step size
+     * @param {string} currentlySelected The currently selected value
+     * @param {string=} classes additional css classes
+     * @returns {Node} div holding the select menu with working functionality.
+     */
+    sliderTemplate(id, range, currentlySelected, classes = "") {
+        return `
+<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${range[1]}" step="${range[2] || 1}" value="${currentlySelected}">
+        `;
     }
 
     arrowDownTemplate(classes = "") {
