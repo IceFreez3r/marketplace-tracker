@@ -190,7 +190,8 @@ function addHardcodedItems() {
 }
 
 function fetchAPI() {
-    fetch("https://idlescape.com/api/market/manifest")
+    const apiUrl = window.location.origin + "/api/market/manifest";
+    fetch(apiUrl)
         .then(function (response) {
             return response.json();
         })

@@ -6,7 +6,8 @@
     "content_scripts": [
         {
             "matches": [
-                "https://idlescape.com/game"
+                "https://idlescape.com/game",
+                "https://www.idlescape.com/game"
             ],
             "js": [
                 "modules/crafting.js",
