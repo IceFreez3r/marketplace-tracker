@@ -195,6 +195,9 @@ body .crafting-container {
         document.getElementsByClassName('crafting-gold-per-exp')[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
         const experience = parseNumberString(experienceNode.childNodes[0].textContent);
+        if (experience === 0) {
+            return;
+        }
         let minCost = - profit('flat', totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
         let maxCost = - profit('flat', totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
         // swap min and max if min is higher than max
