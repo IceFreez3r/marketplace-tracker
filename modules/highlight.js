@@ -26,11 +26,11 @@ class MarketHighlights {
 }
 
 /* Handling multiple highlights at once */
-.quantile-borders .favorite-highlight {
+.quantile-borders.favorite-highlight {
     box-shadow: 0 0 0 3px white;
 }
 
-.quantile-borders .heat-highlight {
+.quantile-borders.heat-highlight {
     box-shadow: 0 0 0 3px red;
 }
 
@@ -39,7 +39,7 @@ class MarketHighlights {
     box-shadow: 0 0 0 3px red;
 }
 
-.quantile-borders .favorite-highlight.heat-highlight {
+.quantile-borders.favorite-highlight.heat-highlight {
     box-shadow: 0 0 0 3px white, 0 0 0 6px red;
 }
 
@@ -299,14 +299,14 @@ class MarketHighlights {
                 }
                 else if (this.settings.quantileDisplay === "border") {
                     item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
-                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
+                    item.classList.toggle('quantile-borders', this.quantileColorsActive);
                 }
                 else if (this.settings.quantileDisplay === "shadow") {
                     item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
                 }
                 else if (this.settings.quantileDisplay === "party") {
                     item.insertAdjacentHTML('beforeend', MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
-                    document.getElementsByClassName('all-items')[0].classList.toggle('quantile-borders', this.quantileColorsActive);
+                    item.classList.toggle('quantile-borders', this.quantileColorsActive);
                     this.partyMode(item, quantile);
                 }
             }
@@ -316,6 +316,7 @@ class MarketHighlights {
                 item.style.border = "";
                 item.getElementsByClassName('item-icon')[0].style.filter = "";
                 item.getElementsByClassName('quantile-dot')[0]?.remove();
+                item.classList.toggle('quantile-borders', this.quantileColorsActive);
             }
         }
     }
