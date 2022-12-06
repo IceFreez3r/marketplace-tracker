@@ -58,8 +58,8 @@ body .crafting-container {
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
-        if (!this.settings.profit) {
-            this.settings.profit = "none";
+        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
+            this.settings.profit = "off";
         }
         if (this.settings.goldPerXP === undefined) {
             this.settings.goldPerXP = 1;
@@ -105,7 +105,7 @@ body .crafting-container {
 </div>
         `);
         moduleSetting.append(this.tracker.selectMenu(CraftingTracker.id + "-profit", {
-                none: "None",
+                off: "Off",
                 percent: "Percent",
                 flat: "Flat",
             }, this.settings.profit));
