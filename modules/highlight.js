@@ -188,7 +188,6 @@ class MarketHighlights {
 
     updatePreview() {
         const preview = document.getElementsByClassName("quantile-dot")[0];
-        console.log(preview);
         if (preview) {
             const size = document.getElementById(MarketHighlights.id + "-markerSize").value;
             preview.style.width = size + "%";

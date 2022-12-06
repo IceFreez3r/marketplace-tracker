@@ -50,7 +50,7 @@ function handleApiData(data) {
         sortPriceList(data[i].itemID);
         itemList[data[i].itemID]["latestPrice"] = data[i].minPrice;
     }
-    const currentHeatValue = heatValue(timestamp);
+    const currentHeatValue = heatValue();
     itemList[2]["prices"].push([timestamp, currentHeatValue.heatValue]);
     sortPriceList(2);
     itemList[2]["latestPrice"] = currentHeatValue.heatValue;
