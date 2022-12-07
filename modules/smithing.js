@@ -81,7 +81,7 @@ class SmithingTracker {
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
-        if (!this.settings.profit) {
+        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "percent";
         }
         this.cssNode = injectCSS(this.css);
@@ -120,7 +120,7 @@ class SmithingTracker {
 </div>
         `);
         moduleSetting.append(this.tracker.selectMenu(SmithingTracker.id + "-profit", {
-            none: "None",
+            off: "Off",
             percent: "Percent",
             flat: "Flat",
             per_hour: "Per Hour",

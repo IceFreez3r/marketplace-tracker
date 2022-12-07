@@ -131,7 +131,7 @@ function isIronmanCharacter() {
  * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
  * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
  * @param {Object} product icon, count, minPrice and maxPrice of the product
- * @param {string} profitType options are `none`, `percent`, `flat` and `per_hour`
+ * @param {string} profitType options are `off`, `percent`, `flat` and `per_hour`
  * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
  * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
  * @param {Number=} secondsPerAction only required if profitType is `per_hour`
@@ -165,7 +165,7 @@ ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}<
         `);
     }
     // Profit
-    if (profitType !== "none") {
+    if (profitType !== "off") {
         header += infoTableCell(classId, `
 <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
 ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
@@ -175,7 +175,7 @@ ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span
     const minPrice = infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
     const maxPrice = infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
     return `
-<div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
+<div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")}, 1fr)">
     ${header}
     ${infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
     ${minPrice}
@@ -199,7 +199,7 @@ function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice,
         row += infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
     }
     // Profit
-    if (profitType !== "none") {
+    if (profitType !== "off") {
         row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), { compactDisplay: compactDisplay, profitType: profitType }));
     }
     return row;

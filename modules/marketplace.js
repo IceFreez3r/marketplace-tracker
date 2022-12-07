@@ -52,16 +52,6 @@ body .marketplace-table-cell-div {
     visibility: visible;
 }
 
-.heat-highlight {
-    border: 3px solid red;
-}
-
-/* Overwrite when both highlights are active */
-.favorite-highlight.heat-highlight {
-    border: 3px solid white;
-    box-shadow: 0 0 0 3px red;
-}
-
 .marketplace-analysis-table {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -410,19 +400,13 @@ body .marketplace-table-cell-div {
     // ###########################################################################
 
     scanMarketplaceLists() {
-        let items = document.getElementsByClassName('marketplace-sell-items')[0]; // Sell page
-        if (!items) {
-            items = document.getElementsByClassName('marketplace-content')[0]; // Overview page
-            if (!items) {
-                return;
-            } else {
+        if (this.createMap) {
+            let items = document.getElementsByClassName('marketplace-content')[0]; // Overview page
+            if (items) {
                 items = items.firstChild;
-                if (this.createMap) {
-                    this.iconToIdMap(items);
-                }
+                this.iconToIdMap(items);
             }
         }
-        this.highlightBestHeatItem(items);
     }
 
     iconToIdMap(items) {
@@ -447,22 +431,6 @@ body .marketplace-table-cell-div {
             map: map
         });
         this.createMap = false;
-    }
-
-    highlightBestHeatItem(items) {
-        const bestHeatItem = storageRequest({
-            type: 'get-best-heat-item',
-        });
-        items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.add("heat-highlight");
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: 24px; height: 24px;">`);
-            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
-                itemNode.firstChild.classList.remove("heat-highlight");
-                itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
-            }
-        });
     }
 
     initMarketHistory() {

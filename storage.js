@@ -6,7 +6,7 @@ function storageRequest(request) {
             handleClose();
             break;
         case "get-best-heat-item":
-            return itemList[heatValue(timestamp).apiId].itemId;
+            return itemList[heatValue().apiId].itemId;
         case "market-api-data":
             handleApiData(request.data);
             break;
@@ -25,6 +25,8 @@ function storageRequest(request) {
             return handleRecipe(request.resourceItemIds, request.scrollId);
         case "smithing-recipe":
             return handleRecipe(request.resourceIds, request.barId);
+        case "latest-price-quantiles":
+            return latestPriceQuantiles();
         default:
             console.log("Unknown request: " + request);
     }
@@ -36,7 +38,7 @@ function handleClose() {
 }
 
 function handleApiData(data) {
-    timestamp = Math.floor(Date.now() / 1000 / 60 / 6);
+    const timestamp = Math.floor(Date.now() / 1000 / 60 / 6);
     for (let i = 0; i < data.length; i++) {
         // data[i].itemID == apiId
         if (!(data[i].itemID in itemList)) {
@@ -45,11 +47,16 @@ function handleApiData(data) {
             itemList[data[i].itemID]["prices"] = [];
         }
         itemList[data[i].itemID]["prices"].push([timestamp, data[i].minPrice]);
+        sortPriceList(data[i].itemID);
+        itemList[data[i].itemID]["latestPrice"] = data[i].minPrice;
     }
-    itemList[2]["prices"].push([timestamp, heatValue(timestamp).heatValue]);
+    const currentHeatValue = heatValue();
+    itemList[2]["prices"].push([timestamp, currentHeatValue.heatValue]);
+    sortPriceList(2);
+    itemList[2]["latestPrice"] = currentHeatValue.heatValue;
 }
 
-function heatValue(timestamp) {
+function heatValue() {
     const heatItems = [
         {apiId: 50, heat: 50},      // Book
         {apiId: 112, heat: 10},     // Coal
@@ -70,17 +77,12 @@ function heatValue(timestamp) {
     ];
     const bestHeatItem = heatItems.reduce(function (result, heatItem) {
         if (heatItem.apiId in itemList) {
-            // find the price tuple with the current timestamp
-            const priceTuple = itemList[heatItem.apiId].prices.find(function (priceTuple) {
-                return priceTuple[0] === timestamp;
-            });
-            if (priceTuple) {
-                if (priceTuple[1] / heatItem.heat < result.heatValue) {
-                    result = {
-                        apiId: heatItem.apiId,
-                        heatValue: priceTuple[1] / heatItem.heat,
-                    };
-                }
+            const latestPrice = itemList[heatItem.apiId]["latestPrice"];
+            if (latestPrice / heatItem.heat < result.heatValue) {
+                result = {
+                    apiId: heatItem.apiId,
+                    heatValue: latestPrice / heatItem.heat,
+                };
             }
         }
         return result;
@@ -133,10 +135,6 @@ function analyzeItem(itemId) {
         }
     }
     const apiId = idMap[itemId];
-    // Sort the price tuples by price
-    itemList[apiId]["prices"].sort(function (a, b) {
-        return a[1] - b[1];
-    });
     const minQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.05);
     const medianQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.5);
     const maxQuantile = Math.floor((itemList[apiId]["prices"].length - 1) * 0.95);
@@ -154,6 +152,36 @@ function analyzeItems(itemIds) {
         medianPrices: analysisArray.map(analysis => analysis.medianPrice),
         maxPrices: analysisArray.map(analysis => analysis.maxPrice),
     }
+}
+
+/**
+ * 
+ * @returns {Object} Object with pairs of itemIds and their latest price quantiles
+ */
+function latestPriceQuantiles() {
+    const quantiles = {};
+    for (let itemId in idMap) {
+        quantiles[itemId] = ((itemId) => {
+            const apiId = idMap[itemId];
+            if (!(apiId in itemList)) {
+                return 1;
+            }
+            const index = itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] == itemList[apiId]["latestPrice"]);
+            if (index === -1) {
+                return 1;
+            }
+            const quantile = index / (itemList[apiId]["prices"].length - 1);
+            return quantile;
+        })(itemId);
+    }
+    return quantiles;
+}
+
+function sortPriceList(apiId) {
+    // Sort the price tuples by price
+    itemList[apiId]["prices"].sort(function (a, b) {
+        return a[1] - b[1];
+    });
 }
 
 function filterItemList() {
@@ -229,7 +257,5 @@ if (!lastLogin) {
     lastLogin = Date.now();
 }
 
-// stores last timestamp at which API date arrived
-let timestamp = 0;
 fetchAPI();
 let apiFetch = setInterval(() => fetchAPI(), 1000 * 60 * 10); // 10 minutes
