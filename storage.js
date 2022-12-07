@@ -6,7 +6,8 @@ function storageRequest(request) {
             handleClose();
             break;
         case "get-best-heat-item":
-            return itemList[heatValue().apiId].itemId;
+            const bestHeatItem = heatValue().apiId;
+            return itemList[bestHeatItem]?.itemId;
         case "market-api-data":
             handleApiData(request.data);
             break;
