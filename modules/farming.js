@@ -207,13 +207,12 @@ body .farming-seeds .all-items {
         }
         // Add new headers for the seed types
         seedContainer.insertAdjacentHTML("beforeend", `
-            <h5 class="farming-seeds-title seed-header-mysterious">Mysterious seeds</h5>
-            <div class="farming-seeds-title-border seed-header-mysterious-border"></div>
-            <h5 class="farming-seeds-title seed-header-single">Single slot seeds</h5>
-            <div class="farming-seeds-title-border seed-header-single-border"></div>
-            <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
-            <div class="farming-seeds-title-border seed-header-multi-border"></div>
-            `);
+                <h5 class="farming-seeds-title seed-header-mysterious">Mysterious seeds</h5>
+                <div class="farming-seeds-title-border seed-header-mysterious-border"></div>
+                <h5 class="farming-seeds-title seed-header-single">Single slot seeds</h5>
+                <div class="farming-seeds-title-border seed-header-single-border"></div>
+                <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
+                <div class="farming-seeds-title-border seed-header-multi-border"></div>`);
     }
 
     clearMetaElements(seedContainer) {

@@ -8,6 +8,10 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=idlescape.com
 // @updateURL    https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
 // @downloadURL  https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/storage.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/templates.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/utility.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/DOMpurify.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/crafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/enchanting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/farming.js
@@ -15,9 +19,6 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/marketplace.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/offline.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/smithing.js
-// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/storage.js
-// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/utility.js
-// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/DOMpurify.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/tracker.js
 // @grant        none
 // ==/UserScript==

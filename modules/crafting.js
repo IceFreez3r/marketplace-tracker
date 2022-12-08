@@ -100,24 +100,22 @@ body .crafting-container {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend',`
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(CraftingTracker.id + "-profit", {
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(CraftingTracker.id + "-profit", {
                 off: "Off",
                 percent: "Percent",
                 flat: "Flat",
             }, this.settings.profit));
 
         const goldPerXP = `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        Show Gold Per Experience
-    </div>
-    ${this.tracker.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
-</div>
-        `;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Show Gold Per Experience
+                </div>
+                ${Templates.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
+            </div>`;
         return [moduleSetting, goldPerXP];
     }
 
@@ -184,7 +182,7 @@ body .crafting-container {
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
         const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
         const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
-        saveInsertAdjacentHTML(craftingContainer, 'beforeend', infoTableTemplate('crafting', ingredients, product, this.settings.profit));
+        saveInsertAdjacentHTML(craftingContainer, 'beforeend', Templates.infoTableTemplate('crafting', ingredients, product, this.settings.profit));
         
         if (this.settings.goldPerXP) {
             this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
@@ -205,14 +203,13 @@ body .crafting-container {
             [minCost, maxCost] = [maxCost, minCost];
         }
         saveInsertAdjacentHTML(experienceNode, 'afterend', `
-<div class="crafting-gold-per-exp">
-    <span>
-        ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
-    </span>
-    <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
-    <span>/</span>
-    <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
-</div>
-        `);
+            <div class="crafting-gold-per-exp">
+                <span>
+                    ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
+                </span>
+                <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
+                <span>/</span>
+                <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
+            </div>`);
     }
 }

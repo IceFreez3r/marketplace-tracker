@@ -1,7 +1,7 @@
 class MarketHighlights {
     static id = "market_highlights";
     static displayName = "Market Highlights";
-    static icon = MarketHighlights.favoriteTemplate(); // TODO
+    static icon = Templates.favoriteTemplate(); // TODO
     static category = "economy";
     css = `
 .tracker-highlight-button {
@@ -102,7 +102,7 @@ class MarketHighlights {
             this.settings.quantileDisplay = "dot";
         }
         if (this.settings.markerSize === undefined) {
-            this.settings.markerSize = "40%";
+            this.settings.markerSize = 40;
         }
         this.cssNode = injectCSS(this.css);
         
@@ -151,11 +151,10 @@ class MarketHighlights {
         let quantileDisplay = document.createElement('div');
         quantileDisplay.classList.add('tracker-module-setting');
         quantileDisplay.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Quantile display
-</div>
-        `);
-        quantileDisplay.append(this.tracker.selectMenu(MarketHighlights.id + "-quantileDisplay", {
+            <div class="tracker-module-setting-name">
+                Quantile display
+            </div>`);
+        quantileDisplay.append(Templates.selectMenu(MarketHighlights.id + "-quantileDisplay", {
             off: "Off",
             border: "Border",
             dot: "Dot",
@@ -165,17 +164,16 @@ class MarketHighlights {
         let markerSize = document.createElement('div');
         markerSize.classList.add('tracker-module-setting');
         markerSize.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Marker size
-</div>
-<div class="marker-size-slider">
-    ${this.tracker.sliderTemplate(MarketHighlights.id + "-markerSize", [15, 70], this.settings.markerSize)}
-    <div class="marker-size-preview item gem" data-tip="true" data-for="marketplaceBuyItemTooltip50" style="background-image: url('/images/ui/frame_icon.png'), linear-gradient(rgb(28, 32, 36), rgb(28, 32, 36));">
-        <img class="item-icon" src="/images/misc/book.png" alt="Book">
-        ${MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot")}
-    </div>
-</div>
-        `);
+            <div class="tracker-module-setting-name">
+                Marker size
+            </div>
+            <div class="marker-size-slider">
+                ${Templates.sliderTemplate(MarketHighlights.id + "-markerSize", [15, 70], this.settings.markerSize)}
+                <div class="marker-size-preview item gem" data-tip="true" data-for="marketplaceBuyItemTooltip50" style="background-image: url('/images/ui/frame_icon.png'), linear-gradient(rgb(28, 32, 36), rgb(28, 32, 36));">
+                    <img class="item-icon" src="/images/misc/book.png" alt="Book">
+                    ${Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot")}
+                </div>
+            </div>`);
         // add onchange listener to slider
         let slider = markerSize.querySelector("input");
         slider.addEventListener("input", this.updatePreview.bind(this));
@@ -233,10 +231,9 @@ class MarketHighlights {
         }
         const sortingContainer = document.getElementsByClassName('market-sorting-container')[0];
         saveInsertAdjacentHTML(sortingContainer.firstChild, 'afterend', `
-<div id="tracker-favorite-filter" class="${this.favoriteFilterActive ? "" : "svg-inactive"}">
-    ${MarketHighlights.favoriteTemplate("tracker-highlight-button")}
-</div>
-        `);
+            <div id="tracker-favorite-filter" class="${this.favoriteFilterActive ? "" : "svg-inactive"}">
+                ${Templates.favoriteTemplate("tracker-highlight-button")}
+            </div>`);
         const filter = document.getElementById('tracker-favorite-filter');
         filter.addEventListener('click', () => {
             filter.classList.toggle('svg-inactive');
@@ -267,10 +264,9 @@ class MarketHighlights {
         }
         const sortingContainer = document.getElementsByClassName('market-sorting-container')[0];
         saveInsertAdjacentHTML(sortingContainer.firstChild, 'afterend', `
-<div id="tracker-quantile-colors" class="${this.quantileColorsActive ? "" : "svg-inactive"}">
-    ${MarketHighlights.colorTemplate("tracker-highlight-button")}
-</div>
-        `);
+            <div id="tracker-quantile-colors" class="${this.quantileColorsActive ? "" : "svg-inactive"}">
+                ${Templates.colorTemplate("tracker-highlight-button")}
+            </div>`);
         const filter = document.getElementById('tracker-quantile-colors');
         filter.addEventListener('click', () => {
             filter.classList.toggle('svg-inactive');
@@ -294,7 +290,7 @@ class MarketHighlights {
                 item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
                 if (this.settings.quantileDisplay === "dot") {
                     // TODO: Adjust dot size with setting
-                    item.insertAdjacentHTML('beforeend', MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
+                    item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
                 }
                 else if (this.settings.quantileDisplay === "border") {
                     item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
@@ -304,7 +300,7 @@ class MarketHighlights {
                     item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
                 }
                 else if (this.settings.quantileDisplay === "party") {
-                    item.insertAdjacentHTML('beforeend', MarketHighlights.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
+                    item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
                     item.classList.toggle('quantile-borders', this.quantileColorsActive);
                     this.partyMode(item, quantile);
                 }
@@ -347,12 +343,11 @@ class MarketHighlights {
         const isFavorite = this.isFavorite(itemId);
         const refreshButton = document.getElementById("marketplace-refresh-button");
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
-<button id="marketplace-favorite-button" class="marketplace-favorite-button ${isFavorite ? '' : 'svg-inactive'}">
-    ${MarketHighlights.favoriteTemplate()}
-    <span>not</span>
-    FAV
-</button>
-        `);
+            <button id="marketplace-favorite-button" class="marketplace-favorite-button ${isFavorite ? '' : 'svg-inactive'}">
+                ${Templates.favoriteTemplate()}
+                <span>not</span>
+                FAV
+            </button>`);
         let toggleFavoriteButton = document.getElementById("marketplace-favorite-button");
         toggleFavoriteButton.addEventListener('click', () => {
             this.toggleFavorite(itemId);
@@ -375,32 +370,6 @@ class MarketHighlights {
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
             }
         });
-    }
-
-    static favoriteTemplate(classes = "") {
-        return `
-<svg class="${classes}" stroke="rgb(255,255,0)" stroke-width="30px" fill="rgb(255,255,0)" x="0px" y="0px" width="24px" heigth="24px" viewBox="-15 -10 366 366">
-    <path d="M329.208,126.666c-1.765-5.431-6.459-9.389-12.109-10.209l-95.822-13.922l-42.854-86.837  c-2.527-5.12-7.742-8.362-13.451-8.362c-5.71,0-10.925,3.242-13.451,8.362l-42.851,86.836l-95.825,13.922  c-5.65,0.821-10.345,4.779-12.109,10.209c-1.764,5.431-0.293,11.392,3.796,15.377l69.339,67.582L57.496,305.07  c-0.965,5.628,1.348,11.315,5.967,14.671c2.613,1.899,5.708,2.865,8.818,2.865c2.387,0,4.784-0.569,6.979-1.723l85.711-45.059  l85.71,45.059c2.208,1.161,4.626,1.714,7.021,1.723c8.275-0.012,14.979-6.723,14.979-15c0-1.152-0.13-2.275-0.376-3.352  l-16.233-94.629l69.339-67.583C329.501,138.057,330.972,132.096,329.208,126.666z">
-</svg>
-        `;
-    }
-
-    static colorTemplate(classes = "") {
-        return `
-<svg class="${classes}" viewbox="0 0 100 100" style="stroke:rgb(255,255,255); stroke-width:8px; fill:black;">
-    <rect class="rect-third" x="5" y="8" width="50" height="50" rx="5" ry="5"/>
-    <rect class="rect-second" x="34" y="18" width="50" height="50" rx="5" ry="5"/>
-    <rect class="rect-first" x="12" y="38" width="50" height="50" rx="5" ry="5"/>
-</svg>
-        `;
-    }
-
-    static dotTemplate(size, classes = "", color = "hsl(40, 80%, 40%)") {
-        return `
-<svg class="${classes}" viewbox="0 0 100 100" style="width: ${size}; height: ${size}; fill: ${color};">
-    <circle cx="50" cy="50" r="50"/>
-</svg>
-        `;
     }
     
     isFavorite(itemId) {

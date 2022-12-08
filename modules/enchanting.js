@@ -80,11 +80,10 @@ body .scrollcrafting-container {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(EnchantingTracker.id + "-profit", {
             off: "Off",
             percent: "Percent",
             flat: "Flat",
@@ -125,7 +124,7 @@ body .scrollcrafting-container {
         });
         const ingredients = Object.assign(response.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
         const product = Object.assign(response.product, { icon: scrollIcon, count: 1 });
-        saveInsertAdjacentHTML(recipe, 'beforeend', infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
+        saveInsertAdjacentHTML(recipe, 'beforeend', Templates.infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
     }
 
     getStandardResources(node) {
