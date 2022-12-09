@@ -178,6 +178,9 @@ body .marketplace-table-cell-div {
         if (this.settings.hideBorder === undefined) {
             this.settings.hideBorder = 0;
         }
+        if (this.settings.vendorWarning === undefined) {
+            this.settings.vendorWarning = 1;
+        }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged('history', this.settings.history);
@@ -195,6 +198,13 @@ body .marketplace-table-cell-div {
                 this.marketplaceTracker();
             }
         });
+        this.sellDialogChecker = new MutationObserver(mutations => {
+            if (document.getElementById("lowest-price")) {
+                this.sellDialogChecker.disconnect();
+                this.belowVendorWarning();
+                this.connectSellDialogChecker();
+            }
+        });
     }
     
     onGameReady() {
@@ -203,11 +213,13 @@ body .marketplace-table-cell-div {
             childList: true,
             subtree: true
         });
+        this.settingChanged('vendorWarning', this.settings.vendorWarning);
     }
 
     deactivate() {
         this.cssNode.remove();
         this.playAreaObserver.disconnect();
+        this.sellDialogChecker.disconnect();
     }
 
     settingsMenuContent() {
@@ -217,6 +229,13 @@ body .marketplace-table-cell-div {
                     More infos in history
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
+            </div>`;
+        const vendorWarning = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Warning when selling below vendor price
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-vendorWarning', this.settings.vendorWarning)}
             </div>`;
         const hideBorder = `
             <div class="tracker-module-setting">
@@ -228,7 +247,7 @@ body .marketplace-table-cell-div {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
             </div>`;
-        return history + hideBorder;
+        return history + vendorWarning + hideBorder;
     }
 
     settingChanged(setting, value) {
@@ -247,6 +266,12 @@ body .marketplace-table-cell-div {
                     this.hideBorderCssNode?.remove();
                 }
                 break;
+            case 'vendorWarning':
+                if (value) {
+                    this.connectSellDialogChecker();
+                } else {
+                    this.sellDialogChecker.disconnect();
+                }
         }
     }
 
@@ -408,8 +433,7 @@ body .marketplace-table-cell-div {
             return;
         }
         let map = [];
-        for (let i = 0; i < items.childNodes.length; i++) {
-            const item = items.childNodes[i];
+        for (let item of items.childNodes) {
             const itemId = convertItemId(item.firstChild.firstChild.src);
             // this will give something like 'marketplaceBuyItemTooltip50'
             const apiIdString = item.firstChild.dataset['for'];
@@ -526,17 +550,25 @@ body .marketplace-table-cell-div {
         this.lastHistoryPage = currentHistoryPage;
     }
 
+    connectSellDialogChecker() {
+        this.sellDialogChecker.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
     belowVendorWarning() {
-        let vendorPrice = document.getElementById('lowest-price');
-        if (!vendorPrice) {
-            return;
-        }
-        vendorPrice = parseNumberString(vendorPrice.childNodes[2].textContent);
-        // very hardcoded way to get the input
-        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[2].childNodes[5];
-        const price = parseNumberString(priceInput.value);
-        if (price * 0.95 < vendorPrice) {
-            // add warning
-        }
+        // very hardcoded way to get nodes here, because there are no descriptive classes
+        const sellButton = document.getElementsByClassName("item-dialogue-button idlescape-button idlescape-button-green")[1];
+        sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate("hidden"));
+        const vendorPriceNode = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[4].firstChild.childNodes[2];
+        const vendorPrice = parseNumberString(vendorPriceNode.textContent);
+        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
+        priceInput.addEventListener('input', () => {
+            const price = parseNumberString(priceInput.value);
+            const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
+            const warningIcon = sellButton.getElementsByClassName("warning")[0];
+            warningIcon.classList.toggle("hidden", !tooLowPrice);
+        });
     }
 }

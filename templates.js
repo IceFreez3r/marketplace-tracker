@@ -220,9 +220,9 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
             </svg>`;
     }
 
-    static warningTemplate(fill = "rgb(255, 172, 0)", classes = "") {
+    static warningTemplate(classes = "", fill = "rgb(255, 172, 0)") {
         return `
-            <svg class="warning ${classes}" viewBox="0 0 485.811 485.811" style="width: 24px; height: 24px; margin-left: 5px; fill: ${fill};">
+            <svg class="warning ${classes}" viewBox="0 0 485.811 485.811" style="width: 20px; height: 20px; margin-left: 5px; fill: ${fill};">
                 <path d="M476.099,353.968l-170.2-294.8c-27.8-48.7-98.1-48.7-125.8,0l-170.3,294.8c-27.8,48.7,6.8,109.2,62.9,109.2h339.9
                     C468.699,463.168,503.899,402.068,476.099,353.968z M242.899,397.768c-14.8,0-27.1-12.3-27.1-27.1s12.3-27.1,27.1-27.1
                     c14.8,0,27.1,12.3,26.5,27.8C270.099,385.468,257.099,397.768,242.899,397.768z M267.599,222.568c-1.2,21-2.5,41.9-3.7,62.9
