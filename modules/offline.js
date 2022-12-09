@@ -45,20 +45,20 @@ class OfflineTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
+        this.bodyObserver = new MutationObserver(mutations => {
             this.offlineTracker();
         });
     };
     
     onGameReady() {
-        this.observer.observe(document.body, {
+        this.bodyObserver.observe(document.body, {
             childList: true
         });
     }
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.bodyObserver.disconnect();
     }
 
     settingsMenuContent() {

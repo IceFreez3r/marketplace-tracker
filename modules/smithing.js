@@ -86,7 +86,7 @@ class SmithingTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -100,7 +100,7 @@ class SmithingTracker {
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -108,7 +108,7 @@ class SmithingTracker {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {

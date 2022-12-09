@@ -134,7 +134,7 @@ body .farming-seeds .all-items {
         this.cssNode = injectCSS(this.css);
 
         // setup mutation observer
-        this.observer = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -148,7 +148,7 @@ body .farming-seeds .all-items {
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -156,7 +156,7 @@ body .farming-seeds .all-items {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {

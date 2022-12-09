@@ -187,7 +187,7 @@ body .marketplace-table-cell-div {
         this.createMap = true;
         this.lastHistoryPage = 0;
 
-        this.observer = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -201,7 +201,7 @@ body .marketplace-table-cell-div {
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -209,7 +209,7 @@ body .marketplace-table-cell-div {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
@@ -526,5 +526,19 @@ body .marketplace-table-cell-div {
         }
         // Save current history page
         this.lastHistoryPage = currentHistoryPage;
+    }
+
+    belowVendorWarning() {
+        let vendorPrice = document.getElementById('lowest-price');
+        if (!vendorPrice) {
+            return;
+        }
+        vendorPrice = parseNumberString(vendorPrice.childNodes[2].textContent);
+        // very hardcoded way to get the input
+        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[2].childNodes[5];
+        const price = parseNumberString(priceInput.value);
+        if (price * 0.95 < vendorPrice) {
+            // add warning
+        }
     }
 }

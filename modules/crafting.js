@@ -69,7 +69,7 @@ body .crafting-container {
         this.lastCraftedItemId = null;
         this.lastSelectedNavTab = null;
 
-        this.observer = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver(mutations => {
             const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
             if (!selectedSkill) {
                 return;
@@ -83,7 +83,7 @@ body .crafting-container {
 
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             attributes: true,
             attributeFilter: ['src'],
             childList: true,
@@ -93,7 +93,7 @@ body .crafting-container {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {

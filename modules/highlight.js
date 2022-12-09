@@ -110,7 +110,7 @@ class MarketHighlights {
         this.favoriteFilterActive = false;
         this.quantileColorsActive = false;
 
-        this.observer = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver(mutations => {
             // TODO: define global detectInfiniteLoop function in utility.js
             if (mutations[0].target.classList.contains("price")) {
                 // prevent infinite loop when user also uses inventory prices from Dael
@@ -136,7 +136,7 @@ class MarketHighlights {
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -144,7 +144,7 @@ class MarketHighlights {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
