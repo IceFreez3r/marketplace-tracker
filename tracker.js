@@ -215,13 +215,7 @@ class Tracker {
         this.gameReadyTimeout = undefined;
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
-
-        window.addEventListener('beforeunload', function () {
-            storageRequest({
-                type: 'close'
-            });
-        });
-
+        
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;

@@ -26,7 +26,7 @@ function parseCompactNumberString(numberString) {
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*$/;
+    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*\.?$/;
     const match = timeString.match(regex);
     const days = match.groups.days ? parseInt(match.groups.days) : 0;
     const hours = match.groups.hours ? parseInt(match.groups.hours) : 0;
