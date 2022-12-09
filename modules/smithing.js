@@ -87,14 +87,12 @@ class SmithingTracker {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Smithing') {
-                return;
+            if (getSelectedSkill() === "Smithing") {
+                this.smithingTracker();
             }
-            this.smithingTracker();
         });
     }
     

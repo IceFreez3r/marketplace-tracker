@@ -126,6 +126,33 @@ function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
 }
 
+function getSelectedSkill() {
+    const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+    return selectedSkill ? selectedSkill.innerText : "";
+}
+
+function detectInfiniteLoop(mutations) {
+    for (let mutation of mutations) {
+        // Daels inventory prices
+        if (mutation.target.classList.contains("price")) {
+            return true;
+        }
+        // Heat highlight marker
+        if (mutation.target.classList.contains("heat-highlight")) {
+            return true;
+        }
+        for (let addedNode of mutation.addedNodes) {
+            if (addedNode.classList) {
+                // Quantile dots
+                if (addedNode.classList.contains("quantile-dot")) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
 function formatNumber(number, options = {}) {
     const {compactDisplay, profitType, showSign} = options;
     if (isNaN(number)) {

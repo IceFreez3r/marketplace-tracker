@@ -46,6 +46,9 @@ class OfflineTracker {
         this.cssNode = injectCSS(this.css);
 
         this.bodyObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
+                return;
+            }
             this.offlineTracker();
         });
     };

@@ -70,14 +70,12 @@ body .crafting-container {
         this.lastSelectedNavTab = null;
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Crafting') {
-                return;
+            if (getSelectedSkill() === "Crafting") {
+                this.craftingTracker();
             }
-            this.craftingTracker();
         });
     }
 

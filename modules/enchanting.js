@@ -52,14 +52,12 @@ body .scrollcrafting-container {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Enchanting') {
-                return;
+            if (getSelectedSkill() === "Enchanting") {
+                this.enchantingTracker();
             }
-            this.enchantingTracker();
         });
     }
     

@@ -188,14 +188,12 @@ body .marketplace-table-cell-div {
         this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Marketplace') {
-                return;
+            if (getSelectedSkill() === "Marketplace") {
+                this.marketplaceTracker();
             }
-            this.marketplaceTracker();
         });
     }
     

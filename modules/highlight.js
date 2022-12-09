@@ -111,26 +111,15 @@ class MarketHighlights {
         this.quantileColorsActive = false;
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            // TODO: define global detectInfiniteLoop function in utility.js
-            if (mutations[0].target.classList.contains("price")) {
-                // prevent infinite loop when user also uses inventory prices from Dael
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            for (let addedNode of mutations[0].addedNodes) {
-                if (addedNode.classList && (addedNode.classList.contains("heat-highlight") || addedNode.classList.contains("quantile-dot"))) {
-                    return;
-                }
-            }
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
-                return;
-            }
-            if (selectedSkill.innerText !== 'Marketplace') {
+            if (getSelectedSkill() === "Marketplace") {
+                this.highlight();
+            } else {
                 this.favoriteFilterActive = false;
                 this.quantileColorsActive = false;
-                return;
             }
-            this.highlight();
         });
     }
     

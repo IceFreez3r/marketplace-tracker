@@ -133,16 +133,13 @@ body .farming-seeds .all-items {
         this.settings = settings;
         this.cssNode = injectCSS(this.css);
 
-        // setup mutation observer
         this.playAreaObserver = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Farming') {
-                return;
+            if (getSelectedSkill() === "Farming") {
+                this.farmingTracker();
             }
-            this.farmingTracker();
         });
     }
     
