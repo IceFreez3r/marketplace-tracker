@@ -62,9 +62,10 @@ class Tracker {
     justify-content: center;
 }
 
-.settings-save {
+.tracker-settings-button {
     height: 40px;
     padding: 6px 16px;
+    margin: 0 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -72,10 +73,47 @@ class Tracker {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     cursor: pointer;
+    position: relative;
 }
 
-.settings-save:hover {
+.tracker-settings-button:hover {
     filter: brightness(1.5);
+}
+
+.tracker-tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.tracker-tooltip-text {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    font-size: 1rem;
+    bottom: 100%;
+    left: -200%;
+    right: -200%;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.tracker-tooltip:hover .tracker-tooltip-text {
+    display: block;
+}
+
+.tracker-confirm-reset {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 4px;
 }
 
 .tracker-module-setting {
@@ -285,7 +323,7 @@ input[type="time"].tracker-time:not(.browser-default) {
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
-            const defaultSettings = isIronmanCharacter() ? {
+            this.defaultSettings = isIronmanCharacter() ? {
                 activeModules: {
                     farming_tracker: 1,
                 }
@@ -300,7 +338,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                     smithing_tracker: 1,
                 }
             };
-            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, this.defaultSettings);
             this.settingsSidebar();
         });
     }
@@ -450,11 +488,23 @@ input[type="time"].tracker-time:not(.browser-default) {
         }
         settingsArea.insertAdjacentHTML('beforeend', `
             <div class="settings-footer">
-                <div id="settings-save" class="settings-save idlescape-button-green">
+                <div id="settings-reset" class="tracker-settings-button idlescape-button-red">
+                    Reset
+                    <div class="tracker-tooltip">
+                        <div class="tracker-tooltip-text">
+                            Requires a page refresh
+                        </div>
+                    </div>
+                </div>
+                <div id="settings-save" class="tracker-settings-button idlescape-button-green">
                     Save
                 </div>
             </div>`);
         playAreaBackground.append(settingsArea);
+
+        this.warningShown = false;
+        const resetButton = document.getElementById('settings-reset');
+        resetButton.addEventListener('click', () => this.resetSettings(resetButton));
 
         const saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
@@ -496,6 +546,23 @@ input[type="time"].tracker-time:not(.browser-default) {
                 }
             }
         };
+    }
+
+    resetSettings(resetButton) {
+        if (this.warningShown) {
+            this.settings = this.defaultSettings;
+            this.storeSettings();
+            location.reload();
+        } else {
+            resetButton.innerHTML = `
+                Reset?
+                <div class="tracker-tooltip">
+                    <div class="tracker-tooltip-text">
+                        Please click again to confirm
+                    </div>
+                </div>`;
+            this.warningShown = true;
+        }
     }
     
     saveSettings() {
@@ -578,6 +645,12 @@ input[type="time"].tracker-time:not(.browser-default) {
                 module.settingChanged(settingId.slice(settingId.indexOf('-') + 1), value);
             }
         }
+    }
+
+    storeSettings() {
+        // Save settings
+        console.log(this.settings);
+        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
     /**
