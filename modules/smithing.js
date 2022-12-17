@@ -157,11 +157,14 @@ class SmithingTracker {
             resourceIcons.push(resourceNodes[i].firstChild.src);
             resourceCounts.push(parseInt(resourceNodes[i].lastChild.innerText));
         }
-        // Delete resource nodes except level and time
-        for (let i = resourceNodes.length - 1; i >= 2; i--) {
+        // Delete resource nodes except level, time and heat
+        for (let i = resourceNodes.length - 1; i >= 3; i--) {
             resourceNodes[i].parentNode.remove();
         }
-        // Move level and time nodes up
+        // Hide heat node
+        const heatNode = recipe.getElementsByClassName('resource-node-time-tooltip')[2];
+        heatNode.parentNode.classList.toggle('hidden', true);
+        // Move vanilla resource nodes up
         let craftingImage = recipe.getElementsByClassName('resource-container-image')[0];
         let requiredResourceNode = recipe.getElementsByClassName('resource-required-resources')[0];
         craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
@@ -172,6 +175,23 @@ class SmithingTracker {
         });
         const ingredients = Object.assign(response.ingredients, {icons: resourceIcons, counts: resourceCounts});
         const product = Object.assign(response.product, {icon: barIcon, count: 1});
+        this.insertInfoTable(craftingImage, ingredients, product, timePerAction);
+        // Add observer to heat node
+        const heatObserver = new MutationObserver(mutations => {
+            for (let mutation of mutations) {
+                const newHeat = parseInt(mutation.target.textContent);
+                heatNode.closest(".resource-container").getElementsByClassName('smithing-info-table')[0].remove();
+                ingredients.counts[0] = newHeat;
+                this.insertInfoTable(craftingImage, ingredients, product, timePerAction);
+            }
+        });
+        heatObserver.observe(heatNode, {
+            subtree: true,
+            characterData: true
+        });
+    }
+    
+    insertInfoTable(craftingImage, ingredients, product, timePerAction) {
         saveInsertAdjacentHTML(craftingImage, 'afterend', infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
     }
 }
