@@ -6,8 +6,8 @@ function convertItemId(itemName) {
     return itemName;
 }
 
-function parseNumberString(numberString) {
-    return parseFloat(numberString.replaceAll(localNumberSeparators['group'], '').replaceAll(localNumberSeparators['decimal'], '.'));
+function parseNumberString(numberString, numberSeparators = localNumberSeparators) {
+    return parseFloat(numberString.replaceAll(numberSeparators['group'], '').replaceAll(numberSeparators['decimal'], '.'));
 }
 
 function parseCompactNumberString(numberString) {

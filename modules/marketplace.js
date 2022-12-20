@@ -560,14 +560,19 @@ body .marketplace-table-cell-div {
     belowVendorWarning() {
         // very hardcoded way to get nodes here, because there are no descriptive classes
         const sellButton = document.getElementsByClassName("item-dialogue-button idlescape-button idlescape-button-green")[1];
+        let warningIcon = sellButton.getElementsByClassName("warning")[0];
+        if (warningIcon) {
+            return;
+        }
         sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate("hidden"));
+        warningIcon = sellButton.getElementsByClassName("warning")[0];
         const vendorPriceNode = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[4].firstChild.childNodes[2];
         const vendorPrice = parseNumberString(vendorPriceNode.textContent);
         const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
         priceInput.addEventListener('input', () => {
-            const price = parseNumberString(priceInput.value);
+            const price = parseNumberString(priceInput.value, {"group": ",", "decimal": "."});
             const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
-            const warningIcon = sellButton.getElementsByClassName("warning")[0];
+            console.log({price, vendorPrice, tooLowPrice});
             warningIcon.classList.toggle("hidden", !tooLowPrice);
         });
     }
