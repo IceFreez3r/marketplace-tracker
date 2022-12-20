@@ -178,6 +178,9 @@ body .marketplace-table-cell-div {
         if (this.settings.hideBorder === undefined) {
             this.settings.hideBorder = 0;
         }
+        if (this.settings.vendorWarning === undefined) {
+            this.settings.vendorWarning = 1;
+        }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged('history', this.settings.history);
@@ -187,52 +190,64 @@ body .marketplace-table-cell-div {
         this.createMap = true;
         this.lastHistoryPage = 0;
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Marketplace') {
-                return;
+            if (getSelectedSkill() === "Marketplace") {
+                this.marketplaceTracker();
             }
-            this.marketplaceTracker();
+        });
+        this.sellDialogChecker = new MutationObserver(mutations => {
+            if (document.getElementById("lowest-price")) {
+                this.sellDialogChecker.disconnect();
+                this.belowVendorWarning();
+                this.connectSellDialogChecker();
+            }
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
+        this.settingChanged('vendorWarning', this.settings.vendorWarning);
     }
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
+        this.sellDialogChecker.disconnect();
     }
 
     settingsMenuContent() {
         const history = `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        More infos in history
-    </div>
-    ${this.tracker.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
-</div>
-        `;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    More infos in history
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
+            </div>`;
+        const vendorWarning = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Warning when selling below vendor price
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-vendorWarning', this.settings.vendorWarning)}
+            </div>`;
         const hideBorder = `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        Remove border on sell page
-        <div class="tracker-module-setting-description">
-            prevents filter from moving by 2 pixels when switching between sell and buy
-        </div>
-    </div>
-    ${this.tracker.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
-</div>
-        `;
-        return history + hideBorder;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Remove border on sell page
+                    <div class="tracker-module-setting-description">
+                        prevents filter from moving by 2 pixels when switching between sell and buy
+                    </div>
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
+            </div>`;
+        return history + vendorWarning + hideBorder;
     }
 
     settingChanged(setting, value) {
@@ -251,6 +266,12 @@ body .marketplace-table-cell-div {
                     this.hideBorderCssNode?.remove();
                 }
                 break;
+            case 'vendorWarning':
+                if (value) {
+                    this.connectSellDialogChecker();
+                } else {
+                    this.sellDialogChecker.disconnect();
+                }
         }
     }
 
@@ -291,27 +312,26 @@ body .marketplace-table-cell-div {
 
     priceAnalysisTableTemplate(analysis) {
         return `
-<div class="marketplace-analysis-table">
-    <div class="marketplace-analysis-table-content">
-        Minimum
-    </div>
-    <div class="marketplace-analysis-table-content">
-        Median
-    </div>
-    <div class="marketplace-analysis-table-content">
-        Maximum
-    </div>
-    <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.minPrice)}
-    </div>
-    <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.medianPrice)}
-    </div>
-    <div class="marketplace-analysis-table-content">
-        ${formatNumber(analysis.maxPrice)}
-    </div>
-</div>
-        `;
+            <div class="marketplace-analysis-table">
+                <div class="marketplace-analysis-table-content">
+                    Minimum
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    Median
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    Maximum
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    ${formatNumber(analysis.minPrice)}
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    ${formatNumber(analysis.medianPrice)}
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    ${formatNumber(analysis.maxPrice)}
+                </div>
+            </div>`;
     }
 
     markOffers(offers, maxPrice) {
@@ -350,51 +370,50 @@ body .marketplace-table-cell-div {
         let profit = Math.floor((maxPrice * 0.95 - price) * amount);
         let color = profit > 0 ? 'text-green' : 'text-red';
         return `
-<div class="marketplace-offer-price-tooltip">
-    <div style="pointer-events: none; padding: 0px 0px 8px;">
-        <div class="item-tooltip">
-            <span>
-                Marketplace Tracker
-            </span>
-            <span>
-                <hr>
-                <br>
-            </span>
-            <span>
-                Maximum price: ${formatNumber(maxPrice)}
-            </span>
-            <span>
-                <hr>
-                <br>
-            </span>
-            <span>
-                <span>
-                    Maximal profit:
-                </span>
-                <span>
-                    (
-                </span>
-                <span class="text-green">
-                    ${formatNumber(maxPrice)}
-                </span>
-                <span>
-                    * 0.95 - 
-                </span>
-                <span class="text-red">
-                    ${formatNumber(price)}
-                </span>
-                <span>
-                    ) * ${formatNumber(amount)} =
-                </span>
-                <span class="${color}">
-                    ${formatNumber(profit)}
-                </span>
-                <br>
-            </span>
-        </div>
-    </div>
-</div>
-        `;
+            <div class="marketplace-offer-price-tooltip">
+                <div style="pointer-events: none; padding: 0px 0px 8px;">
+                    <div class="item-tooltip">
+                        <span>
+                            Marketplace Tracker
+                        </span>
+                        <span>
+                            <hr>
+                            <br>
+                        </span>
+                        <span>
+                            Maximum price: ${formatNumber(maxPrice)}
+                        </span>
+                        <span>
+                            <hr>
+                            <br>
+                        </span>
+                        <span>
+                            <span>
+                                Maximal profit:
+                            </span>
+                            <span>
+                                (
+                            </span>
+                            <span class="text-green">
+                                ${formatNumber(maxPrice)}
+                            </span>
+                            <span>
+                                * 0.95 - 
+                            </span>
+                            <span class="text-red">
+                                ${formatNumber(price)}
+                            </span>
+                            <span>
+                                ) * ${formatNumber(amount)} =
+                            </span>
+                            <span class="${color}">
+                                ${formatNumber(profit)}
+                            </span>
+                            <br>
+                        </span>
+                    </div>
+                </div>
+            </div>`;
     }
 
     // ###########################################################################
@@ -414,8 +433,7 @@ body .marketplace-table-cell-div {
             return;
         }
         let map = [];
-        for (let i = 0; i < items.childNodes.length; i++) {
-            const item = items.childNodes[i];
+        for (let item of items.childNodes) {
             const itemId = convertItemId(item.firstChild.firstChild.src);
             // this will give something like 'marketplaceBuyItemTooltip50'
             const apiIdString = item.firstChild.dataset['for'];
@@ -468,24 +486,23 @@ body .marketplace-table-cell-div {
         oldTrackerHistory?.remove();
         // Create new table
         history.insertAdjacentHTML('afterend', `
-<div class="tracker-history">
-    <div class="tracker-history-header">
-        DATE
-    </div>
-    <div class="tracker-history-header" style="grid-area: 1 / 2 / 2 / 4;">
-        ITEM
-    </div>
-    <div class="tracker-history-header">
-        QUANTITY
-    </div>
-    <div class="tracker-history-header">
-        PER ITEM
-    </div>
-    <div class="tracker-history-header">
-        TOTAL
-    </div>
-</div>
-        `);
+            <div class="tracker-history">
+                <div class="tracker-history-header">
+                    DATE
+                </div>
+                <div class="tracker-history-header" style="grid-area: 1 / 2 / 2 / 4;">
+                    ITEM
+                </div>
+                <div class="tracker-history-header">
+                    QUANTITY
+                </div>
+                <div class="tracker-history-header">
+                    PER ITEM
+                </div>
+                <div class="tracker-history-header">
+                    TOTAL
+                </div>
+            </div>`);
         let trackerHistory = history.nextElementSibling;
         // Copy and modify rows
         let historyItems = history.getElementsByClassName('marketplace-history-item');
@@ -504,33 +521,59 @@ body .marketplace-table-cell-div {
             const total = parseNumberString(totalDiv.textContent);
             const type = totalDiv.classList[1]; // "purchase" or "sale"
             saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
-<div class="marketplace-history-item-per-item ${type}">
-    <div>
-        ${formatNumber(total / itemQuantity, { showSign: true })}
-        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
-    </div>
-    ${type === "sale" ? `
-    <div>
-        ~ ${formatNumber(profit("flat", 0, total / itemQuantity), { showSign: true })}
-        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
-    </div>
-    ` : ''}
-</div>
-<div class="marketplace-history-item-price ${type}">
-    <div>
-        ${formatNumber(total, { showSign: true })}
-        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
-    </div>
-    ${type === "sale" ? `
-    <div>
-        ${formatNumber(profit("flat", 0, total), { showSign: true })}
-        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
-    </div>
-    ` : ''}
-</div>
-            `);
+                <div class="marketplace-history-item-per-item ${type}">
+                    <div>
+                        ${formatNumber(total / itemQuantity, { showSign: true })}
+                        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
+                    </div>
+                    ${type === "sale" ? `
+                    <div>
+                        ~ ${formatNumber(profit("flat", 0, total / itemQuantity), { showSign: true })}
+                        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="marketplace-history-item-price ${type}">
+                    <div>
+                        ${formatNumber(total, { showSign: true })}
+                        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
+                    </div>
+                    ${type === "sale" ? `
+                    <div>
+                        ${formatNumber(profit("flat", 0, total), { showSign: true })}
+                        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
+                    </div>
+                    ` : ''}
+                </div>`);
         }
         // Save current history page
         this.lastHistoryPage = currentHistoryPage;
+    }
+
+    connectSellDialogChecker() {
+        this.sellDialogChecker.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    belowVendorWarning() {
+        // very hardcoded way to get nodes here, because there are no descriptive classes
+        const sellButton = document.getElementsByClassName("item-dialogue-button idlescape-button idlescape-button-green")[1];
+        let warningIcon = sellButton.getElementsByClassName("warning")[0];
+        if (warningIcon) {
+            return;
+        }
+        sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate("hidden"));
+        warningIcon = sellButton.getElementsByClassName("warning")[0];
+        const vendorPriceNode = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[4].firstChild.childNodes[2];
+        const vendorPrice = parseNumberString(vendorPriceNode.textContent);
+        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
+        priceInput.addEventListener('input', () => {
+            const price = parseNumberString(priceInput.value, {"group": ",", "decimal": "."});
+            const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
+            console.log({price, vendorPrice, tooLowPrice});
+            warningIcon.classList.toggle("hidden", !tooLowPrice);
+        });
     }
 }

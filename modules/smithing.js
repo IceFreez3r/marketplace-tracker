@@ -86,21 +86,19 @@ class SmithingTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Smithing') {
-                return;
+            if (getSelectedSkill() === "Smithing") {
+                this.smithingTracker();
             }
-            this.smithingTracker();
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -108,18 +106,17 @@ class SmithingTracker {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(SmithingTracker.id + "-profit", {
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(SmithingTracker.id + "-profit", {
             off: "Off",
             percent: "Percent",
             flat: "Flat",
@@ -172,6 +169,6 @@ class SmithingTracker {
         });
         const ingredients = Object.assign(response.ingredients, {icons: resourceIcons, counts: resourceCounts});
         const product = Object.assign(response.product, {icon: barIcon, count: 1});
-        saveInsertAdjacentHTML(craftingImage, 'afterend', infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
+        saveInsertAdjacentHTML(craftingImage, 'afterend', Templates.infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
     }
 }

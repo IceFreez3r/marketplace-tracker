@@ -45,31 +45,33 @@ class OfflineTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
+        this.bodyObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
+                return;
+            }
             this.offlineTracker();
         });
     };
     
     onGameReady() {
-        this.observer.observe(document.body, {
+        this.bodyObserver.observe(document.body, {
             childList: true
         });
     }
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.bodyObserver.disconnect();
     }
 
     settingsMenuContent() {
         return `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        Include Gold
-    </div>
-    ${this.tracker.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
-</div>
-        `;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Include Gold
+                </div>
+                ${Templates.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
+            </div>`;
     }
 
     settingChanged(settingId, value) {
@@ -150,38 +152,37 @@ class OfflineTracker {
         const minPerHour = totalMinValue * 1000 * 60 * 60 / offlineTime;
         const maxPerHour = totalMaxValue * 1000 * 60 * 60 / offlineTime;
         return `
-<div class="offline-progress-box offline-info-box">
-    <div class="offline-info-title">
-        Total value
-    </div>
-    <div class="offline-info-value">
-        <div class="left-info">
-            <span>
-                ${formatNumber(totalMinValue)}
-                <img src="/images/money_icon.png" class="offline-gold-icon">
-            </span>
-            <br>
-            <span>
-                ${formatNumber(minPerHour)}/h
-            </span>
-        </div>
-        <div class="center-info">
-            <span> ~ </span>
-            <br>
-            <span> ~ </span>
-        </div>
-        <div class="right-info">
-            <span>
-                ${formatNumber(totalMaxValue)}
-                <img src="/images/money_icon.png" class="offline-gold-icon">
-            </span>
-            <br>
-            <span>
-                ${formatNumber(maxPerHour)}/h
-            </span>
-        </div>
-    </div>
-</div>
-        `;
+            <div class="offline-progress-box offline-info-box">
+                <div class="offline-info-title">
+                    Total value
+                </div>
+                <div class="offline-info-value">
+                    <div class="left-info">
+                        <span>
+                            ${formatNumber(totalMinValue)}
+                            <img src="/images/money_icon.png" class="offline-gold-icon">
+                        </span>
+                        <br>
+                        <span>
+                            ${formatNumber(minPerHour)}/h
+                        </span>
+                    </div>
+                    <div class="center-info">
+                        <span> ~ </span>
+                        <br>
+                        <span> ~ </span>
+                    </div>
+                    <div class="right-info">
+                        <span>
+                            ${formatNumber(totalMaxValue)}
+                            <img src="/images/money_icon.png" class="offline-gold-icon">
+                        </span>
+                        <br>
+                        <span>
+                            ${formatNumber(maxPerHour)}/h
+                        </span>
+                    </div>
+                </div>
+            </div>`;
     }
 }

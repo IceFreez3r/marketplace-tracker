@@ -51,21 +51,19 @@ body .scrollcrafting-container {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Enchanting') {
-                return;
+            if (getSelectedSkill() === "Enchanting") {
+                this.enchantingTracker();
             }
-            this.enchantingTracker();
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -73,18 +71,17 @@ body .scrollcrafting-container {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(EnchantingTracker.id + "-profit", {
             off: "Off",
             percent: "Percent",
             flat: "Flat",
@@ -125,7 +122,7 @@ body .scrollcrafting-container {
         });
         const ingredients = Object.assign(response.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
         const product = Object.assign(response.product, { icon: scrollIcon, count: 1 });
-        saveInsertAdjacentHTML(recipe, 'beforeend', infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
+        saveInsertAdjacentHTML(recipe, 'beforeend', Templates.infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
     }
 
     getStandardResources(node) {
