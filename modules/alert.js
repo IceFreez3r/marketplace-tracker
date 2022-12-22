@@ -4,36 +4,35 @@ class AlertTracker {
     static icon = "<img src='/images/combat/equipment/fire_orb.png' alt='Alert Tracker Icon'/>";
     static category = "economy";
     css = `
-.alert-item-container {
-    display: flex;
-    flex-direction: column;
-}
 .marketplace-alert-button {
-    order: 1;
+    order: 1; /* always at the end */
+    margin-top: 8px;
+    color: #fff;
+    height: 45px;
+    width: 45px;
+    background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
 }
+
 .sound {
     fill: none;
 }
-.svg-inactive > .sound {
-  stroke: none;
+
+.svg-inactive .sound {
+    stroke: none;
 }
 
-.loginPopup {
-    position: relative;
+.alertPopup {
     text-align: center;
     width: 100%;
-}
-.formPopup {
     display: none;
-    position: fixed;
-    left: 45%;
+    position: absolute;
+    left: 50%;
     top: 5%;
     transform: translate(-50%, 5%);
     border: 2px solid silver;
     z-index: 9;
     max-width: 600px;
     padding: 50px !important;
-    color: #fff;
     background-color: rgba(0,0,0,.19);
     align-items: center;
     border-image-source: url(/images/ui/stone-9slice.png) !important;
@@ -43,38 +42,50 @@ class AlertTracker {
     border-image-repeat: repeat !important;
     overflow-x: hidden;
 }
-.formContainer{
-    width: 100%;
-    padding: 15px;
-    margin: 5px 0 20px 0;
-    border: none;
-    background: #eee;
-}
-.formContainer:focus {
-    background-color: var(--tracker-red);
-    outline: none;
-}
-.btn {
-    padding: 12px 20px;
-    border: none;
-    background-color: #8ebf42;
+
+.alertPopup input[type="number"] {
     color: #fff;
-    cursor: pointer;
+    text-align: center;
+}
+
+.alertPopup input[type="number"]:not(.browser-default):focus:not([readonly]) {
+    border-bottom: 1px solid var(--tracker-red);
+    box-shadow: 0 1px 0 0 var(--tracker-red);
+}
+
+.alertPopup input[type="number"]:not(.browser-default):focus:not([readonly]) + label {
+    color: var(--tracker-red);
+}
+
+.alertInputContainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+    grid-template-areas: "inputBelow inputAbove"
+                         "labelBelow labelAbove"
+}
+
+.alertButtonContainer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+.alertButton {
+    height: 40px;
     width: 100%;
-    margin-bottom: 15px;
-    opacity: 0.8;
+    padding: 6px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-size: 100% 100%;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    cursor: pointer;
 }
-.btn:hover {
-    opacity: 1;
-}
-.cancel {
-    background-color: #cc0000;
-}
-.delete {
-    background-color: #ffffff;
-}
-.save {
-    background-color: #dddddd;
+
+.alertButton:hover {
+  filter: brightness(1.5);
 }
     `;
 
@@ -83,10 +94,8 @@ class AlertTracker {
     constructor(tracker, settings) {
         this.tracker = tracker;
         this.settings = settings;
-        this.TrackerAlertPricesTrackerTracker = 'TrackerAlertPricesTrackerTracker';
-        this.allAlerts = loadLocalStorage(this.TrackerAlertPricesTrackerTracker, []);
-        
-        //settings kaudawelsch
+        this.storageKey = 'TrackerAlerts';
+        this.allAlerts = loadLocalStorage(this.storageKey, {});
 
         this.cssNode = injectCSS(this.css);
 
@@ -95,8 +104,6 @@ class AlertTracker {
                 return;
             }
             if (getSelectedSkill() === "Marketplace") {
-                //this.marketplaceTracker();
-
                 // Buy page
                 let buyHeader = document.getElementsByClassName('marketplace-buy-item-top')[0];
                 if (buyHeader) {
@@ -109,28 +116,30 @@ class AlertTracker {
     }
 
     onGameReady() {
-        //hier iwie sowas wie nen alert maybe
-        let promise = Notification.requestPermission();
-        promise.then(() => {
-            let notification = new Notification("Test", {
-                body: "Thanks for using our extension!",
-                icon: "https://idlescape.com/images/combat/equipment/fire_orb.png"
-                // https://github.com/IceFreez3r/marketplace-tracker/tree/main/images/tracker.png   // may be svg
-            });
-        });
+        if (Notification.permission !== "denied") {
+            Notification.requestPermission()
+                .then((permission) => {
+                    if (permission === "granted") {
+                        const notification = new Notification("Notifications allowed", {
+                            body: "Thanks for using our extension!",
+                            icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
+                            // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                        });
+                    }
+                });
+        }
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true,
         });
-        console.log("below are all the loaded (or not loaded) TrackerAlertTrackTracker values");
-        console.log(this.allAlerts);
         this.onAPIUpdate();
     }
 
     deactivate() {
-        //remove all html nodes and disconnect mutations
+        this.playAreaObserver.disconnect();
+        this.cssNode.remove();
     }
 
     settingsMenuContent() {
@@ -145,156 +154,136 @@ class AlertTracker {
     }
 
     onAPIUpdate() {
-        let notificationInformation = this.collectNotificationData();
-        this.createNotifications(notificationInformation);
+        if (this.collectNotificationData()) {
+            this.createNotification();
+        }
     }
 
-    collectNotificationData(){
+    collectNotificationData() {
         const prices = storageRequest({type: "latest-prices"});
-        let notificationInformation = {};
-        for (let item in this.allAlerts) {
-            if((prices[item] < this.allAlerts[item].priceBelow) && (prices[item] > this.allAlerts[item].priceAbove)){
-                //collect information for both for final notification
-                notificationInformation[item] = {
-                    type: "both",
-                    price: prices[item],
-                }
-            }
-            else if(prices[item] < this.allAlerts[item].priceBelow){
-                //collect information for priceBelow for final notification
-                notificationInformation[item] = {
-                    type: "below",
-                    price: prices[item],
-                }
-            }
-            else if(prices[item] > this.allAlerts[item].priceAbove){
-                //collect information for priceAbove for final notification
-                notificationInformation[item] = {
-                    type: "above",
-                    price: prices[item],
-                }
+        this.notificationInformation = {};
+        let notificationNeeded = false;
+        for (let itemId in this.allAlerts) {
+            if (prices[itemId] < this.allAlerts[itemId].priceBelow) {
+                this.notificationInformation[itemId] = "below";
+                notificationNeeded = true;
+            } else if (prices[itemId] > this.allAlerts[itemId].priceAbove) {
+                this.notificationInformation[itemId] = "above";
+                notificationNeeded = true;
             }
         }
-        return notificationInformation;
+        return notificationNeeded;
     }
 
-    createNotifications(notificationInformation){
-         //i don't know how to check for this stupid shit (notificationInformation.length or notificationInformation!= {} won't work)
-        if (false) {
-            return;
+    createNotification(permission = Notification.permission) {
+        if (permission === "granted") {
+            const notification = new Notification("Idlescape Marketplace", {
+                body: "Some items should be interesting to you!",
+                icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
+                // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                
+            });
+        } else {
+            console.log("Notification permission denied");
+            // TODO: After rewrite add ingame notification here
+            // Also by default if tab is visible
         }
-        //clickable basenotification
-        let baseNotification = Notification.requestPermission();
-        baseNotification.then(() => {
-            let notification = new Notification("Basenotification", {
-                body: "Some items on the marketplace should be interesting to you!",
-                icon: "https://idlescape.com/images/combat/equipment/fire_orb.png"
-                // https://github.com/IceFreez3r/marketplace-tracker/tree/main/images/tracker.png   // may be svg
-            });
-        });
-        //clickable basenotification
-        let informativeNotification = Notification.requestPermission();
-        informativeNotification.then(() => {
-            let notification = new Notification("InformativeNotification", {
-                //name of item, price <- marked green for cheap, red for expensive (cheap=below, expensiv= above, none if both)
-                body: JSON.stringify(notificationInformation),
-                icon: "https://idlescape.com/images/combat/equipment/fire_orb.png"
-                // https://github.com/IceFreez3r/marketplace-tracker/tree/main/images/tracker.png   // may be svg
-            });
-        });
     }
 
     createAlertButton(buyContainer) {
         if (document.getElementById("marketplace-alert-button")) {
             return;
         }
-        let offer = buyContainer.getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
+        const offer = buyContainer.getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
         if (!offer) { // not loaded yet
             return;
         }
         const itemId = convertItemId(offer.childNodes[1].firstChild.src);
-        //TODO: icon like favorite button active/inactive
-        //const isAlert = this.isAlert(itemId);
         const refreshButton = document.getElementById("marketplace-refresh-button");
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
-            <button id="marketplace-alert-button" class="marketplace-alert-button"> 
+        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" > 
             ${Templates.alertTemplate()}
-            <span>not</span>
-            Alert
         </button>`);
-        let AlertButton = document.getElementById("marketplace-alert-button");
-        AlertButton.addEventListener('click', () => {
-            this.openPopUp(itemId);
-            /*this.toggleFavorite(itemId);
-            toggleFavoriteButton.classList.toggle('svg-inactive');
-            this.saveData();*/
+        const alertButton = document.getElementById("marketplace-alert-button");
+        alertButton.addEventListener('click', () => {
+            this.openPopUp();
         });
-
         this.createPopUp(itemId);
     }
 
-    openPopUp(itemId) {
-        document.getElementById("popupForm").style.display = "block";
+    openPopUp() {
+        document.getElementById("alertPopup").style.display = "block";
     }
 
     closePopUp() {
-        document.getElementById("popupForm").style.display = "none";
+        document.getElementById("alertPopup").style.display = "none";
     }
 
-    save(itemId, priceBelow, priceAbove) {
-        //fang die kack alphabetical values ab! >:c --- die sind null wikked     
-        if ((priceBelow == 0 || priceBelow == "") && 
-            (priceAbove == 0 || priceAbove == "")){
-            //delete item from allAlerts
+    save(itemId, priceBelow, priceAbove) {   
+        if ((priceBelow == 0 || priceBelow == "") && (priceAbove == 0 || priceAbove == "")) {
             delete this.allAlerts[itemId];
         } else {
             this.allAlerts[itemId] = {
-                priceBelow: priceBelow,
-                priceAbove: priceAbove,
+                below: priceBelow,
+                above: priceAbove,
             };
         }
-        localStorage.setItem(this.TrackerAlertPricesTrackerTracker, JSON.stringify(this.allAlerts));
-        console.log(loadLocalStorage(this.TrackerAlertPricesTrackerTracker, []));
+        const alertButton = document.getElementById("marketplace-alert-button");
+        alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(itemId));
+        localStorage.setItem(this.storageKey, JSON.stringify(this.allAlerts));
         this.closePopUp();
     }
 
     createPopUp(itemId) {
-        const marketPlaceTable = document.getElementsByClassName("marketplace-table");
-        saveInsertAdjacentHTML(marketPlaceTable[0], 'afterbegin', `
-        <div class="loginPopup">
-            <div class="formPopup" id="popupForm">
-                <h2>Choose your poison! >:) </h2>
-                
-                <label for="price_below">
-                    <strong>Price below</strong>
-                </label>
-                <input type="number" inputmode="numeric" id="price_below" placeholder="666" name="price_below" min="0" max="100000000000">
-                <label for="price_above">
-                    <strong>Price above</strong>
-                </label>
-                <input type="number" inputmode="numeric" id="price_above" placeholder="666" name="price_above" min="0" max="100000000000">
-                
-                <button type="button" class="btn save" onclick="save()">Save</button>
-                <button type="button" class="btn cancel" onclick="closePopUp()">Close</button>
-                <button type="button" class="btn delete" onclick="delete()">Delete</button>
-            </div>
-        </div>
-        `);
-        const saveButton = document.getElementsByClassName("save")[0];
-        const cancelButton = document.getElementsByClassName("cancel")[0];
-        const deleteButton = document.getElementsByClassName("delete")[0];
-
-        saveButton.addEventListener('click', () => {
-            const priceBelow = document.getElementById("price_below").value;
-            const priceAbove = document.getElementById("price_above").value;
-
+        const marketPlaceTable = document.getElementsByClassName("marketplace-table")[0];
+        saveInsertAdjacentHTML(marketPlaceTable, 'afterbegin', `
+            <div id="alertPopup" class="alertPopup">
+                <h2>Notification thresholds</h2>
+                <div class="alertInputContainer">
+                    <input id="price_below" style="grid-area: inputBelow;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price_below" min="0" max="100_000_000_000">
+                    <label for="price_below" style="grid-area: labelBelow;">
+                        <strong>Lower threshold</strong>
+                    </label>
+                    <input id="price_above" style="grid-area: inputAbove;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price_above" min="0" max="100_000_000_000">
+                    <label for="price_above" style="grid-area: labelAbove;">
+                        <strong>Upper threshold</strong>
+                    </label>
+                </div>
+                <div class="alertButtonContainer">
+                    <button type="button" class="alertButton delete idlescape-button-red">Delete</button>
+                    <button type="button" class="alertButton cancel idlescape-button-gray">Close</button>
+                    <button type="button" class="alertButton save idlescape-button-green">Save</button>
+                </div>
+            </div>`);
+        const priceBelowInput = document.getElementById("price_below");
+        const priceAboveInput = document.getElementById("price_above");
+        this.fillPopUp(itemId, priceBelowInput, priceAboveInput);
+        
+        marketPlaceTable.getElementsByClassName("save")[0].addEventListener('click', () => {
+            const priceBelow = priceBelowInput.value;
+            const priceAbove = priceAboveInput.value;
             this.save(itemId, priceBelow, priceAbove);
         });
-        cancelButton.addEventListener('click', () => {
+        marketPlaceTable.getElementsByClassName("cancel")[0].addEventListener('click', () => {
             this.closePopUp();
         });
-        deleteButton.addEventListener('click', () => {
-            this.save(itemId, 0, 0);
+        marketPlaceTable.getElementsByClassName("delete")[0].addEventListener('click', () => {
+            this.save(itemId, "", "");
+            this.fillPopUp(itemId, priceBelowInput, priceAboveInput);
         });
+    }
+
+    fillPopUp(itemId, priceBelowInput, priceAboveInput) {
+        if (!this.hasActiveAlert(itemId)) {
+            priceBelowInput.value = "";
+            priceAboveInput.value = "";
+        } else {
+            priceBelowInput.value = this.allAlerts[itemId].below;
+            priceAboveInput.value = this.allAlerts[itemId].above;
+        }
+    }
+
+    hasActiveAlert(itemId) {
+        return itemId in this.allAlerts;
     }
 }

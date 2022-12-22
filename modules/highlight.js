@@ -48,7 +48,7 @@ class MarketHighlights {
     margin-top: 8px;
     color: #fff;
     height: 45px;
-    width: 100px;
+    width: 45px;
     background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
 }
 
@@ -334,8 +334,6 @@ class MarketHighlights {
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
             <button id="marketplace-favorite-button" class="marketplace-favorite-button ${isFavorite ? '' : 'svg-inactive'}">
                 ${Templates.favoriteTemplate()}
-                <span>not</span>
-                FAV
             </button>`);
         let toggleFavoriteButton = document.getElementById("marketplace-favorite-button");
         toggleFavoriteButton.addEventListener('click', () => {

@@ -44,6 +44,7 @@ class Tracker {
 .settings-module-header-toggle-icon > :is(img, svg){
     width: 30px;
     height: 30px;
+    object-fit: contain;
 }
 
 .settings-module-content > :last-child {
