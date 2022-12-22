@@ -21,6 +21,7 @@
                 "modules/marketplace.js",
                 "modules/offline.js",
                 "modules/smithing.js",
+                "modules/alert.js",
                 "tracker.js",
                 "main.js"
             ]

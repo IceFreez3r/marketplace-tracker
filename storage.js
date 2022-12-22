@@ -24,6 +24,8 @@ function storageRequest(request) {
             return handleRecipe(request.resourceItemIds, request.scrollId);
         case "smithing-recipe":
             return handleRecipe(request.resourceIds, request.barId);
+        case "latest-prices":
+            return latestPrices();
         case "latest-price-quantiles":
             return latestPriceQuantiles();
         default:
@@ -150,6 +152,24 @@ function analyzeItems(itemIds) {
         medianPrices: analysisArray.map(analysis => analysis.medianPrice),
         maxPrices: analysisArray.map(analysis => analysis.maxPrice),
     }
+}
+
+/**
+ * 
+ * @returns {Object} Object with pairs of itemIds and their latest prices
+ */
+function latestPrices() {
+    const prices = {};
+    for (let itemId in idMap) {
+        prices[itemId] = ((itemId) => {
+            const apiId = idMap[itemId];
+            if (!(apiId in itemList)) {
+                return NaN;
+            }
+            return itemList[apiId]["latestPrice"];
+        })(itemId);
+    }
+    return prices;
 }
 
 /**
