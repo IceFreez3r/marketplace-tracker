@@ -43,6 +43,12 @@ class AlertTracker {
     overflow-x: hidden;
 }
 
+.alertPopupTitle {
+    margin-top: 0;
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
 .alertPopup input[type="number"] {
     color: #fff;
     text-align: center;
@@ -238,7 +244,7 @@ class AlertTracker {
         const marketPlaceTable = document.getElementsByClassName("marketplace-table")[0];
         saveInsertAdjacentHTML(marketPlaceTable, 'afterbegin', `
             <div id="alertPopup" class="alertPopup">
-                <h2>Notification thresholds</h2>
+                <div class="alertPopupTitle">Notification thresholds</div>
                 <div class="alertInputContainer">
                     <input id="price_below" style="grid-area: inputBelow;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price_below" min="0" max="100_000_000_000">
                     <label for="price_below" style="grid-area: labelBelow;">
@@ -250,9 +256,9 @@ class AlertTracker {
                     </label>
                 </div>
                 <div class="alertButtonContainer">
-                    <button type="button" class="alertButton delete idlescape-button-red">Delete</button>
-                    <button type="button" class="alertButton cancel idlescape-button-gray">Close</button>
-                    <button type="button" class="alertButton save idlescape-button-green">Save</button>
+                    <div class="alertButton cancel idlescape-button-gray">Close</div>
+                    <div class="alertButton clear idlescape-button-red">Clear</div>
+                    <div class="alertButton save idlescape-button-green">Save</div>
                 </div>
             </div>`);
         const priceBelowInput = document.getElementById("price_below");
@@ -267,7 +273,7 @@ class AlertTracker {
         marketPlaceTable.getElementsByClassName("cancel")[0].addEventListener('click', () => {
             this.closePopUp();
         });
-        marketPlaceTable.getElementsByClassName("delete")[0].addEventListener('click', () => {
+        marketPlaceTable.getElementsByClassName("clear")[0].addEventListener('click', () => {
             this.save(itemId, "", "");
             this.fillPopUp(itemId, priceBelowInput, priceAboveInput);
         });
