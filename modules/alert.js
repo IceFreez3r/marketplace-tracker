@@ -13,18 +13,17 @@ class AlertTracker {
     background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
 }
 
-.sound {
+.alert-sound {
     fill: none;
 }
 
-.svg-inactive .sound {
+.svg-inactive .alert-sound {
     stroke: none;
 }
 
-.alertPopup {
+.alert-popup {
     text-align: center;
     width: 100%;
-    display: none;
     position: absolute;
     left: 50%;
     top: 5%;
@@ -32,52 +31,56 @@ class AlertTracker {
     border: 2px solid silver;
     z-index: 9;
     max-width: 600px;
-    padding: 50px !important;
+    padding: 50px;
     background-color: rgba(0,0,0,.19);
     align-items: center;
-    border-image-source: url(/images/ui/stone-9slice.png) !important;
-    border-image-slice: 100 fill !important;
-    border-image-width: 100px !important;
-    border-image-outset: 0 !important;
-    border-image-repeat: repeat !important;
+    border-image-source: url(/images/ui/stone-9slice.png);
+    border-image-slice: 100 fill;
+    border-image-width: 100px;
+    border-image-outset: 0;
+    border-image-repeat: repeat;
     overflow-x: hidden;
 }
 
-.alertPopupTitle {
+.alert-popup-title {
     margin-top: 0;
     font-size: 2rem;
     line-height: 1.2;
 }
 
-.alertPopup input[type="number"] {
+.alert-popup input[type="number"] {
     color: #fff;
     text-align: center;
 }
 
-.alertPopup input[type="number"]:not(.browser-default):focus:not([readonly]) {
+.alert-popup input[type="number"]:not(.browser-default):focus:not([readonly]) {
     border-bottom: 1px solid var(--tracker-red);
     box-shadow: 0 1px 0 0 var(--tracker-red);
 }
 
-.alertPopup input[type="number"]:not(.browser-default):focus:not([readonly]) + label {
+.alert-popup input[type="number"]:not(.browser-default):focus:not([readonly]) + label {
     color: var(--tracker-red);
 }
 
-.alertInputContainer {
+.alert-input-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     column-gap: 20px;
-    grid-template-areas: "inputBelow inputAbove"
-                         "labelBelow labelAbove"
+    grid-template-areas: "input-below input-above"
+                         "label-below label-above"
 }
 
-.alertButtonContainer {
+.alert-popup-button-container {
     display: flex;
     justify-content: space-between;
     padding: 10px;
 }
 
-.alertButton {
+.alert-popup-button-container > :not(:first-child) {
+    margin-left: 8px;
+}
+
+.alert-popup-button {
     height: 40px;
     width: 100%;
     padding: 6px 16px;
@@ -90,12 +93,19 @@ class AlertTracker {
     cursor: pointer;
 }
 
-.alertButton:hover {
+.alert-popup-button:hover {
   filter: brightness(1.5);
 }
+
+.alert-popup-button.clear,
+.alert-popup-button.cancel {
+    flex: 1 0 0;
+}
+
+.alert-popup-button.save {
+    flex: 2 0 0;
+}
     `;
-
-
 
     constructor(tracker, settings) {
         this.tracker = tracker;
@@ -212,20 +222,62 @@ class AlertTracker {
         </button>`);
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.addEventListener('click', () => {
-            this.openPopUp();
+            this.openPopUp(itemId);
         });
-        this.createPopUp(itemId);
     }
 
-    openPopUp() {
-        document.getElementById("alertPopup").style.display = "block";
-    }
+    openPopUp(itemId) {
+        saveInsertAdjacentHTML(document.body, 'beforeend', Templates.popupTemplate(`
+            <div class="alert-popup">
+                <div class="alert-popup-title">Notification thresholds</div>
+                <div class="alert-input-container">
+                    <input id="price-below" style="grid-area: input-below;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price-below" min="0" max="100_000_000_000">
+                    <label for="price-below" style="grid-area: label-below;">
+                        <strong>Lower threshold</strong>
+                    </label>
+                    <input id="price-above" style="grid-area: input-above;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price-above" min="0" max="100_000_000_000">
+                    <label for="price-above" style="grid-area: label-above;">
+                        <strong>Upper threshold</strong>
+                    </label>
+                </div>
+                <div class="alert-popup-button-container">
+                    <div class="alert-popup-button cancel idlescape-button-gray">Close</div>
+                    <div class="alert-popup-button clear idlescape-button-red">Clear</div>
+                    <div class="alert-popup-button save idlescape-button-green">Save</div>
+            </div>`));
+        const alertPopup = document.getElementsByClassName("alert-popup")[0];
+        const priceBelowInput = document.getElementById("price-below");
+        const priceAboveInput = document.getElementById("price-above");
+        if (!this.hasActiveAlert(itemId)) {
+            priceBelowInput.value = "";
+            priceAboveInput.value = "";
+        } else {
+            priceBelowInput.value = this.allAlerts[itemId].below;
+            priceAboveInput.value = this.allAlerts[itemId].above;
+        }
 
-    closePopUp() {
-        document.getElementById("alertPopup").style.display = "none";
+        document.getElementsByClassName("save")[0].addEventListener('click', () => {
+            this.save(itemId, priceBelowInput.value, priceAboveInput.value);
+        });
+        document.getElementsByClassName("clear")[0].addEventListener('click', () => {
+            this.save(itemId, 0, 0);
+        });
+        document.getElementsByClassName("cancel")[0].addEventListener('click', () => {
+            this.tracker.closePopup();
+        });
+        document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
+            if (event.target == event.currentTarget) {
+                this.tracker.closePopup();
+            }
+        });
+        alertPopup.addEventListener('keydown', (event) => {
+            if (event.key === "Enter") {
+                this.save(itemId, priceBelowInput.value, priceAboveInput.value);
+            }
+        });
     }
-
-    save(itemId, priceBelow, priceAbove) {   
+    
+    save(itemId, priceBelow, priceAbove) {
         if ((priceBelow == 0 || priceBelow == "") && (priceAbove == 0 || priceAbove == "")) {
             delete this.allAlerts[itemId];
         } else {
@@ -237,58 +289,9 @@ class AlertTracker {
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(itemId));
         localStorage.setItem(this.storageKey, JSON.stringify(this.allAlerts));
-        this.closePopUp();
+        this.tracker.closePopup();
     }
-
-    createPopUp(itemId) {
-        const marketPlaceTable = document.getElementsByClassName("marketplace-table")[0];
-        saveInsertAdjacentHTML(marketPlaceTable, 'afterbegin', `
-            <div id="alertPopup" class="alertPopup">
-                <div class="alertPopupTitle">Notification thresholds</div>
-                <div class="alertInputContainer">
-                    <input id="price_below" style="grid-area: inputBelow;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price_below" min="0" max="100_000_000_000">
-                    <label for="price_below" style="grid-area: labelBelow;">
-                        <strong>Lower threshold</strong>
-                    </label>
-                    <input id="price_above" style="grid-area: inputAbove;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price_above" min="0" max="100_000_000_000">
-                    <label for="price_above" style="grid-area: labelAbove;">
-                        <strong>Upper threshold</strong>
-                    </label>
-                </div>
-                <div class="alertButtonContainer">
-                    <div class="alertButton cancel idlescape-button-gray">Close</div>
-                    <div class="alertButton clear idlescape-button-red">Clear</div>
-                    <div class="alertButton save idlescape-button-green">Save</div>
-                </div>
-            </div>`);
-        const priceBelowInput = document.getElementById("price_below");
-        const priceAboveInput = document.getElementById("price_above");
-        this.fillPopUp(itemId, priceBelowInput, priceAboveInput);
-        
-        marketPlaceTable.getElementsByClassName("save")[0].addEventListener('click', () => {
-            const priceBelow = priceBelowInput.value;
-            const priceAbove = priceAboveInput.value;
-            this.save(itemId, priceBelow, priceAbove);
-        });
-        marketPlaceTable.getElementsByClassName("cancel")[0].addEventListener('click', () => {
-            this.closePopUp();
-        });
-        marketPlaceTable.getElementsByClassName("clear")[0].addEventListener('click', () => {
-            this.save(itemId, "", "");
-            this.fillPopUp(itemId, priceBelowInput, priceAboveInput);
-        });
-    }
-
-    fillPopUp(itemId, priceBelowInput, priceAboveInput) {
-        if (!this.hasActiveAlert(itemId)) {
-            priceBelowInput.value = "";
-            priceAboveInput.value = "";
-        } else {
-            priceBelowInput.value = this.allAlerts[itemId].below;
-            priceAboveInput.value = this.allAlerts[itemId].above;
-        }
-    }
-
+    
     hasActiveAlert(itemId) {
         return itemId in this.allAlerts;
     }

@@ -208,6 +208,18 @@ class Tracker {
     stroke-linecap: round;
     stroke-linejoin: round
 }
+
+#tracker-popup {
+    z-index: 1300;
+    position: fixed;
+}
+
+.tracker-popup-background {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    inset: 0;
+}
     `;
 
     constructor() {
@@ -216,7 +228,18 @@ class Tracker {
         this.gameReadyTimeout = undefined;
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
-        
+
+        window.addEventListener('beforeunload', function () {
+            storageRequest({
+                type: 'close'
+            });
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.closePopup();
+            }
+        });
+
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
@@ -526,5 +549,9 @@ class Tracker {
             }
             this.gameReadyCallbacks = [];
         }
+    }
+
+    closePopup() {
+        document.getElementById('tracker-popup')?.remove();
     }
 }
