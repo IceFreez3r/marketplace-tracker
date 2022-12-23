@@ -169,9 +169,10 @@ body .marketplace-table-cell-div {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.history === undefined) {
             this.settings.history = 1;
         }
@@ -275,6 +276,10 @@ body .marketplace-table-cell-div {
         }
     }
 
+    onAPIUpdate() {
+        return;
+    }
+
     marketplaceTracker() {
         this.scanMarketplaceLists();
         this.scanOfferList();
@@ -297,10 +302,7 @@ body .marketplace-table-cell-div {
             return;
         }
         const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
-        let analysis = storageRequest({
-            type: 'analyze-item',
-            itemId: itemId
-        });
+        const analysis = this.storage.analyzeItem(itemId);
         if (document.getElementsByClassName('marketplace-analysis-table').length === 0) {
             let marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
             saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
@@ -444,10 +446,7 @@ body .marketplace-table-cell-div {
                 apiId: apiId
             });
         }
-        storageRequest({
-            type: 'icon-to-id-map',
-            map: map
-        });
+        this.storage.updateIdMap(map);
         this.createMap = false;
     }
 

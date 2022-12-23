@@ -229,11 +229,9 @@ class Tracker {
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
 
-        window.addEventListener('beforeunload', function () {
-            storageRequest({
-                type: 'close'
-            });
-        });
+        this.storage = new Storage(() => this.onApiUpdate());
+
+        window.addEventListener('beforeunload', () => this.storage.handleClose());
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 this.closePopup();
@@ -258,7 +256,7 @@ class Tracker {
                     smithing_tracker: 1,
                 }
             };
-            this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
             this.settingsSidebar();
         });
     }
@@ -278,7 +276,7 @@ class Tracker {
             if (!this.settings[moduleId]) {
                 this.settings[moduleId] = {};
             }
-            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId]);
+            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId], this.storage);
             this.activeModules[moduleId].onGameReady();
             console.log(`Activated module ${moduleId}`);
             return true;
@@ -295,6 +293,12 @@ class Tracker {
             return true;    
         }
         return false;
+    }
+
+    onApiUpdate() {
+        for (let module of Object.values(this.activeModules)) {
+            module.onAPIUpdate();
+        }
     }
 
     settingsSidebar() {

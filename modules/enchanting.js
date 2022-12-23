@@ -43,9 +43,10 @@ body .scrollcrafting-container {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "percent";
         }
@@ -94,6 +95,10 @@ body .scrollcrafting-container {
         return;
     }
 
+    onAPIUpdate() {
+        return;
+    }
+
     enchantingTracker() {
         let recipes = document.getElementsByClassName("scrollcrafting-container");
         for (let i = 0; i < recipes.length; i++) {
@@ -115,13 +120,9 @@ body .scrollcrafting-container {
         let resourceItemIds = ["scroll"].concat(dynamicResources.map(resource => resource.itemId));
         let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));
         let resourceItemCounts = [standardResources.scrolls].concat(dynamicResources.map(resource => resource.amount));
-        let response = storageRequest({
-            type: "enchanting-recipe",
-            scrollId: scrollId,
-            resourceItemIds: resourceItemIds
-        });
-        const ingredients = Object.assign(response.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
-        const product = Object.assign(response.product, { icon: scrollIcon, count: 1 });
+        const recipePrices = this.storage.handleRecipe(resourceItemIds, scrollId);
+        const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
+        const product = Object.assign(recipePrices.product, { icon: scrollIcon, count: 1 });
         saveInsertAdjacentHTML(recipe, 'beforeend', Templates.infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
     }
 

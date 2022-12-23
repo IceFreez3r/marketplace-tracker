@@ -99,18 +99,6 @@ function getLocalNumberSeparators() {
 
 const localNumberSeparators = getLocalNumberSeparators();
 
-function loadLocalStorage(key, fallback) {
-    const value = localStorage.getItem(key);
-    if (value === null) {
-        // if fallback is a function, call it
-        if (typeof fallback === "function") {
-            return fallback();
-        }
-        return fallback;
-    }
-    return JSON.parse(value);
-}
-
 function injectCSS(css) {
     let style = document.createElement("style");
     style.appendChild(document.createTextNode(css));
@@ -172,4 +160,11 @@ function formatNumber(number, options = {}) {
     }
     const formatter = new Intl.NumberFormat("en-US", formatterOptions);
     return formatter.format(number);
+}
+
+function sortObj(obj) {
+    return Object.keys(obj).sort().reduce((result, key) => {
+        result[key] = obj[key];
+        return result;
+    }, {});
 }

@@ -128,7 +128,7 @@ body .farming-seeds .all-items {
     }
     numGridElements = 42; // seeds (36) + headers (3) + borders (3)
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
         this.cssNode = injectCSS(this.css);
@@ -158,6 +158,10 @@ body .farming-seeds .all-items {
 
     settingsMenuContent() {
         return "";
+    }
+
+    onAPIUpdate() {
+        return;
     }
 
     farmingTracker() {

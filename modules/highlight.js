@@ -95,9 +95,10 @@ class MarketHighlights {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.quantileDisplay === undefined) {
             this.settings.quantileDisplay = "dot";
         }
@@ -106,7 +107,7 @@ class MarketHighlights {
         }
         this.cssNode = injectCSS(this.css);
         
-        this.favorites = loadLocalStorage('favorites', []);
+        this.favorites = this.storage.loadLocalStorage('favorites', []);
         this.favoriteFilterActive = false;
         this.quantileColorsActive = false;
 
@@ -170,6 +171,10 @@ class MarketHighlights {
     }
 
     settingChanged(settingId, value) {
+        return;
+    }
+
+    onAPIUpdate() {
         return;
     }
 
@@ -270,9 +275,7 @@ class MarketHighlights {
             return;
         }
         if (this.quantileColorsActive) {
-            const priceQuantiles = storageRequest({
-                type: "latest-price-quantiles"
-            });
+            const priceQuantiles = this.storage.latestPriceQuantiles();
             for (let item of items) {
                 const itemId = convertItemId(item.firstChild.src);
                 const quantile = priceQuantiles[itemId];
@@ -344,9 +347,7 @@ class MarketHighlights {
     }
 
     highlightBestHeatItem(items) {
-        const bestHeatItem = storageRequest({
-            type: 'get-best-heat-item',
-        });
+        const bestHeatItem = this.storage.bestHeatItem();
         items.childNodes.forEach((itemNode) => {
             const itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {

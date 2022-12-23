@@ -107,11 +107,12 @@ class AlertTracker {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         this.storageKey = 'TrackerAlerts';
-        this.allAlerts = loadLocalStorage(this.storageKey, {});
+        this.allAlerts = this.storage.loadLocalStorage(this.storageKey, {});
 
         this.cssNode = injectCSS(this.css);
 
@@ -132,7 +133,7 @@ class AlertTracker {
     }
 
     onGameReady() {
-        if (Notification.permission !== "denied") {
+        if (Notification.permission === "default") {
             Notification.requestPermission()
                 .then((permission) => {
                     if (permission === "granted") {
@@ -141,6 +142,9 @@ class AlertTracker {
                             icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
                             // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                         });
+                    } else {
+                        console.log("Notifications not allowed");
+                        // TODO: After rewrite send ingame notification
                     }
                 });
         }
@@ -150,7 +154,6 @@ class AlertTracker {
             childList: true,
             subtree: true,
         });
-        this.onAPIUpdate();
     }
 
     deactivate() {
@@ -176,14 +179,14 @@ class AlertTracker {
     }
 
     collectNotificationData() {
-        const prices = storageRequest({type: "latest-prices"});
+        const prices = this.storage.latestPrices();
         this.notificationInformation = {};
         let notificationNeeded = false;
         for (let itemId in this.allAlerts) {
-            if (prices[itemId] < this.allAlerts[itemId].priceBelow) {
+            if (prices[itemId] <= this.allAlerts[itemId].below) {
                 this.notificationInformation[itemId] = "below";
                 notificationNeeded = true;
-            } else if (prices[itemId] > this.allAlerts[itemId].priceAbove) {
+            } else if (prices[itemId] >= this.allAlerts[itemId].above) {
                 this.notificationInformation[itemId] = "above";
                 notificationNeeded = true;
             }
