@@ -209,6 +209,48 @@ class Tracker {
     stroke-linejoin: round
 }
 
+input[type="text"].tracker-time-duration:not(.browser-default) {
+    position: relative;
+    width: 40px;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="text"].tracker-time-duration:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
+.tracker-time-range {
+    display: flex;
+    gap: 3px;
+}
+
+input[type="time"].tracker-time:not(.browser-default) {
+    position: relative;
+    width: fit-content;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    font-size: 14px;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="time"].tracker-time:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
 #tracker-popup {
     z-index: 1300;
     position: fixed;
@@ -493,6 +535,11 @@ class Tracker {
         const sliders = document.getElementsByClassName('tracker-slider');
         for (const slider of sliders) {
             this.setSetting(slider.id, slider.value);
+        }
+        // Time inputs
+        const timeInputs = document.querySelectorAll('.tracker-time, .tracker-time-duration');
+        for (const timeInput of timeInputs) {
+            this.setSetting(timeInput.id, timeInput.value);
         }
         // Save settings
         console.log(this.settings);

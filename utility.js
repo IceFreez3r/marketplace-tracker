@@ -168,3 +168,15 @@ function sortObj(obj) {
         return result;
     }, {});
 }
+
+function durationToMilliseconds(duration) {
+    const [hours, minutes] = duration.split(":");
+    return (parseInt(hours) * 60 + parseInt(minutes)) * 60 * 1000;
+}
+
+function millisecondsToDuration(milliseconds) {
+    const hours = Math.floor(milliseconds / 1000 / 60 / 60);
+    milliseconds -= hours * 60 * 60 * 1000;
+    const minutes = Math.floor(milliseconds / 1000 / 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+}

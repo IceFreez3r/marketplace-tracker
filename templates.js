@@ -244,6 +244,71 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
         return `<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${range[1]}" step="${range[2] || 1}" value="${currentlySelected}">`;
     }
 
+    static timeDurationTemplate(id, value = "", classes = "") {
+        const durationInput = document.createElement('input');
+        durationInput.id = id; 
+        durationInput.classList = `tracker-time-duration ${classes}`;
+        durationInput.type = 'text';
+        durationInput.value = value;
+        durationInput.maxLength = 5;
+        durationInput.placeholder = "hh:mm";
+
+        let lastKey = null;
+        durationInput.addEventListener('keydown', (event) => {
+            lastKey = event.key;
+        });
+
+        durationInput.addEventListener('keypress', (event) => {
+            if (/[^\d:]/.test(event.key)) {
+                event.preventDefault();
+            }
+        });
+
+        durationInput.addEventListener('input', (event) => {
+            event.target.value = Templates.formatTimeInput(event.target.value, lastKey);
+        });
+
+        durationInput.addEventListener('blur', (event) => {
+            event.target.value = Templates.padTime(Templates.formatTimeInput(event.target.value, lastKey));
+        });
+        return durationInput;
+    }
+
+    static timeRangeTemplate(id, start = "", end = "", classes = "") {
+        return `
+            <div class="tracker-time-range ${classes}">
+                <input id="${id + "-start"}" class="tracker-time ${classes}" type="time" value="${start}">
+                <span>-</span>
+                <input id="${id + "-end"}" class="tracker-time ${classes}" type="time" value="${end}">
+            </div>`;
+    }
+
+    static formatTimeInput(value, lastKey) {
+        // if the user removed the colon, also remove the last digit of the hours
+        if (lastKey === 'Backspace' && value.length === 2) {
+            value = value[0];
+        }
+        value = value.replace(/:/g, '');
+        let hours = value.substring(0, 2);
+        let minutes = value.substring(2, 4);
+        if (lastKey === ':') {
+            hours = hours.padStart(2, '0');
+        }
+        const needsColon = hours.length === 2;
+        hours = hours > 23 ? '23' : hours;
+        minutes = minutes > 59 ? '59' : minutes;
+        return `${hours}${needsColon ? `:${minutes}` : ""}`;
+    }
+
+    static padTime(value) {
+        if (value.length === 0) {
+            return value;
+        }
+        let [hours, minutes] = value.split(':');
+        minutes = minutes || "00"; // minutes is undefined if there is no colon
+        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    }
+
     static trackerLogoTemplate(classes = "") {
         return `
             <svg class="${classes}" viewBox="0 0 119.24264 119.24264">

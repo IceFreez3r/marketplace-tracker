@@ -111,6 +111,20 @@ class AlertTracker {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
+        if (this.settings.cooldown === undefined) {
+            this.settings.cooldownEnd = 0;
+            this.settings.cooldown = "00:30";
+        }
+        if (this.settings.doNotDisturb === undefined) {
+            this.settings.doNotDisturb = {
+                start: "23:00",
+                end: "07:00"
+            };
+        }
+        if (this.settings.manualMuteEnd === undefined) {
+            this.settings.manualMuteEnd = 0;
+            this.settings.manualMute = "";
+        }
         this.storageKey = 'TrackerAlerts';
         this.allAlerts = this.storage.loadLocalStorage(this.storageKey, {});
 
@@ -165,11 +179,38 @@ class AlertTracker {
         //time between notifications
         //mute notifications till time, between time
         //button -> pop-up that contains all timeframes with mute active -> clearable
-        return "";
+        const cooldown = document.createElement('div');
+        cooldown.classList.add('tracker-module-setting');
+        cooldown.insertAdjacentHTML('beforeend', `
+            <div class="tracker-module-setting-name">
+                Cooldown between notifications
+            </div>`);
+        cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + '-cooldown', this.settings.cooldown));
+        
+        const doNotDisturb = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Do not disturb between
+                </div>
+                ${Templates.timeRangeTemplate(AlertTracker.id + '-doNotDisturb', this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
+            </div>`;
+        
+        const manualMute = document.createElement('div');
+        manualMute.classList.add('tracker-module-setting');
+        manualMute.insertAdjacentHTML('beforeend', `
+            <div class="tracker-module-setting-name">
+                Manually mute notifications for
+            </div>`);
+        const remainingMute = this.settings.manualMuteEnd - Date.now();
+        this.settings.manualMute = remainingMute > 0 ? millisecondsToDuration(remainingMute) : "";
+        manualMute.append(Templates.timeDurationTemplate(AlertTracker.id + '-manualMute', this.settings.manualMute));
+        return [cooldown, doNotDisturb, manualMute];
     }
 
     settingChanged(settingId, value) {
-        return;
+        if (settingId === 'manualMute') {
+            this.settings.manualMuteEnd = Date.now() + durationToMilliseconds(value);
+        }
     }
 
     onAPIUpdate() {
@@ -195,18 +236,49 @@ class AlertTracker {
     }
 
     createNotification(permission = Notification.permission) {
-        if (permission === "granted") {
-            const notification = new Notification("Idlescape Marketplace", {
-                body: "Some items should be interesting to you!",
-                icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
-                // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
-                
-            });
-        } else {
-            console.log("Notification permission denied");
-            // TODO: After rewrite add ingame notification here
-            // Also by default if tab is visible
+        if (!this.muted()) {
+            if (permission === "granted") {
+                const notification = new Notification("Idlescape Marketplace", {
+                    body: "Some items should be interesting to you!",
+                    icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
+                    // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                    
+                });
+            } else {
+                console.log("Notification permission denied");
+                // TODO: After rewrite add ingame notification here
+                // Also by default if tab is visible
+            }
+            // set cooldown, reduce by 30 seconds to account for possible delay
+            this.settings.cooldownEnd = Date.now() + durationToMilliseconds(this.settings.cooldown) - 30 * 1000;
         }
+    }
+
+    muted() {
+        const now = new Date();
+        if (this.settings.manualMuteEnd > now) {
+            return true;
+        }
+        if (this.settings.cooldownEnd > now) {
+            return true;
+        }
+        if (this.settings.doNotDisturb.end === this.settings.doNotDisturb.start) {
+            return false;
+        }
+        if (this.settings.doNotDisturb.start === "" || this.settings.doNotDisturb.end === "") {
+            return false;
+        }
+        const nowTimeString = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'});
+        if (this.settings.doNotDisturb.start <= this.settings.doNotDisturb.end) {
+            if (nowTimeString > this.settings.doNotDisturb.start && nowTimeString < this.settings.doNotDisturb.end) {
+                return true;
+            }
+        } else {
+            if (this.settings.doNotDisturb.start <= nowTimeString || nowTimeString < this.settings.doNotDisturb.end) {
+                return true;
+            }
+        }
+        return false;
     }
 
     createAlertButton(buyContainer) {
