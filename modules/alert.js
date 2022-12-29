@@ -176,9 +176,10 @@ class AlertTracker {
     }
 
     settingsMenuContent() {
-        //time between notifications
-        //mute notifications till time, between time
-        //button -> pop-up that contains all timeframes with mute active -> clearable
+        const note = `
+            <div class="tracker-module-setting-description">
+                Works best if you also have Market Highlights enabled.
+            </div>`
         const cooldown = document.createElement('div');
         cooldown.classList.add('tracker-module-setting');
         cooldown.insertAdjacentHTML('beforeend', `
@@ -204,7 +205,7 @@ class AlertTracker {
         const remainingMute = this.settings.manualMuteEnd - Date.now();
         this.settings.manualMute = remainingMute > 0 ? millisecondsToDuration(remainingMute) : "";
         manualMute.append(Templates.timeDurationTemplate(AlertTracker.id + '-manualMute', this.settings.manualMute));
-        return [cooldown, doNotDisturb, manualMute];
+        return [note, cooldown, doNotDisturb, manualMute];
     }
 
     settingChanged(settingId, value) {
@@ -217,6 +218,7 @@ class AlertTracker {
         if (this.collectNotificationData()) {
             this.createNotification();
         }
+        this.tracker.notifyModule(MarketHighlights.id, "alerts", this.notificationInformation);
     }
 
     collectNotificationData() {
@@ -224,10 +226,10 @@ class AlertTracker {
         this.notificationInformation = {};
         let notificationNeeded = false;
         for (let itemId in this.allAlerts) {
-            if (prices[itemId] <= this.allAlerts[itemId].below) {
+            if (this.allAlerts[itemId].below && prices[itemId] <= this.allAlerts[itemId].below) {
                 this.notificationInformation[itemId] = "below";
                 notificationNeeded = true;
-            } else if (prices[itemId] >= this.allAlerts[itemId].above) {
+            } else if (this.allAlerts[itemId].above && prices[itemId] >= this.allAlerts[itemId].above) {
                 this.notificationInformation[itemId] = "above";
                 notificationNeeded = true;
             }
@@ -238,8 +240,11 @@ class AlertTracker {
     createNotification(permission = Notification.permission) {
         if (!this.muted()) {
             if (permission === "granted") {
+                const items = Object.keys(this.notificationInformation).map(itemId => {
+                    return this.storage.getItemName(itemId);
+                }).join(", ");
                 const notification = new Notification("Idlescape Marketplace", {
-                    body: "Some items should be interesting to you!",
+                    body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
                     // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                     

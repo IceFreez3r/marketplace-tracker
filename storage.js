@@ -110,6 +110,14 @@ class Storage {
         localStorage.setItem('idMap', JSON.stringify(this.idMap));
     }
 
+    getItemName(itemId) {
+        if (!(itemId in this.idMap)) {
+            return null;
+        }
+        const apiId = this.idMap[itemId];
+        return this.itemList[apiId]["name"];
+    }
+
     analyzeItem(itemId) {
         if (!(itemId in this.idMap)) {
             return {

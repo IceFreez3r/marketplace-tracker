@@ -135,6 +135,10 @@ function detectInfiniteLoop(mutations) {
                 if (addedNode.classList.contains("quantile-dot")) {
                     return true;
                 }
+                // Notification marker
+                if (addedNode.classList.contains("alert-icon")) {
+                    return true;
+                }
             }
         }
     }

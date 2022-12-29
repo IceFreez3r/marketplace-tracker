@@ -79,6 +79,28 @@ class MarketHighlights {
     padding: 2px;
 }
 
+.alert-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 4px;
+    display: flex;
+    justify-content: center;
+    z-index: 1;
+    stroke: white;
+    stroke-width: 2px;
+    stroke-linejoin: round;
+}
+
+.alert-icon.below {
+    fill: red;
+}
+
+.alert-icon.above {
+    fill: green;
+    transform: rotate(180deg);
+}
+
 .marker-size-slider {
     position: relative;
 }
@@ -110,6 +132,7 @@ class MarketHighlights {
         this.favorites = this.storage.loadLocalStorage('favorites', []);
         this.favoriteFilterActive = false;
         this.quantileColorsActive = false;
+        this.notificationInformation = {}; // comes from alert.js
 
         this.playAreaObserver = new MutationObserver(mutations => {
             if (detectInfiniteLoop(mutations)) {
@@ -178,6 +201,13 @@ class MarketHighlights {
         return;
     }
 
+    onNotify(message, data) {
+        if (message === "alerts") {
+            this.notificationInformation = data;
+            this.onAPIUpdate();
+        }
+    }
+
     updatePreview() {
         const preview = document.getElementsByClassName("quantile-dot")[0];
         if (preview) {
@@ -209,6 +239,7 @@ class MarketHighlights {
                 this.quantileColors();
             }
             this.highlightBestHeatItem(items);
+            this.highlightAlertItems(items);
             return;
         }
         // Buy page
@@ -279,20 +310,21 @@ class MarketHighlights {
             for (let item of items) {
                 const itemId = convertItemId(item.firstChild.src);
                 const quantile = priceQuantiles[itemId];
+                const color = this.getHSLColor(quantile);
                 item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
                 if (this.settings.quantileDisplay === "dot") {
                     // TODO: Adjust dot size with setting
-                    item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
+                    this.quantileDot(item, color)
                 }
                 else if (this.settings.quantileDisplay === "border") {
-                    item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
+                    item.style.border = `3px solid ${color}`;
                     item.classList.toggle('quantile-borders', this.quantileColorsActive);
                 }
                 else if (this.settings.quantileDisplay === "shadow") {
-                    item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
+                    item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
                 }
                 else if (this.settings.quantileDisplay === "party") {
-                    item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", this.getHSLColor(quantile)));
+                    this.quantileDot(item, color)
                     item.classList.toggle('quantile-borders', this.quantileColorsActive);
                     this.partyMode(item, quantile);
                 }
@@ -308,15 +340,25 @@ class MarketHighlights {
         }
     }
 
+    quantileDot(item, color) {
+        const quantileDot = item.getElementsByClassName('quantile-dot')[0];
+        if (quantileDot) {
+            quantileDot.firstElementChild.style.fill = color;
+        } else {
+            item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", color));
+        }
+    }
+
     getHSLColor(quantile) {
         const hue = 120 * (1 - quantile);
         return `hsl(${hue}, 80%, 40%)`;
     }
 
     partyMode(item, quantile) {
-        item.style.border = `3px solid ${this.getHSLColor(quantile)}`;
-        item.getElementsByClassName('quantile-dot')[0].firstElementChild.style.fill = this.getHSLColor(quantile);
-        item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${this.getHSLColor(quantile)})`;
+        const color = this.getHSLColor(quantile);
+        item.style.border = `3px solid ${color}`;
+        this.quantileDot(item, color);
+        item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
         quantile = (quantile + 0.05) % 3;
         setTimeout(() => {
             this.partyMode(item, quantile);
@@ -356,6 +398,27 @@ class MarketHighlights {
             } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.remove("heat-highlight");
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
+            }
+        });
+    }
+
+    highlightAlertItems(items) {
+        const alertIcons = document.getElementsByClassName('alert-icon');
+        for (let i = alertIcons.length - 1; i >= 0; i--) {
+            alertIcons[i].remove();
+        }
+        items.childNodes.forEach((itemNode) => {
+            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            if (this.notificationInformation[itemId] === "below" && !itemNode.firstChild.classList.contains('alert-below')) {
+                itemNode.firstChild.insertAdjacentHTML('beforeend', `
+                    <div class="alert-icon below" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
+                        ${Templates.arrowDownTemplate()}
+                    </div>`);
+            } else if (this.notificationInformation[itemId] === "above" && !itemNode.firstChild.classList.contains('alert-above')) {
+                itemNode.firstChild.insertAdjacentHTML('beforeend', `
+                    <div class="alert-icon above" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
+                        ${Templates.arrowDownTemplate()}
+                    </div>`);
             }
         });
     }

@@ -296,6 +296,7 @@ input[type="time"].tracker-time:not(.browser-default):focus {
                     marketplace_tracker: 1,
                     offline_tracker: 1,
                     smithing_tracker: 1,
+                    alert_tracker: 1,
                 }
             };
             this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
@@ -343,6 +344,12 @@ input[type="time"].tracker-time:not(.browser-default):focus {
         }
     }
 
+    notifyModule(moduleId, message, data) {
+        if (this.activeModules[moduleId]) {
+            this.activeModules[moduleId].onNotify(message, data);
+        }
+    }
+
     settingsSidebar() {
         let oldSidebarItem = document.getElementById('tracker-settings-sidebar');
         if (oldSidebarItem) {
@@ -370,7 +377,6 @@ input[type="time"].tracker-time:not(.browser-default):focus {
             }
         }
     }
-
 
     settingsPage() {
         let oldNavTab = document.getElementById('tracker-settings-nav-tab');
