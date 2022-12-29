@@ -50,6 +50,7 @@ class OfflineTracker {
 
         window.addEventListener('beforeunload', function () {
             this.settings.lastLogin[getCharacterName()] = Date.now();
+            this.tracker.storeSettings();
         });
 
         this.bodyObserver = new MutationObserver(mutations => {
