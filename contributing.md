@@ -13,15 +13,19 @@ Modules need to implement the following variables:
 
 and functions:
 
-- `constructor(tracker, settings): void`: The constructor of the module. The `tracker` is the instance of the tracker class. The `settings` are the settings of your module. Add css nodes to the page here. Setup your own mutation observers here, but don't start them yet. 
+- `constructor(tracker, settings, storage): void`: The constructor of the module. The `tracker` is the instance of the tracker class. The `settings` are the settings of your module. `storage` is the reference to the storage object. Add css nodes to the page here. Setup your own mutation observers here, but don't start them yet. 
 - `onGameReady(): void`: This function is called when the the `play-area-container` finished loading. Anything that interacts directly with the game (e.g. `observer.observe(...)`) should wait for this function to be called.
 - `deactivate(): void`: This function is called when the module is deactivated. Remove all your css nodes and disconnect all mutation observers here.
 - `settingsMenuContent(): string|HTMLElement|[string|HTMLElement]`: You can use this function to define subsettings of your module in the settings menu. Templates for a checkmark, a select menu or similar things can be found in [`templates.js`](templates.js). Settings can be either given as a HTML string or as a HTMLElement. If you have multiple settings, you can return an (mixed) array of strings and HTMLElements. Please check the existing modules for the correct structure and css classes.
+- `onAPIUpdate(): void`: This function is called when the API data is updated. You can leave this function empty if you don't need to do anything when the API data is updated.
 - `settingChanged(settingId, value): void`: This function is called when a setting of your module is changed. The `settingId` is the id of the setting that was changed (without your module id prefix). The `value` is the new value of the setting. You can leave this function out if you don't have any subsettings. If you don't need to do anything when a setting is changed, you can just leave this function empty.
+- `onNotify(message, data): void`: Modules can receive messages from other modules that were send through `this.tracker.notify(message, data)`. The `message` is the message that was send. The `data` is the data that was send. You can leave this function out if you don't need to receive any messages.
 
 When your done see [Firefox extension and userscript support](#firefox-extension-and-userscript-support) to add your module to the tracker.
 
-## Utility functions
+## Templates and utility
+
+You can find templates for your settings menu or various svg icons in [`templates.js`](templates.js). Access them with `Templates.<template>()`. Feel free to add new ones if you think they could be useful for other modules.
 
 There are a lot of useful functions in [`utility.js`](utility.js). You can use them in your modules. If you have a new general function, you can add it there. For functions that aren't self-explanatory, please add a JSDoc comment above the function.
 
