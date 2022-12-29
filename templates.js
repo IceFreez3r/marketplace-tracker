@@ -311,8 +311,8 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
 
     static trackerLogoTemplate(classes = "") {
         return `
-            <svg class="${classes}" viewBox="0 0 119.24264 119.24264">
-                <path fill="green" stroke="green" stroke-width="1" d="M7, 67 L37, 37 A8.48528 8.48528 0 0 1 49 37 L69 57 L99 27 L79, 27 A3.62132 3.62132 0 0 1 79 19.75736 L105 19.75736 A8.48528 8.48528 0 0 1 112.24264 27 L112.24264 53 A3.62132 3.62132 0 0 1 105 53 L105 33 L75 63 A8.48528 8.48528 0 0 1 63 63 L43 43 L13 73 A4.24264 4.24264 0 0 1 7 67 Z" />
+            <svg class="${classes}" viewBox="0 -11.15467 119.24264 109.08797">
+                <path fill="green" d="M7, 67 L37, 37 A8.48528 8.48528 0 0 1 49 37 L69 57 L99 27 L79, 27 A3.62132 3.62132 0 0 1 79 19.75736 L105 19.75736 A8.48528 8.48528 0 0 1 112.24264 27 L112.24264 53 A3.62132 3.62132 0 0 1 105 53 L105 33 L75 63 A8.48528 8.48528 0 0 1 63 63 L43 43 L13 73 A4.24264 4.24264 0 0 1 7 67 Z" />
             </svg>`;
     }
 
