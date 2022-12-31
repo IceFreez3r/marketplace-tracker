@@ -78,9 +78,10 @@ class SmithingTracker {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "percent";
         }
@@ -129,6 +130,10 @@ class SmithingTracker {
         return;
     }
 
+    onAPIUpdate() {
+        return;
+    }
+
    smithingTracker() {
         let recipes = document.getElementsByClassName('resource-container');
         for (let i = 0; i < recipes.length; i++) {
@@ -162,13 +167,9 @@ class SmithingTracker {
         let craftingImage = recipe.getElementsByClassName('resource-container-image')[0];
         let requiredResourceNode = recipe.getElementsByClassName('resource-required-resources')[0];
         craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
-        let response = storageRequest({
-            type: 'smithing-recipe',
-            barId: barId,
-            resourceIds: resourceIds
-        });
-        const ingredients = Object.assign(response.ingredients, {icons: resourceIcons, counts: resourceCounts});
-        const product = Object.assign(response.product, {icon: barIcon, count: 1});
+        const recipePrices = this.storage.handleRecipe(resourceIds, barId);
+        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceIcons, counts: resourceCounts});
+        const product = Object.assign(recipePrices.product, {icon: barIcon, count: 1});
         saveInsertAdjacentHTML(craftingImage, 'afterend', Templates.infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
     }
 }

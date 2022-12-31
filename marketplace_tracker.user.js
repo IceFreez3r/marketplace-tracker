@@ -19,6 +19,7 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/marketplace.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/offline.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/smithing.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/alert.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/tracker.js
 // @grant        none
 // ==/UserScript==
@@ -34,5 +35,6 @@
     tracker.addModule(SmithingTracker);
     tracker.addModule(CraftingTracker);
     tracker.addModule(FarmingTracker);
+    tracker.addModule(AlertTracker);
 
 })();

@@ -37,9 +37,10 @@ class OfflineTracker {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
@@ -86,6 +87,10 @@ class OfflineTracker {
         return;
     }
 
+    onAPIUpdate() {
+        return;
+    }
+
     offlineTracker(){
         let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
         if (!offlineProgressBox) {
@@ -111,10 +116,7 @@ class OfflineTracker {
             items[itemId] ??= 0;
             items[itemId] += itemCount;
         }
-        const itemValues = storageRequest({
-            type: 'get-item-values',
-            itemIds: Object.keys(items),
-        });
+        const itemValues = this.storage.analyzeItems(Object.keys(items));
         const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, Object.values(items));
 
         /* Offline Time

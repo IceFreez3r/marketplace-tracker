@@ -55,9 +55,10 @@ body .crafting-container {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "off";
         }
@@ -121,6 +122,10 @@ body .crafting-container {
         return;
     }
 
+    onAPIUpdate() {
+        return;
+    }
+
     craftingTracker(){
         let recipeNode = document.getElementsByClassName("crafting-container")[0];
         if (!recipeNode) {
@@ -168,18 +173,14 @@ body .crafting-container {
             resourceItemCounts.push(parseNumberString(resourceItemNodes[i].firstChild.textContent) / craftingAmount);
         }
 
-        let response = storageRequest({
-            type: 'crafting-recipe',
-            craftedItemId: craftedItemId,
-            resourceItemIds: resourceItemIds
-        });
+        const recipePrices = this.storage.handleRecipe(resourceItemIds, craftedItemId)
         // TODO: use vendor price where appropriate
 
         // crafting info table
         document.getElementsByClassName("crafting-info-table")[0]?.remove();
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
-        const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
+        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
+        const product = Object.assign(recipePrices.product, {icon: craftedItemIcon, count: craftedItemCount});
         saveInsertAdjacentHTML(craftingContainer, 'beforeend', Templates.infoTableTemplate('crafting', ingredients, product, this.settings.profit));
         
         if (this.settings.goldPerXP) {

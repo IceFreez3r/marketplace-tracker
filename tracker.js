@@ -44,6 +44,7 @@ class Tracker {
 .settings-module-header-toggle-icon > :is(img, svg){
     width: 30px;
     height: 30px;
+    object-fit: contain;
 }
 
 .settings-module-content > :last-child {
@@ -207,6 +208,60 @@ class Tracker {
     stroke-linecap: round;
     stroke-linejoin: round
 }
+
+input[type="text"].tracker-time-duration:not(.browser-default) {
+    position: relative;
+    width: 40px;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="text"].tracker-time-duration:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
+.tracker-time-range {
+    display: flex;
+    gap: 3px;
+}
+
+input[type="time"].tracker-time:not(.browser-default) {
+    position: relative;
+    width: fit-content;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    font-size: 14px;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="time"].tracker-time:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
+#tracker-popup {
+    z-index: 1300;
+    position: fixed;
+}
+
+.tracker-popup-background {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    inset: 0;
+}
     `;
 
     constructor() {
@@ -215,7 +270,16 @@ class Tracker {
         this.gameReadyTimeout = undefined;
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
-        
+
+        this.storage = new Storage(() => this.onApiUpdate());
+
+        window.addEventListener('beforeunload', () => this.storage.handleClose());
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.closePopup();
+            }
+        });
+
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
@@ -232,9 +296,10 @@ class Tracker {
                     marketplace_tracker: 1,
                     offline_tracker: 1,
                     smithing_tracker: 1,
+                    alert_tracker: 1,
                 }
             };
-            this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
             this.settingsSidebar();
         });
     }
@@ -254,7 +319,7 @@ class Tracker {
             if (!this.settings[moduleId]) {
                 this.settings[moduleId] = {};
             }
-            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId]);
+            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId], this.storage);
             this.activeModules[moduleId].onGameReady();
             console.log(`Activated module ${moduleId}`);
             return true;
@@ -271,6 +336,18 @@ class Tracker {
             return true;    
         }
         return false;
+    }
+
+    onApiUpdate() {
+        for (let module of Object.values(this.activeModules)) {
+            module.onAPIUpdate();
+        }
+    }
+
+    notifyModule(moduleId, message, data) {
+        if (this.activeModules[moduleId]) {
+            this.activeModules[moduleId].onNotify(message, data);
+        }
     }
 
     settingsSidebar() {
@@ -300,7 +377,6 @@ class Tracker {
             }
         }
     }
-
 
     settingsPage() {
         let oldNavTab = document.getElementById('tracker-settings-nav-tab');
@@ -466,6 +542,11 @@ class Tracker {
         for (const slider of sliders) {
             this.setSetting(slider.id, slider.value);
         }
+        // Time inputs
+        const timeInputs = document.querySelectorAll('.tracker-time, .tracker-time-duration');
+        for (const timeInput of timeInputs) {
+            this.setSetting(timeInput.id, timeInput.value);
+        }
         // Save settings
         console.log(this.settings);
         this.storeSettings();
@@ -525,5 +606,9 @@ class Tracker {
             }
             this.gameReadyCallbacks = [];
         }
+    }
+
+    closePopup() {
+        document.getElementById('tracker-popup')?.remove();
     }
 }
