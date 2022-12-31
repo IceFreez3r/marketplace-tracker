@@ -153,8 +153,7 @@ class AlertTracker {
                     if (permission === "granted") {
                         const notification = new Notification("Notifications allowed", {
                             body: "Thanks for using our extension!",
-                            icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
-                            // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                            icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                         });
                     } else {
                         console.log("Notifications not allowed");
@@ -245,8 +244,7 @@ class AlertTracker {
                 }).join(", ");
                 const notification = new Notification("Idlescape Marketplace", {
                     body: "Interesting items for you: " + items,
-                    icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/notifications/images/logo.svg",
-                    // icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                    icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                     
                 });
             } else {

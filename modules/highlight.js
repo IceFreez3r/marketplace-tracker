@@ -313,7 +313,6 @@ class MarketHighlights {
                 const color = this.getHSLColor(quantile);
                 item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
                 if (this.settings.quantileDisplay === "dot") {
-                    // TODO: Adjust dot size with setting
                     this.quantileDot(item, color)
                 }
                 else if (this.settings.quantileDisplay === "border") {
