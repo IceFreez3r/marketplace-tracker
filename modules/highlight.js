@@ -176,7 +176,7 @@ class MarketHighlights {
         }, this.settings.quantileDisplay));
         let markerSize = document.createElement('div');
         markerSize.classList.add('tracker-module-setting');
-        markerSize.insertAdjacentHTML('beforeend', `
+        saveInsertAdjacentHTML(markerSize, 'beforeend', `
             <div class="tracker-module-setting-name">
                 Marker size
             </div>
@@ -344,7 +344,7 @@ class MarketHighlights {
         if (quantileDot) {
             quantileDot.firstElementChild.style.fill = color;
         } else {
-            item.insertAdjacentHTML('beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", color));
+            saveInsertAdjacentHTML(item, 'beforeend', Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", color));
         }
     }
 
@@ -393,7 +393,7 @@ class MarketHighlights {
             const itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.add("heat-highlight");
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`);
+                saveInsertAdjacentHTML(itemNode.firstChild, 'beforeend', `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`);
             } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains('heat-highlight')) {
                 itemNode.firstChild.classList.remove("heat-highlight");
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
@@ -409,12 +409,12 @@ class MarketHighlights {
         items.childNodes.forEach((itemNode) => {
             const itemId = convertItemId(itemNode.firstChild.firstChild.src);
             if (this.notificationInformation[itemId] === "below" && !itemNode.firstChild.classList.contains('alert-below')) {
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `
+                saveInsertAdjacentHTML(itemNode.firstChild, 'beforeend', `
                     <div class="alert-icon below" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
                         ${Templates.arrowDownTemplate()}
                     </div>`);
             } else if (this.notificationInformation[itemId] === "above" && !itemNode.firstChild.classList.contains('alert-above')) {
-                itemNode.firstChild.insertAdjacentHTML('beforeend', `
+                saveInsertAdjacentHTML(itemNode.firstChild, 'beforeend', `
                     <div class="alert-icon above" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
                         ${Templates.arrowDownTemplate()}
                     </div>`);
