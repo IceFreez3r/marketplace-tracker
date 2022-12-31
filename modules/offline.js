@@ -43,7 +43,15 @@ class OfflineTracker {
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
+        if (this.settings.lastLogin === undefined) {
+            this.settings.lastLogin = {};
+        }
         this.cssNode = injectCSS(this.css);
+
+        window.addEventListener('beforeunload', () => {
+            this.settings.lastLogin[getCharacterName()] = Date.now();
+            this.tracker.storeSettings();
+        });
 
         this.bodyObserver = new MutationObserver(mutations => {
             if (detectInfiniteLoop(mutations)) {
@@ -124,11 +132,13 @@ class OfflineTracker {
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
         if (!isDaelsTracker) {
-            const lastLogin = storageRequest({
-                type: 'get-last-login',
-            });
-            const offlineTimeBackground = Date.now() - lastLogin;
-            offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+            const lastLogin = this.settings.lastLogin[getCharacterName()];
+            if (!lastLogin) {
+                offlineTime = offlineTimeScrapped;
+            } else {
+                const offlineTimeBackground = Date.now() - lastLogin;
+                offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+            }
         } else {
             offlineTime = offlineTimeScrapped;
         }

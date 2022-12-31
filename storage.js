@@ -18,8 +18,6 @@ function storageRequest(request) {
             return analyzeItem(request.itemId);
         case "get-item-values":
             return analyzeItems(request.itemIds);
-        case "get-last-login":
-            return lastLogin;
         case "crafting-recipe":
             return handleRecipe(request.resourceItemIds, request.craftedItemId);
         case "enchanting-recipe":
@@ -35,7 +33,6 @@ function storageRequest(request) {
 
 function handleClose() {
     storeItemList();
-    localStorage.setItem('lastLogin', Date.now());
 }
 
 function handleApiData(data) {
@@ -252,11 +249,6 @@ let idMap = {
 result = localStorage.getItem('idMap');
 if (result) {
     idMap = JSON.parse(result);
-}
-
-let lastLogin = localStorage.getItem('lastLogin');
-if (!lastLogin) {
-    lastLogin = Date.now();
 }
 
 fetchAPI();

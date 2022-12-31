@@ -215,13 +215,7 @@ class Tracker {
         this.gameReadyTimeout = undefined;
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
-
-        window.addEventListener('beforeunload', function () {
-            storageRequest({
-                type: 'close'
-            });
-        });
-
+        
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
@@ -474,7 +468,7 @@ class Tracker {
         }
         // Save settings
         console.log(this.settings);
-        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
+        this.storeSettings();
 
         // Visual feedback
         const saveButton = document.getElementById('settings-save');
@@ -489,6 +483,10 @@ class Tracker {
         this.saveCheckmarkTimeout = setTimeout(() => {
             saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0].remove();
         }, 5000);
+    }
+
+    storeSettings() {
+        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
     setSetting(settingId, value) {
