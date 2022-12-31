@@ -48,7 +48,7 @@ class OfflineTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        window.addEventListener('beforeunload', function () {
+        window.addEventListener('beforeunload', () => {
             this.settings.lastLogin[getCharacterName()] = Date.now();
             this.tracker.storeSettings();
         });
