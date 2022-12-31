@@ -128,27 +128,24 @@ body .farming-seeds .all-items {
     }
     numGridElements = 42; // seeds (36) + headers (3) + borders (3)
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
         this.cssNode = injectCSS(this.css);
 
-        // setup mutation observer
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Farming') {
-                return;
+            if (getSelectedSkill() === "Farming") {
+                this.farmingTracker();
             }
-            this.farmingTracker();
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -156,11 +153,15 @@ body .farming-seeds .all-items {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         return "";
+    }
+
+    onAPIUpdate() {
+        return;
     }
 
     farmingTracker() {
@@ -207,13 +208,12 @@ body .farming-seeds .all-items {
         }
         // Add new headers for the seed types
         seedContainer.insertAdjacentHTML("beforeend", `
-            <h5 class="farming-seeds-title seed-header-mysterious">Mysterious seeds</h5>
-            <div class="farming-seeds-title-border seed-header-mysterious-border"></div>
-            <h5 class="farming-seeds-title seed-header-single">Single slot seeds</h5>
-            <div class="farming-seeds-title-border seed-header-single-border"></div>
-            <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
-            <div class="farming-seeds-title-border seed-header-multi-border"></div>
-            `);
+                <h5 class="farming-seeds-title seed-header-mysterious">Mysterious seeds</h5>
+                <div class="farming-seeds-title-border seed-header-mysterious-border"></div>
+                <h5 class="farming-seeds-title seed-header-single">Single slot seeds</h5>
+                <div class="farming-seeds-title-border seed-header-single-border"></div>
+                <h5 class="farming-seeds-title seed-header-multi">Multi slot seeds</h5>
+                <div class="farming-seeds-title-border seed-header-multi-border"></div>`);
     }
 
     clearMetaElements(seedContainer) {

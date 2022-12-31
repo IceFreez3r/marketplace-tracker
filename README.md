@@ -14,9 +14,16 @@ Please visit the marketplace once afterwards to initialize the extension.
 ## Features
 
 ### Marketplace
-Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click. Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview. 
+Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click. 
+Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview. 
+
+Allows to define lower and upper limits for the price of items and sends desktop notifications when the price is within the defined range.
 
 <img src="./images/readme/marketplace_overview.png" alt="Marketplace Overview" width="600">
+
+Adds a toggle to show the quantile of prices for items in the overview, such that it is instantly visible, if an item is cheap or expensive at the moment.
+
+<img src="./images/readme/marketplace_overview_quantile.png" alt="Marketplace Overview Quantile" width="600">
 
 On the buy tab low cost items are highlighted in relation to the maximum price in the collected data:
 - <95% of maximum price &rarr; red 🔴
@@ -88,20 +95,16 @@ API calls are only stored for two weeks, to make sure, that the data of the exte
 ## Planned Features
 (without any particular order)
 - Marketplace
-    - Highlight items with a very low price in the last API call on the market overview page 📉
-        - below current minPrice or below vendor price
     - Scan the trade chat channel for cheap offers
-    - Warning when selling items with less profit than the vendor price :warning:
     - Display gold/heat for heat items 🔥
     - Continous colors for low price items instead of categories and update the crappy popup 🌈
+    - Customizable [filters](https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/assets/images/InventoryFilter/meta_image.png)
 - Farming 🌽
     - Calculate the average profit for farming per seed (maybe even per enchantment)
     - Collect data for mysterious seeds and crack the algorithm behind them
         - It is already known, that the algorithm will change with the coming big update. Therefore low prio for now.
 - Crafting
     - store recipes to be able to highlight the best XP/Gold recipe
-- Offline Tracker 😴
-    - Improve offline time tracking
 
 ## Contact
 If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).

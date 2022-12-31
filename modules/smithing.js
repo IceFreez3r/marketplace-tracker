@@ -78,29 +78,28 @@ class SmithingTracker {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
-        if (!this.settings.profit) {
+        this.storage = storage;
+        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "percent";
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Smithing') {
-                return;
+            if (getSelectedSkill() === "Smithing") {
+                this.smithingTracker();
             }
-            this.smithingTracker();
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -108,19 +107,18 @@ class SmithingTracker {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(SmithingTracker.id + "-profit", {
-            none: "None",
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(SmithingTracker.id + "-profit", {
+            off: "Off",
             percent: "Percent",
             flat: "Flat",
             per_hour: "Per Hour",
@@ -129,6 +127,10 @@ class SmithingTracker {
     }
 
     settingChanged(settingId, value) {
+        return;
+    }
+
+    onAPIUpdate() {
         return;
     }
 
@@ -165,13 +167,9 @@ class SmithingTracker {
         let craftingImage = recipe.getElementsByClassName('resource-container-image')[0];
         let requiredResourceNode = recipe.getElementsByClassName('resource-required-resources')[0];
         craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
-        let response = storageRequest({
-            type: 'smithing-recipe',
-            barId: barId,
-            resourceIds: resourceIds
-        });
-        const ingredients = Object.assign(response.ingredients, {icons: resourceIcons, counts: resourceCounts});
-        const product = Object.assign(response.product, {icon: barIcon, count: 1});
-        saveInsertAdjacentHTML(craftingImage, 'afterend', infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
+        const recipePrices = this.storage.handleRecipe(resourceIds, barId);
+        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceIcons, counts: resourceCounts});
+        const product = Object.assign(recipePrices.product, {icon: barIcon, count: 1});
+        saveInsertAdjacentHTML(craftingImage, 'afterend', Templates.infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
     }
 }

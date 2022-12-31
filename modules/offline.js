@@ -37,42 +37,57 @@ class OfflineTracker {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
+        this.storage = storage;
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
+        if (this.settings.lastLogin === undefined) {
+            this.settings.lastLogin = {};
+        }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
+        window.addEventListener('beforeunload', () => {
+            this.settings.lastLogin[getCharacterName()] = Date.now();
+            this.tracker.storeSettings();
+        });
+
+        this.bodyObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
+                return;
+            }
             this.offlineTracker();
         });
     };
     
     onGameReady() {
-        this.observer.observe(document.body, {
+        this.bodyObserver.observe(document.body, {
             childList: true
         });
     }
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.bodyObserver.disconnect();
     }
 
     settingsMenuContent() {
         return `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        Include Gold
-    </div>
-    ${this.tracker.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
-</div>
-        `;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Include Gold
+                </div>
+                ${Templates.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
+            </div>`;
     }
 
     settingChanged(settingId, value) {
+        return;
+    }
+
+    onAPIUpdate() {
         return;
     }
 
@@ -101,10 +116,7 @@ class OfflineTracker {
             items[itemId] ??= 0;
             items[itemId] += itemCount;
         }
-        const itemValues = storageRequest({
-            type: 'get-item-values',
-            itemIds: Object.keys(items),
-        });
+        const itemValues = this.storage.analyzeItems(Object.keys(items));
         const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, Object.values(items));
 
         /* Offline Time
@@ -122,11 +134,13 @@ class OfflineTracker {
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
         if (!isDaelsTracker) {
-            const lastLogin = storageRequest({
-                type: 'get-last-login',
-            });
-            const offlineTimeBackground = Date.now() - lastLogin;
-            offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+            const lastLogin = this.settings.lastLogin[getCharacterName()];
+            if (!lastLogin) {
+                offlineTime = offlineTimeScrapped;
+            } else {
+                const offlineTimeBackground = Date.now() - lastLogin;
+                offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+            }
         } else {
             offlineTime = offlineTimeScrapped;
         }
@@ -150,38 +164,37 @@ class OfflineTracker {
         const minPerHour = totalMinValue * 1000 * 60 * 60 / offlineTime;
         const maxPerHour = totalMaxValue * 1000 * 60 * 60 / offlineTime;
         return `
-<div class="offline-progress-box offline-info-box">
-    <div class="offline-info-title">
-        Total value
-    </div>
-    <div class="offline-info-value">
-        <div class="left-info">
-            <span>
-                ${formatNumber(totalMinValue)}
-                <img src="/images/money_icon.png" class="offline-gold-icon">
-            </span>
-            <br>
-            <span>
-                ${formatNumber(minPerHour)}/h
-            </span>
-        </div>
-        <div class="center-info">
-            <span> ~ </span>
-            <br>
-            <span> ~ </span>
-        </div>
-        <div class="right-info">
-            <span>
-                ${formatNumber(totalMaxValue)}
-                <img src="/images/money_icon.png" class="offline-gold-icon">
-            </span>
-            <br>
-            <span>
-                ${formatNumber(maxPerHour)}/h
-            </span>
-        </div>
-    </div>
-</div>
-        `;
+            <div class="offline-progress-box offline-info-box">
+                <div class="offline-info-title">
+                    Total value
+                </div>
+                <div class="offline-info-value">
+                    <div class="left-info">
+                        <span>
+                            ${formatNumber(totalMinValue)}
+                            <img src="/images/money_icon.png" class="offline-gold-icon">
+                        </span>
+                        <br>
+                        <span>
+                            ${formatNumber(minPerHour)}/h
+                        </span>
+                    </div>
+                    <div class="center-info">
+                        <span> ~ </span>
+                        <br>
+                        <span> ~ </span>
+                    </div>
+                    <div class="right-info">
+                        <span>
+                            ${formatNumber(totalMaxValue)}
+                            <img src="/images/money_icon.png" class="offline-gold-icon">
+                        </span>
+                        <br>
+                        <span>
+                            ${formatNumber(maxPerHour)}/h
+                        </span>
+                    </div>
+                </div>
+            </div>`;
     }
 }

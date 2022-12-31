@@ -6,8 +6,8 @@ function convertItemId(itemName) {
     return itemName;
 }
 
-function parseNumberString(numberString) {
-    return parseFloat(numberString.replaceAll(localNumberSeparators['group'], '').replaceAll(localNumberSeparators['decimal'], '.'));
+function parseNumberString(numberString, numberSeparators = localNumberSeparators) {
+    return parseFloat(numberString.replaceAll(numberSeparators['group'], '').replaceAll(numberSeparators['decimal'], '.'));
 }
 
 function parseCompactNumberString(numberString) {
@@ -26,7 +26,7 @@ function parseCompactNumberString(numberString) {
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*$/;
+    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*\.?$/;
     const match = timeString.match(regex);
     const days = match.groups.days ? parseInt(match.groups.days) : 0;
     const hours = match.groups.hours ? parseInt(match.groups.hours) : 0;
@@ -99,18 +99,6 @@ function getLocalNumberSeparators() {
 
 const localNumberSeparators = getLocalNumberSeparators();
 
-function loadLocalStorage(key, fallback) {
-    const value = localStorage.getItem(key);
-    if (value === null) {
-        // if fallback is a function, call it
-        if (typeof fallback === "function") {
-            return fallback();
-        }
-        return fallback;
-    }
-    return JSON.parse(value);
-}
-
 function injectCSS(css) {
     let style = document.createElement("style");
     style.appendChild(document.createTextNode(css));
@@ -126,91 +114,35 @@ function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
 }
 
-/**
- * 
- * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
- * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
- * @param {Object} product icon, count, minPrice and maxPrice of the product
- * @param {string} profitType options are `none`, `percent`, `flat` and `per_hour`
- * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
- * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
- * @param {Number=} secondsPerAction only required if profitType is `per_hour`
- * @param {Number=} chance chance to successfully craft the product
- * @returns {string} html string
- */
-function infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1) {
-    const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
-    const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice } = product;
-    // Ingredients
-    let header = "";
-    for (let i = 0; i < ingredientIcons.length; i++) {
-        header += infoTableCell(classId, `
-<img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
-${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}
-        `);
-    }
-    // Total crafting cost
-    header += infoTableCell(classId, `
-<span class="${classId}-info-table-font">
-    &Sigma;
-</span>
-    `);
-    // Product
-    header += infoTableCell(classId, `<img class="${classId}-info-table-icon" src="${productIcon}">`);
-    if (productCount > 1) {
-        header += infoTableCell(classId, `
-<span class="${classId}-info-table-font">
-    &Sigma;
-</span>
-        `);
-    }
-    // Profit
-    if (profitType !== "none") {
-        header += infoTableCell(classId, `
-<img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
-${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}
-        `);
-    }
-
-    const minPrice = infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
-    const maxPrice = infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
-    return `
-<div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "none")}, 1fr)">
-    ${header}
-    ${infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
-    ${minPrice}
-    ${infoTableCell(classId, compactDisplay ? "Max" : "Maximal Marketprice")}
-    ${maxPrice}
-</div>
-    `;
+function getSelectedSkill() {
+    const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+    return selectedSkill ? selectedSkill.innerText : "";
 }
 
-function infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
-    let row = "";
-    // Ingredients
-    row += ingredientPrices.map(price => infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay }))).join("");
-    // Total crafting cost
-    const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
-    const totalProductPrice = productPrice * productCount;
-    row += infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
-    // Product
-    row += infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay }));
-    if (productCount > 1) {
-        row += infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
+function detectInfiniteLoop(mutations) {
+    for (let mutation of mutations) {
+        // Daels inventory prices
+        if (mutation.target.classList.contains("price")) {
+            return true;
+        }
+        // Heat highlight marker
+        if (mutation.target.classList.contains("heat-highlight")) {
+            return true;
+        }
+        for (let addedNode of mutation.addedNodes) {
+            if (addedNode.classList) {
+                // Quantile dots
+                if (addedNode.classList.contains("quantile-dot")) {
+                    return true;
+                }
+                // Notification marker
+                if (addedNode.classList.contains("alert-icon")) {
+                    return true;
+                }
+            }
+        }
     }
-    // Profit
-    if (profitType !== "none") {
-        row += infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), { compactDisplay: compactDisplay, profitType: profitType }));
-    }
-    return row;
-}
-
-function infoTableCell(classId, content) {
-    return `
-<div class="${classId}-info-table-content">
-    ${content}
-</div>
-    `;
+    return false;
 }
 
 function formatNumber(number, options = {}) {
@@ -232,4 +164,23 @@ function formatNumber(number, options = {}) {
     }
     const formatter = new Intl.NumberFormat("en-US", formatterOptions);
     return formatter.format(number);
+}
+
+function sortObj(obj) {
+    return Object.keys(obj).sort().reduce((result, key) => {
+        result[key] = obj[key];
+        return result;
+    }, {});
+}
+
+function durationToMilliseconds(duration) {
+    const [hours, minutes] = duration.split(":");
+    return (parseInt(hours) * 60 + parseInt(minutes)) * 60 * 1000;
+}
+
+function millisecondsToDuration(milliseconds) {
+    const hours = Math.floor(milliseconds / 1000 / 60 / 60);
+    milliseconds -= hours * 60 * 60 * 1000;
+    const minutes = Math.floor(milliseconds / 1000 / 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }

@@ -1,24 +1,27 @@
 {
     "manifest_version": 2,
     "name": "Idlescape Marketplace Tracker",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "Automatically tracks prices of items on the Idlescape Marketplace",
     "content_scripts": [
         {
             "matches": [
-                "https://idlescape.com/game"
+                "https://idlescape.com/game",
+                "https://www.idlescape.com/game"
             ],
             "js": [
+                "storage.js",
+                "templates.js",
+                "utility.js",
+                "external/DOMpurify.min.js",
                 "modules/crafting.js",
                 "modules/enchanting.js",
                 "modules/farming.js",
-                "modules/favorite.js",
+                "modules/highlight.js",
                 "modules/marketplace.js",
                 "modules/offline.js",
                 "modules/smithing.js",
-                "storage.js",
-                "utility.js",
-                "external/DOMpurify.min.js",
+                "modules/alert.js",
                 "tracker.js",
                 "main.js"
             ]

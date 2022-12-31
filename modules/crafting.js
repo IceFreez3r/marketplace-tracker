@@ -55,11 +55,12 @@ body .crafting-container {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
-        if (!this.settings.profit) {
-            this.settings.profit = "none";
+        this.storage = storage;
+        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
+            this.settings.profit = "off";
         }
         if (this.settings.goldPerXP === undefined) {
             this.settings.goldPerXP = 1;
@@ -69,21 +70,19 @@ body .crafting-container {
         this.lastCraftedItemId = null;
         this.lastSelectedNavTab = null;
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Crafting') {
-                return;
+            if (getSelectedSkill() === "Crafting") {
+                this.craftingTracker();
             }
-            this.craftingTracker();
         });
     }
 
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             attributes: true,
             attributeFilter: ['src'],
             childList: true,
@@ -93,35 +92,37 @@ body .crafting-container {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend',`
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(CraftingTracker.id + "-profit", {
-                none: "None",
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(CraftingTracker.id + "-profit", {
+                off: "Off",
                 percent: "Percent",
                 flat: "Flat",
             }, this.settings.profit));
 
         const goldPerXP = `
-<div class="tracker-module-setting">
-    <div class="tracker-module-setting-name">
-        Show Gold Per Experience
-    </div>
-    ${this.tracker.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
-</div>
-        `;
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Show Gold Per Experience
+                </div>
+                ${Templates.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
+            </div>`;
         return [moduleSetting, goldPerXP];
     }
 
     settingChanged(settingId, value) {
+        return;
+    }
+
+    onAPIUpdate() {
         return;
     }
 
@@ -172,19 +173,15 @@ body .crafting-container {
             resourceItemCounts.push(parseNumberString(resourceItemNodes[i].firstChild.textContent) / craftingAmount);
         }
 
-        let response = storageRequest({
-            type: 'crafting-recipe',
-            craftedItemId: craftedItemId,
-            resourceItemIds: resourceItemIds
-        });
+        const recipePrices = this.storage.handleRecipe(resourceItemIds, craftedItemId)
         // TODO: use vendor price where appropriate
 
         // crafting info table
         document.getElementsByClassName("crafting-info-table")[0]?.remove();
         let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        const ingredients = Object.assign(response.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
-        const product = Object.assign(response.product, {icon: craftedItemIcon, count: craftedItemCount});
-        saveInsertAdjacentHTML(craftingContainer, 'beforeend', infoTableTemplate('crafting', ingredients, product, this.settings.profit));
+        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
+        const product = Object.assign(recipePrices.product, {icon: craftedItemIcon, count: craftedItemCount});
+        saveInsertAdjacentHTML(craftingContainer, 'beforeend', Templates.infoTableTemplate('crafting', ingredients, product, this.settings.profit));
         
         if (this.settings.goldPerXP) {
             this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
@@ -195,6 +192,9 @@ body .crafting-container {
         document.getElementsByClassName('crafting-gold-per-exp')[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
         const experience = parseNumberString(experienceNode.childNodes[0].textContent);
+        if (experience === 0) {
+            return;
+        }
         let minCost = - profit('flat', totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
         let maxCost = - profit('flat', totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
         // swap min and max if min is higher than max
@@ -202,14 +202,13 @@ body .crafting-container {
             [minCost, maxCost] = [maxCost, minCost];
         }
         saveInsertAdjacentHTML(experienceNode, 'afterend', `
-<div class="crafting-gold-per-exp">
-    <span>
-        ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
-    </span>
-    <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
-    <span>/</span>
-    <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
-</div>
-        `);
+            <div class="crafting-gold-per-exp">
+                <span>
+                    ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
+                </span>
+                <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
+                <span>/</span>
+                <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
+            </div>`);
     }
 }

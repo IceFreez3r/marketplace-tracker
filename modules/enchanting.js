@@ -43,29 +43,28 @@ body .scrollcrafting-container {
 }
     `;
 
-    constructor(tracker, settings) {
+    constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
-        if (!this.settings.profit) {
+        this.storage = storage;
+        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
             this.settings.profit = "percent";
         }
         this.cssNode = injectCSS(this.css);
 
-        this.observer = new MutationObserver(mutations => {
-            const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
-            if (!selectedSkill) {
+        this.playAreaObserver = new MutationObserver(mutations => {
+            if (detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (selectedSkill.innerText !== 'Enchanting') {
-                return;
+            if (getSelectedSkill() === "Enchanting") {
+                this.enchantingTracker();
             }
-            this.enchantingTracker();
         });
     }
     
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.observer.observe(playAreaContainer, {
+        this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true
         });
@@ -73,19 +72,18 @@ body .scrollcrafting-container {
 
     deactivate() {
         this.cssNode.remove();
-        this.observer.disconnect();
+        this.playAreaObserver.disconnect();
     }
 
     settingsMenuContent() {
         let moduleSetting = document.createElement('div');
         moduleSetting.classList.add('tracker-module-setting');
         moduleSetting.insertAdjacentHTML('beforeend', `
-<div class="tracker-module-setting-name">
-    Profit
-</div>
-        `);
-        moduleSetting.append(this.tracker.selectMenu(EnchantingTracker.id + "-profit", {
-            none: "None",
+            <div class="tracker-module-setting-name">
+                Profit
+            </div>`);
+        moduleSetting.append(Templates.selectMenu(EnchantingTracker.id + "-profit", {
+            off: "Off",
             percent: "Percent",
             flat: "Flat",
             per_hour: "Per Hour",
@@ -94,6 +92,10 @@ body .scrollcrafting-container {
     }
 
     settingChanged(settingId, value) {
+        return;
+    }
+
+    onAPIUpdate() {
         return;
     }
 
@@ -118,14 +120,10 @@ body .scrollcrafting-container {
         let resourceItemIds = ["scroll"].concat(dynamicResources.map(resource => resource.itemId));
         let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));
         let resourceItemCounts = [standardResources.scrolls].concat(dynamicResources.map(resource => resource.amount));
-        let response = storageRequest({
-            type: "enchanting-recipe",
-            scrollId: scrollId,
-            resourceItemIds: resourceItemIds
-        });
-        const ingredients = Object.assign(response.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
-        const product = Object.assign(response.product, { icon: scrollIcon, count: 1 });
-        saveInsertAdjacentHTML(recipe, 'beforeend', infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
+        const recipePrices = this.storage.handleRecipe(resourceItemIds, scrollId);
+        const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
+        const product = Object.assign(recipePrices.product, { icon: scrollIcon, count: 1 });
+        saveInsertAdjacentHTML(recipe, 'beforeend', Templates.infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
     }
 
     getStandardResources(node) {

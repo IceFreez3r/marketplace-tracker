@@ -1,7 +1,8 @@
 class Tracker {
     css = `
 :root {
-    --tracker-red: #f50057;
+    --tracker-red: rgb(245, 0, 87);
+    --tracker-red-transparent: rgba(245, 0, 87, 0.3);
 }
 
 .drawer-item {
@@ -43,6 +44,7 @@ class Tracker {
 .settings-module-header-toggle-icon > :is(img, svg){
     width: 30px;
     height: 30px;
+    object-fit: contain;
 }
 
 .settings-module-content > :last-child {
@@ -126,6 +128,39 @@ class Tracker {
     justify-content: space-between;
 }
 
+.tracker-slider[type="range"] {
+    width: 150px;
+    border: unset;
+    color: var(--tracker-red);
+    box-shadow: unset;
+}
+
+/* styling the slider thumb needs browser specific prefixes */
+.tracker-slider[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: var(--tracker-red);
+}
+
+.tracker-slider[type="range"]::-moz-range-thumb {
+    background: var(--tracker-red);
+}
+
+.tracker-slider[type="range"]::-ms-thumb {
+    background: var(--tracker-red);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-webkit-slider-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-moz-range-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
+}
+
+.keyboard-focused .tracker-slider[type="range"]:focus:not(.active)::-ms-thumb {
+    box-shadow: 0 0 0 10px var(--tracker-red-transparent);
+}
+
 .tracker-options {
     display: none;
     position: absolute;
@@ -173,6 +208,60 @@ class Tracker {
     stroke-linecap: round;
     stroke-linejoin: round
 }
+
+input[type="text"].tracker-time-duration:not(.browser-default) {
+    position: relative;
+    width: 40px;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="text"].tracker-time-duration:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
+.tracker-time-range {
+    display: flex;
+    gap: 3px;
+}
+
+input[type="time"].tracker-time:not(.browser-default) {
+    position: relative;
+    width: fit-content;
+    text-align: center;
+    border: 1px solid var(--tracker-red);
+    border-radius: 5px;
+    padding: 4px;
+    background-color: white;
+    font-size: 14px;
+    height: unset;
+    margin: unset;
+}
+
+/* needed to override the default materialize css */
+input[type="time"].tracker-time:not(.browser-default):focus {
+    border: 1px solid var(--tracker-red);
+    box-shadow: unset;
+}
+
+#tracker-popup {
+    z-index: 1300;
+    position: fixed;
+}
+
+.tracker-popup-background {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    inset: 0;
+}
     `;
 
     constructor() {
@@ -182,10 +271,13 @@ class Tracker {
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
 
-        window.addEventListener('beforeunload', function () {
-            storageRequest({
-                type: 'close'
-            });
+        this.storage = new Storage(() => this.onApiUpdate());
+
+        window.addEventListener('beforeunload', () => this.storage.handleClose());
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.closePopup();
+            }
         });
 
         injectCSS(this.css);
@@ -200,13 +292,14 @@ class Tracker {
                     crafting_tracker: 1,
                     enchanting_tracker: 1,
                     farming_tracker: 1,
-                    favorite_tracker: 1,
+                    market_highlights: 1,
                     marketplace_tracker: 1,
                     offline_tracker: 1,
                     smithing_tracker: 1,
+                    alert_tracker: 1,
                 }
             };
-            this.settings = loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
             this.settingsSidebar();
         });
     }
@@ -226,7 +319,7 @@ class Tracker {
             if (!this.settings[moduleId]) {
                 this.settings[moduleId] = {};
             }
-            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId]);
+            this.activeModules[moduleId] = new this.modules[moduleId](this, this.settings[moduleId], this.storage);
             this.activeModules[moduleId].onGameReady();
             console.log(`Activated module ${moduleId}`);
             return true;
@@ -245,6 +338,18 @@ class Tracker {
         return false;
     }
 
+    onApiUpdate() {
+        for (let module of Object.values(this.activeModules)) {
+            module.onAPIUpdate();
+        }
+    }
+
+    notifyModule(moduleId, message, data) {
+        if (this.activeModules[moduleId]) {
+            this.activeModules[moduleId].onNotify(message, data);
+        }
+    }
+
     settingsSidebar() {
         let oldSidebarItem = document.getElementById('tracker-settings-sidebar');
         if (oldSidebarItem) {
@@ -255,13 +360,12 @@ class Tracker {
         for (let drawerItem of navDrawerContainer.getElementsByClassName('drawer-item')) {
             if (drawerItem.firstChild.innerText === 'Settings') {
                 drawerItem.insertAdjacentHTML('afterend', `
-<div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
-    <div class="drawer-item-left">
-        ${this.trackerLogoTemplate('drawer-item-icon')}
-        Marketplace Tracker
-    </div>
-</div>
-                `);
+                    <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
+                        <div class="drawer-item-left">
+                            ${Templates.trackerLogoTemplate('drawer-item-icon')}
+                            Marketplace Tracker
+                        </div>
+                    </div>`);
                 document.getElementById('tracker-settings-sidebar').addEventListener('click', () => {
                     // Hide sidebar unless it's pinned
                     if (!document.getElementsByClassName('drawer-item center')[0].lastChild.classList.contains('pressed')) {
@@ -273,7 +377,6 @@ class Tracker {
             }
         }
     }
-
 
     settingsPage() {
         let oldNavTab = document.getElementById('tracker-settings-nav-tab');
@@ -292,11 +395,10 @@ class Tracker {
             navTabsLeft[i].style.display = 'none';
         }
         navTabContainer.insertAdjacentHTML("afterbegin", `
-<div id="tracker-settings-nav-tab" class="nav-tab-left noselect selected-tab tracker">
-    ${this.trackerLogoTemplate('nav-tab-icon icon-border')}
-    Tracker
-</div>
-        `);
+            <div id="tracker-settings-nav-tab" class="nav-tab-left noselect selected-tab tracker">
+                ${Templates.trackerLogoTemplate('nav-tab-icon icon-border')}
+                Tracker
+            </div>`);
 
         let playAreas = playAreaContainer.getElementsByClassName('play-area')
         for (let i = 0; i < playAreas.length; i++) {
@@ -337,16 +439,15 @@ class Tracker {
             let moduleSettings = document.createElement('div');
             moduleSettings.className = 'settings-module';
             saveInsertAdjacentHTML(moduleSettings, 'beforeend', `
-<div class="settings-module-header">
-    <div class="settings-module-header-toggle-icon">
-        ${module.icon}
-    </div>
-    <div class="settings-module-header-title">
-        ${module.displayName}
-    </div>
-    ${this.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
-</div>
-            `);
+                <div class="settings-module-header">
+                    <div class="settings-module-header-toggle-icon">
+                        ${module.icon}
+                    </div>
+                    <div class="settings-module-header-title">
+                        ${module.displayName}
+                    </div>
+                    ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
+                </div>`);
             let moduleSettingsContent = document.createElement('div');
             moduleSettingsContent.className = 'settings-module-content';
             this.addModuleSettings(moduleId, moduleSettingsContent);
@@ -354,12 +455,11 @@ class Tracker {
             settingCategories[module.category].div.append(moduleSettings);
         }
         settingsArea.insertAdjacentHTML('beforeend', `
-<div class="settings-footer">
-    <div id="settings-save" class="settings-save idlescape-button-green">
-        Save
-    </div>
-</div>
-        `);
+            <div class="settings-footer">
+                <div id="settings-save" class="settings-save idlescape-button-green">
+                    Save
+                </div>
+            </div>`);
         playAreaContainer.append(settingsArea);
 
         let saveButton = document.getElementById('settings-save');
@@ -437,9 +537,19 @@ class Tracker {
         for (const selectMenu of selectMenus) {
             this.setSetting(selectMenu.id, selectMenu.dataset.for);
         }
+        // Slider
+        const sliders = document.getElementsByClassName('tracker-slider');
+        for (const slider of sliders) {
+            this.setSetting(slider.id, slider.value);
+        }
+        // Time inputs
+        const timeInputs = document.querySelectorAll('.tracker-time, .tracker-time-duration');
+        for (const timeInput of timeInputs) {
+            this.setSetting(timeInput.id, timeInput.value);
+        }
         // Save settings
         console.log(this.settings);
-        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
+        this.storeSettings();
 
         // Visual feedback
         const saveButton = document.getElementById('settings-save');
@@ -449,11 +559,15 @@ class Tracker {
             checkmark.getElementsByTagName('animate')[0].beginElement()
             clearTimeout(this.saveCheckmarkTimeout);
         } else {
-            saveButton.insertAdjacentHTML('beforeend', this.checkmarkTemplate("settings-save-checkmark"));
+            saveButton.insertAdjacentHTML('beforeend', Templates.checkmarkTemplate("settings-save-checkmark"));
         }
         this.saveCheckmarkTimeout = setTimeout(() => {
             saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0].remove();
         }, 5000);
+    }
+
+    storeSettings() {
+        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
     setSetting(settingId, value) {
@@ -494,109 +608,7 @@ class Tracker {
         }
     }
 
-    trackerLogoTemplate(classes = "") {
-        return `
-<svg class="${classes}" viewBox="0 0 119.24264 119.24264">
-    <path fill="green" stroke="green" stroke-width="1" d="M7, 67 L37, 37 A8.48528 8.48528 0 0 1 49 37 L69 57 L99 27 L79, 27 A3.62132 3.62132 0 0 1 79 19.75736 L105 19.75736 A8.48528 8.48528 0 0 1 112.24264 27 L112.24264 53 A3.62132 3.62132 0 0 1 105 53 L105 33 L75 63 A8.48528 8.48528 0 0 1 63 63 L43 43 L13 73 A4.24264 4.24264 0 0 1 7 67 Z" />
-</svg>
-    `;
-    }
-
-    /**
-     * Creates a checkbox template
-     * 
-     * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
-     *                    e.g. a checkbox with id "module-css-header" will store `1` or `0` in `this.settings.module.css.header`.
-     *                    The setting needs to be set to a default value in the constructor of the corresponding module if it's
-     *                    not set.
-     *                    !! This will not check if the path exists in the settings !!
-     * @param {boolean} active The start state of the checkbox
-     * @param {string=} classes additional css classes
-     * @returns HTML template
-     */
-    checkboxTemplate(id, active, classes = "") {
-        return `
-<input id="${id}" type="checkbox" class="tracker-settings-checkbox ${classes}"${active ? " checked" : ""}>
-<label for="${id}" class="settings-checkbox-label">
-    <svg class="settings-checkbox-svg" focusable="false" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.89-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-    </svg>
-</label>
-        `;
-    }
-
-    /**
-     * Creates a select menu with the provided options.
-     * 
-     * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
-     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at 
-     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of 
-     *                    the corresponding module if it's not set.
-     *                    !! This will not check if the path exists in the settings !!
-     * @param {Object} options object with pairs of the internal settingsname and a string for the display
-     * @param {string} currentlySelected A key existing in options
-     * @returns {Node} div holding the select menu with working functionality.
-     */
-    selectMenu(id, options, currentlySelected) {
-        if (document.getElementById(id)) {
-            console.log("Menu with id " + id + " already exists!");
-            return;
-        }
-        let menu = document.createElement('div');
-        menu.classList.add('tracker-select-menu');
-        let content = `
-<div class="tracker-select-menu-current">
-    <span class="tracker-select-menu-selection" id="${id}" data-for="${currentlySelected}">${options[currentlySelected]}</span>
-    ${this.arrowDownTemplate('arrow-down')}
-</div>
-<div class="tracker-options">
-        `;
-        for (let option in options) {
-            content += `
-<div class="tracker-option${option == currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
-    ${options[option]}
-</div>
-            `;
-        }
-        content += "</div>";
-        saveInsertAdjacentHTML(menu, 'beforeend', content);
-
-        const optionDivs = menu.getElementsByClassName('tracker-option');
-        for (let optionDiv of optionDivs) {
-            optionDiv.addEventListener('click', function (e) {
-                if (optionDiv.classList.contains('tracker-selected')) {
-                    return;
-                }
-                const oldSelection = menu.getElementsByClassName('tracker-selected')[0];
-                oldSelection.classList.remove('tracker-selected');
-                optionDiv.classList.add('tracker-selected');
-                const newValue = optionDiv.getAttribute('data-for');
-                let current = document.getElementById(id);
-                current.dataset.for = newValue;
-                current.innerText = options[newValue];
-            });
-        }
-        return menu;
-    }
-
-    arrowDownTemplate(classes = "") {
-        return `
-<svg class="${classes}" viewBox="0 0 20.633 20.633">
-    <path d="M10.79,15.617l9.648-9.646c0.133-0.131,0.195-0.301,0.195-0.473s-0.062-0.344-0.195-0.473l-0.012-0.012
-        c-0.125-0.127-0.295-0.195-0.472-0.195h-4.682c-0.18,0-0.348,0.068-0.473,0.195l-4.48,4.479l-4.48-4.479
-        C5.711,4.886,5.54,4.818,5.366,4.818H0.684c-0.182,0-0.349,0.068-0.475,0.195L0.196,5.025C0.068,5.148,0,5.322,0,5.498
-        c0,0.176,0.068,0.348,0.196,0.473l9.648,9.646C10.108,15.88,10.53,15.88,10.79,15.617z"/>
-</svg>
-        `;
-    }
-
-    checkmarkTemplate(classes = "") {
-        return `
-<svg class="checkmark ${classes}" viewBox="0 0 24 24">
-    <path d="M4.1 12.7L9 17.6 20.3 6.3" fill="none">
-        <animate attributeType="XML" attributeName="stroke-dashoffset" from="24" to="0" dur="1s" restart="always"/>
-    </path>
-</svg>
-        `;
+    closePopup() {
+        document.getElementById('tracker-popup')?.remove();
     }
 }
