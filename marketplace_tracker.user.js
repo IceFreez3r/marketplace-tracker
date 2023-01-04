@@ -4,8 +4,8 @@
 // @version      1.0.6
 // @description  Automatically tracks prices of items on the Idlescape Marketplace
 // @author       IceFreez3r
-// @match        https://www.idlescape.com/game
-// @match        https://idlescape.com/game
+// @match        https://www.idlescape.com/*
+// @match        https://idlescape.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=idlescape.com
 // @updateURL    https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
 // @downloadURL  https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
