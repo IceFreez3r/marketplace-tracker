@@ -352,45 +352,34 @@ input[type="time"].tracker-time:not(.browser-default):focus {
 
     settingsSidebar() {
         let oldSidebarItem = document.getElementById('tracker-settings-sidebar');
-        if (oldSidebarItem) {
-            oldSidebarItem.remove();
-        }
+        oldSidebarItem?.remove();
 
-        let navDrawerContainer = document.getElementsByClassName('nav-drawer-container')[0];
-        for (let drawerItem of navDrawerContainer.getElementsByClassName('drawer-item')) {
-            if (drawerItem.firstChild.innerText === 'Settings') {
-                drawerItem.insertAdjacentHTML('afterend', `
-                    <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
-                        <div class="drawer-item-left">
-                            ${Templates.trackerLogoTemplate('drawer-item-icon')}
-                            Marketplace Tracker
-                        </div>
-                    </div>`);
-                document.getElementById('tracker-settings-sidebar').addEventListener('click', () => {
-                    // Hide sidebar unless it's pinned
-                    if (!document.getElementsByClassName('drawer-item center')[0].lastChild.classList.contains('pressed')) {
-                        document.getElementsByClassName('nav-drawer')[0].classList.add('drawer-closed');
-                    }
-                    this.settingsPage();
-                });
-                break;
+        const vanillaSettings = document.getElementsByClassName("Settings")[0];
+        vanillaSettings.insertAdjacentHTML('afterend', `
+            <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
+                <div class="drawer-item-left">
+                    ${Templates.trackerLogoTemplate('drawer-item-icon')}
+                    Marketplace Tracker
+                </div>
+            </div>`);
+        document.getElementById('tracker-settings-sidebar').addEventListener('click', () => {
+            // Hide sidebar unless it's pinned
+            if (!document.getElementsByClassName('drawer-item center')[0].lastChild.classList.contains('pressed')) {
+                document.getElementsByClassName('nav-drawer')[0].classList.add('drawer-closed');
             }
-        }
+            this.settingsPage();
+        });
     }
 
     settingsPage() {
         let oldNavTab = document.getElementById('tracker-settings-nav-tab');
-        if (oldNavTab) {
-            oldNavTab.remove();
-        }
+        oldNavTab?.remove();
         let oldSettingsArea = document.getElementById('tracker-settings-area');
-        if (oldSettingsArea) {
-            oldSettingsArea.remove();
-        }
+        oldSettingsArea?.remove();
 
-        let playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        let navTabContainer = playAreaContainer.getElementsByClassName('nav-tab-container')[0];
-        let navTabsLeft = navTabContainer.getElementsByClassName('nav-tab-left');
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const navTabContainer = playAreaContainer.getElementsByClassName('nav-tab-container')[0];
+        const navTabsLeft = navTabContainer.getElementsByClassName('nav-tab-left');
         for (let i = 0; i < navTabsLeft.length; i++) {
             navTabsLeft[i].style.display = 'none';
         }
@@ -400,16 +389,17 @@ input[type="time"].tracker-time:not(.browser-default):focus {
                 Tracker
             </div>`);
 
-        let playAreas = playAreaContainer.getElementsByClassName('play-area')
+        const playAreaBackground = playAreaContainer.getElementsByClassName('play-area-background')[0];
+        const playAreas = playAreaBackground.getElementsByClassName('play-area')
         for (let i = 0; i < playAreas.length; i++) {
             playAreas[i].style.display = "none";
         }
         console.log(this.settings);
-        let settingsArea = document.createElement('div');
+        const settingsArea = document.createElement('div');
         settingsArea.id = 'tracker-settings-area';
         settingsArea.className = 'play-area theme-default tracker';
 
-        let settingCategories = {
+        const settingCategories = {
             "economy": {
                 "name": "Economy",
                 "div": undefined,
@@ -427,16 +417,16 @@ input[type="time"].tracker-time:not(.browser-default):focus {
             const module = this.modules[moduleId];
             // Create new category block if the category doesn't exist yet
             if (settingCategories[module.category].div === undefined) {
-                let category = document.createElement('div');
+                const category = document.createElement('div');
                 category.className = 'tracker-settings-category';
-                let categoryHeader = document.createElement('div');
+                const categoryHeader = document.createElement('div');
                 categoryHeader.className = 'tracker-settings-category-header';
                 categoryHeader.innerText = settingCategories[module.category].name;
                 category.append(categoryHeader);
                 settingsArea.append(category);
                 settingCategories[module.category].div = category;
             }
-            let moduleSettings = document.createElement('div');
+            const moduleSettings = document.createElement('div');
             moduleSettings.className = 'settings-module';
             saveInsertAdjacentHTML(moduleSettings, 'beforeend', `
                 <div class="settings-module-header">
@@ -448,7 +438,7 @@ input[type="time"].tracker-time:not(.browser-default):focus {
                     </div>
                     ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
                 </div>`);
-            let moduleSettingsContent = document.createElement('div');
+            const moduleSettingsContent = document.createElement('div');
             moduleSettingsContent.className = 'settings-module-content';
             this.addModuleSettings(moduleId, moduleSettingsContent);
             moduleSettings.append(moduleSettingsContent);
@@ -460,9 +450,9 @@ input[type="time"].tracker-time:not(.browser-default):focus {
                     Save
                 </div>
             </div>`);
-        playAreaContainer.append(settingsArea);
+        playAreaBackground.append(settingsArea);
 
-        let saveButton = document.getElementById('settings-save');
+        const saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
 
         const resetObserver = new MutationObserver(mutations => {

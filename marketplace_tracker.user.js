@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Idlescape Marketplace Tracker
 // @namespace    https://github.com/IceFreez3r
-// @version      1.0.6
+// @version      2.0.0
 // @description  Automatically tracks prices of items on the Idlescape Marketplace
 // @author       IceFreez3r
-// @match        https://www.idlescape.com/*
-// @match        https://idlescape.com/*
+// @match        https://www.dev.idlescape.com/*
+// @match        https://dev.idlescape.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=idlescape.com
 // @updateURL    https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
 // @downloadURL  https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
@@ -29,13 +29,13 @@
     'use strict';
 
     let tracker = new Tracker();
-    tracker.addModule(MarketplaceTracker);
-    tracker.addModule(MarketHighlights);
-    tracker.addModule(OfflineTracker);
-    tracker.addModule(EnchantingTracker);
-    tracker.addModule(SmithingTracker);
-    tracker.addModule(CraftingTracker);
-    tracker.addModule(FarmingTracker);
-    tracker.addModule(AlertTracker);
+    // tracker.addModule(MarketplaceTracker);
+    // tracker.addModule(MarketHighlights);
+    // tracker.addModule(OfflineTracker);
+    // tracker.addModule(EnchantingTracker);
+    // tracker.addModule(SmithingTracker);
+    // tracker.addModule(CraftingTracker);
+    // tracker.addModule(FarmingTracker);
+    // tracker.addModule(AlertTracker);
 
 })();
