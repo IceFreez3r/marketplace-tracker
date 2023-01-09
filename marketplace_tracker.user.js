@@ -29,7 +29,7 @@
     'use strict';
 
     let tracker = new Tracker();
-    // tracker.addModule(MarketplaceTracker);
+    tracker.addModule(MarketplaceTracker);
     // tracker.addModule(MarketHighlights);
     // tracker.addModule(OfflineTracker);
     // tracker.addModule(EnchantingTracker);
