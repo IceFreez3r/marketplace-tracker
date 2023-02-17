@@ -78,6 +78,10 @@ body .marketplace-table-cell-div {
 }
     `;
     historyCss = `
+.marketplace-history {
+    display: none;
+}
+
 .tracker-history {
     display: grid;
     grid-template-columns: max-content 1fr repeat(3, minmax(max-content, 0.4fr));
@@ -460,8 +464,6 @@ body .marketplace-table-cell-div {
             return;
         }
         this.marketHistory(history);
-        // Hide vanilla table
-        history.classList.add('hidden');
         // Add observer to the original table
         const observer = new MutationObserver((mutations) => {
             this.marketHistory(history);
