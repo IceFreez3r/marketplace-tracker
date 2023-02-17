@@ -5,6 +5,12 @@ class Tracker {
     --tracker-red-transparent: rgba(245, 0, 87, 0.3);
 }
 
+.tracker-nav-tab-container {
+    display: flex;
+    height: 30px;
+    width: 100%;
+}
+
 .drawer-item {
     justify-content: space-between;
 }
@@ -211,20 +217,19 @@ class Tracker {
 
 input[type="text"].tracker-time-duration:not(.browser-default) {
     position: relative;
-    width: 40px;
+    width: 42px;
     text-align: center;
-    border: 1px solid var(--tracker-red);
+    border: 1px solid var(--tracker-red) !important;
     border-radius: 5px;
     padding: 4px;
     background-color: white;
     height: unset;
     margin: unset;
+    color: black;
 }
 
-/* needed to override the default materialize css */
-input[type="text"].tracker-time-duration:not(.browser-default):focus {
-    border: 1px solid var(--tracker-red);
-    box-shadow: unset;
+.tracker-time-duration::placeholder {
+    color: #9a9a9a;
 }
 
 .tracker-time-range {
@@ -243,12 +248,7 @@ input[type="time"].tracker-time:not(.browser-default) {
     font-size: 14px;
     height: unset;
     margin: unset;
-}
-
-/* needed to override the default materialize css */
-input[type="time"].tracker-time:not(.browser-default):focus {
-    border: 1px solid var(--tracker-red);
-    box-shadow: unset;
+    color: black;
 }
 
 #tracker-popup {
@@ -270,6 +270,7 @@ input[type="time"].tracker-time:not(.browser-default):focus {
         this.gameReadyTimeout = undefined;
         this.gameReadyCallbacks = [];
         this.saveCheckmarkTimeout = undefined;
+        this.settingsResetObserver = undefined;
 
         this.storage = new Storage(() => this.onApiUpdate());
 
@@ -296,7 +297,6 @@ input[type="time"].tracker-time:not(.browser-default):focus {
                     marketplace_tracker: 1,
                     offline_tracker: 1,
                     smithing_tracker: 1,
-                    alert_tracker: 1,
                 }
             };
             this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
@@ -372,25 +372,26 @@ input[type="time"].tracker-time:not(.browser-default):focus {
     }
 
     settingsPage() {
-        let oldNavTab = document.getElementById('tracker-settings-nav-tab');
-        oldNavTab?.remove();
+        let oldNavTabContainer = document.getElementById('tracker-settings-nav-tab-container');
+        oldNavTabContainer?.remove();
         let oldSettingsArea = document.getElementById('tracker-settings-area');
         oldSettingsArea?.remove();
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         const navTabContainer = playAreaContainer.getElementsByClassName('nav-tab-container')[0];
-        const navTabsLeft = navTabContainer.getElementsByClassName('nav-tab-left');
-        for (let i = 0; i < navTabsLeft.length; i++) {
-            navTabsLeft[i].style.display = 'none';
-        }
-        navTabContainer.insertAdjacentHTML("afterbegin", `
-            <div id="tracker-settings-nav-tab" class="nav-tab-left noselect selected-tab tracker">
-                ${Templates.trackerLogoTemplate('nav-tab-icon icon-border')}
-                Tracker
+        navTabContainer.style.display = "none";
+
+        navTabContainer.insertAdjacentHTML("afterend", `
+            <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
+                <div class="nav-tab noselect selected-tab tracker">
+                    ${Templates.trackerLogoTemplate('nav-tab-icon icon-border')}
+                    Tracker
+                </div>
             </div>`);
+        const selectedSkill = getSelectedSkill();
 
         const playAreaBackground = playAreaContainer.getElementsByClassName('play-area-background')[0];
-        const playAreas = playAreaBackground.getElementsByClassName('play-area')
+        const playAreas = playAreaBackground.getElementsByClassName('play-area');
         for (let i = 0; i < playAreas.length; i++) {
             playAreas[i].style.display = "none";
         }
@@ -455,20 +456,21 @@ input[type="time"].tracker-time:not(.browser-default):focus {
         const saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
 
-        const resetObserver = new MutationObserver(mutations => {
-            for (let i = 0; i < navTabsLeft.length; i++) {
-                navTabsLeft[i].style.display = 'block';
+        this.settingsResetObserver?.disconnect();
+        this.settingsResetObserver = new MutationObserver(mutations => {
+            if (getSelectedSkill() !== selectedSkill) {
+                navTabContainer.style.display = '';
+                for (let i = 0; i < playAreas.length; i++) {
+                    playAreas[i].style.display = "block";
+                }
+                document.getElementById('tracker-settings-nav-tab-container').remove();
+                document.getElementById('tracker-settings-area').remove();
+                clearTimeout(this.saveCheckmarkTimeout);
+                // Stop observing
+                this.settingsResetObserver.disconnect();
             }
-            for (let i = 0; i < playAreas.length; i++) {
-                playAreas[i].style.display = "block";
-            }
-            document.getElementById('tracker-settings-nav-tab').remove();
-            document.getElementById('tracker-settings-area').remove();
-            clearTimeout(this.saveCheckmarkTimeout);
-            // Stop observing
-            resetObserver.disconnect();
         });
-        resetObserver.observe(playAreaContainer.getElementsByClassName('play-area')[0], {
+        this.settingsResetObserver.observe(navTabContainer, {
             childList: true,
             subtree: true
         });

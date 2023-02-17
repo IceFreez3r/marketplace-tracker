@@ -6,4 +6,4 @@ tracker.addModule(MarketHighlights);
 // tracker.addModule(SmithingTracker);
 // tracker.addModule(CraftingTracker);
 // tracker.addModule(FarmingTracker);
-// tracker.addModule(AlertTracker);
+tracker.addModule(AlertTracker);

@@ -159,6 +159,42 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
             </div>`;
     }
 
+    /**
+     * Creates a notification with the provided message that disappears after 10 seconds or when the user clicks on it.
+     * 
+     * @param {string} type options are `success` (green), `info` (blue), `warning` (yellow) and `danger` (red)
+     * @param {string} title string
+     * @param {string} message string
+     * @returns {HTMLElement} the notification element
+     */
+    static notificationTemplate(type, title, message) {
+        const notification = `
+            <div style="height: 178px; width: 325px; transition: height 10ms ease 0s;" class="rnc__notification">
+                <div class="animate__animated animate__fadeIn rnc__notification-item rnc__notification-item--${type}">
+                    <div class="rnc__notification-content">
+                        <div class="rnc__notification-title">
+                            ${title}
+                        </div>
+                        <div class="rnc__notification-message">
+                            ${message}
+                        </div>
+                        <div class="rnc__notification-timer">
+                            <div class="rnc__notification-timer-filler" style="animation-name: timer; animation-duration: 10000ms; animation-timing-function: linear; animation-fill-mode: forwards; animation-play-state: running;"/>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        const topRightNotificationContainer = document.getElementsByClassName("rnc__notification-container--top-right")[0];
+        saveInsertAdjacentHTML(topRightNotificationContainer, "afterbegin", notification);
+        const notificationElement = topRightNotificationContainer.lastElementChild;
+        setTimeout(() => {
+            notificationElement?.remove();
+        }, 10000);
+        notificationElement?.addEventListener("click", () => {
+            notificationElement?.remove();
+        });
+        return notificationElement;
+    }
 
     /**
      * Creates a popup with the provided content that can be closed by clicking on the background.

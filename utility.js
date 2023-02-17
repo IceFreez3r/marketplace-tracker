@@ -115,7 +115,7 @@ function isIronmanCharacter() {
 }
 
 function getSelectedSkill() {
-    const selectedSkill = document.getElementsByClassName('nav-tab-left noselect selected-tab')[0];
+    const selectedSkill = document.getElementsByClassName('nav-tab noselect selected-tab')[0];
     return selectedSkill ? selectedSkill.innerText : "";
 }
 
