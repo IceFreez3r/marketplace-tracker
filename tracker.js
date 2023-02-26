@@ -95,6 +95,7 @@ class Tracker {
 }
 
 .settings-checkbox-label {
+    flex-shrink: 0;
     width: 1.5rem;
     height: 1.5rem;
     border: 2px solid #fff;
