@@ -6,8 +6,8 @@
     "content_scripts": [
         {
             "matches": [
-                "https://dev.idlescape.com/game",
-                "https://www.dev.idlescape.com/game"
+                "https://dev.idlescape.com/*",
+                "https://www.dev.idlescape.com/*"
             ],
             "js": [
                 "storage.js",
