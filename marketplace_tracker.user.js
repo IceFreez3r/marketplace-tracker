@@ -35,7 +35,7 @@
     tracker.addModule(EnchantingTracker);
     // tracker.addModule(SmithingTracker);
     // tracker.addModule(CraftingTracker);
-    // tracker.addModule(FarmingTracker);
+    tracker.addModule(FarmingTracker);
     tracker.addModule(AlertTracker);
 
 })();
