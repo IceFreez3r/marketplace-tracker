@@ -39,6 +39,8 @@ The history shows prices per item and tax-free prices for sold items.
 <img src="./images/readme/marketplace_history.png" alt="Marketplace Buy" width="600">
 
 ### Crafting
+*Needs rework for the new crafting system. Currently disabled*
+
 Shows the cost for buying all ingredients for a recipe compared to the cost of buying the crafted item directly. Also calculates the amount of gold you would need per XP when crafting the selected item.
 
 <img src="./images/readme/crafting_tracker.png" alt="Crafting Tracker" width="600">
@@ -49,6 +51,8 @@ Shows the cost for buying all ingredients for crafting a scroll compared to the 
 <img src="./images/readme/enchanting_tracker.png" alt="Enchanting Tracker" width="600">
 
 ### Smithing
+*Needs rework for the new smithing system. Currently disabled*
+
 Same thing once again. Compact prices to fit into the small space.
 
 <img src="./images/readme/smithing_tracker.png" alt="Smithing Tracker" width="600">
@@ -102,9 +106,11 @@ API calls are only stored for two weeks, to make sure, that the data of the exte
 - Farming 🌽
     - Calculate the average profit for farming per seed (maybe even per enchantment)
     - Collect data for mysterious seeds and crack the algorithm behind them
-        - It is already known, that the algorithm will change with the coming big update. Therefore low prio for now.
 - Crafting
     - store recipes to be able to highlight the best XP/Gold recipe
+- Runecrafting
+    - add profit table
+    - calculate price of essence by using the price of the talismans
 
 ## Contact
 If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger over the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).

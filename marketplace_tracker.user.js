@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Idlescape Marketplace Tracker
 // @namespace    https://github.com/IceFreez3r
-// @version      2.0.0
+// @version      1.1.0
 // @description  Automatically tracks prices of items on the Idlescape Marketplace
 // @author       IceFreez3r
-// @match        https://www.dev.idlescape.com/*
-// @match        https://dev.idlescape.com/*
+// @match        https://www.idlescape.com/*
+// @match        https://idlescape.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=idlescape.com
 // @updateURL    https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
 // @downloadURL  https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/marketplace_tracker.user.js
