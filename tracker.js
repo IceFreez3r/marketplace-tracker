@@ -380,7 +380,9 @@ input[type="time"].tracker-time:not(.browser-default) {
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         const navTabContainer = playAreaContainer.getElementsByClassName('nav-tab-container')[0];
-        navTabContainer.style.display = "none";
+        if (document.getElementsByClassName("game-container")[0].classList.contains("navbar-disabled")) {
+            navTabContainer.style.display = "none";
+        }
 
         navTabContainer.insertAdjacentHTML("afterend", `
             <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">

@@ -129,13 +129,13 @@ class Storage {
             }
         }
         const apiId = this.idMap[itemId];
-        const minQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.05);
-        const medianQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.5);
-        const maxQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.95);
+        const minQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.05);
+        const medianQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.5);
+        const maxQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.95);
         return {
-            minPrice: this.itemList[apiId]["prices"][minQuantile][1],
-            medianPrice: this.itemList[apiId]["prices"][medianQuantile][1],
-            maxPrice: this.itemList[apiId]["prices"][maxQuantile][1]
+            minPrice: this.itemList[apiId]?.prices[minQuantile][1],
+            medianPrice: this.itemList[apiId]?.prices[medianQuantile][1],
+            maxPrice: this.itemList[apiId]?.prices[maxQuantile][1]
         }
     }
 
