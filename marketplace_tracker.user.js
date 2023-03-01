@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Idlescape Marketplace Tracker
 // @namespace    https://github.com/IceFreez3r
-// @version      1.0.6
+// @version      1.1.0
 // @description  Automatically tracks prices of items on the Idlescape Marketplace
 // @author       IceFreez3r
 // @match        https://www.idlescape.com/*
@@ -33,8 +33,8 @@
     tracker.addModule(MarketHighlights);
     tracker.addModule(OfflineTracker);
     tracker.addModule(EnchantingTracker);
-    tracker.addModule(SmithingTracker);
-    tracker.addModule(CraftingTracker);
+    // tracker.addModule(SmithingTracker);
+    // tracker.addModule(CraftingTracker);
     tracker.addModule(FarmingTracker);
     tracker.addModule(AlertTracker);
 

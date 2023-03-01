@@ -24,7 +24,7 @@ class Storage {
     }
 
     handleApiData(data) {
-        const timestamp = Math.floor(Date.now() / 1000 / 60 / 6);
+        const timestamp = Math.floor(Date.now() / 1000 / 60 / 10);
         for (let i = 0; i < data.length; i++) {
             // data[i].itemID == apiId
             if (!(data[i].itemID in this.itemList)) {
@@ -57,11 +57,13 @@ class Storage {
             {apiId: 304, heat: 20},     // Willow Log
             {apiId: 305, heat: 70},     // Maple Log
             {apiId: 306, heat: 200},    // Yew Log
+            {apiId: 307, heat: 350},    // Elder Log
             {apiId: 702, heat: 100},    // Pyre Log
             {apiId: 703, heat: 200},    // Oak Pyre Log
             {apiId: 704, heat: 400},    // Willow Pyre Log
             {apiId: 705, heat: 800},    // Maple Pyre Log
             {apiId: 706, heat: 3000},   // Yew Pyre Log
+            {apiId: 707, heat: 5000},   // Elder Pyre Log
             {apiId: 11030, heat: 25},   // Rotten Driftwood
             {apiId: 11031, heat: 75},   // Sturdy Driftwood
             {apiId: 11036, heat: 125},  // Mystical Driftwood
@@ -127,13 +129,13 @@ class Storage {
             }
         }
         const apiId = this.idMap[itemId];
-        const minQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.05);
-        const medianQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.5);
-        const maxQuantile = Math.floor((this.itemList[apiId]["prices"].length - 1) * 0.95);
+        const minQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.05);
+        const medianQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.5);
+        const maxQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.95);
         return {
-            minPrice: this.itemList[apiId]["prices"][minQuantile][1],
-            medianPrice: this.itemList[apiId]["prices"][medianQuantile][1],
-            maxPrice: this.itemList[apiId]["prices"][maxQuantile][1]
+            minPrice: this.itemList[apiId]?.prices[minQuantile][1],
+            medianPrice: this.itemList[apiId]?.prices[medianQuantile][1],
+            maxPrice: this.itemList[apiId]?.prices[maxQuantile][1]
         }
     }
 
@@ -195,10 +197,12 @@ class Storage {
     }
 
     filterItemList() {
-        const twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 6) - (14 * 24 * 6);
+        const twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 10) - (14 * 24 * 6);
+        const now = Math.floor(Date.now() / 1000 / 60 / 10);
         for (let apiId in this.itemList) {
             for (let i = 0; i < this.itemList[apiId]["prices"].length; i++) {
-                if (this.itemList[apiId]["prices"][i][0] < twoWeeksAgo) {
+                // Second condition due to Issue #52 https://github.com/IceFreez3r/marketplace-tracker/issues/52
+                if (this.itemList[apiId]["prices"][i][0] < twoWeeksAgo || this.itemList[apiId]["prices"][i][0] > now) {
                     this.itemList[apiId]["prices"].splice(i, 1);
                     i--;
                 }
@@ -237,11 +241,11 @@ class Storage {
                 if (data.status === "Success") {
                     this.handleApiData(data.manifest);
                 } else {
-                    console.log("Error fetching API data");
+                    console.error("Error fetching API data. Status: " + data.status);
                 }
             })
             .catch((err) => {
-                console.log(err);
+                console.error(err);
             });
         this.APICallback();
     }

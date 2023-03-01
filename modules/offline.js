@@ -60,6 +60,7 @@ class OfflineTracker {
             }
             this.offlineTracker();
         });
+        this.offlineTracker();
     };
     
     onGameReady() {

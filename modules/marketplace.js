@@ -78,9 +78,13 @@ body .marketplace-table-cell-div {
 }
     `;
     historyCss = `
+.marketplace-history {
+    display: none;
+}
+
 .tracker-history {
     display: grid;
-    grid-template-columns: repeat(2, max-content) 1fr repeat(3, minmax(max-content, 0.4fr));
+    grid-template-columns: max-content 1fr repeat(3, minmax(max-content, 0.4fr));
     overflow-y: auto;
     flex: 1 1;
     border-radius: 6px 6px 0 0;
@@ -95,12 +99,11 @@ body .marketplace-table-cell-div {
 }
 
 /* Alternating background */
-.tracker-history > :nth-child(12n-6), 
-.tracker-history > :nth-child(12n-5), 
-.tracker-history > :nth-child(12n-4), 
-.tracker-history > :nth-child(12n-3), 
-.tracker-history > :nth-child(12n-2), 
-.tracker-history > :nth-child(12n-1) {
+.tracker-history > :nth-child(10n-4),
+.tracker-history > :nth-child(10n-3),
+.tracker-history > :nth-child(10n-2),
+.tracker-history > :nth-child(10n-1),
+.tracker-history > :nth-child(10n) {
     background: #3b3b3b;
 }
 
@@ -111,10 +114,6 @@ body .marketplace-table-cell-div {
 .tracker-history-header {
     text-align: center;
     line-height: 22px;
-}
-
-.marketplace-history-item-date {
-    width: 110px;
 }
 
 .marketplace-history-item-date-i {
@@ -149,6 +148,10 @@ body .marketplace-table-cell-div {
 
 .marketplace-history-item-per-item.sale {
     color: #4eff4e;
+}
+
+.marketplace-history-item-amount, .marketplace-history-item-price {
+    line-height: unset;
 }
 
 .marketplace-history-item-price-tax {
@@ -308,7 +311,7 @@ body .marketplace-table-cell-div {
             saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
         }
         this.markOffers(offers, analysis.maxPrice);
-        this.priceHoverListener(offers, analysis.maxPrice);
+        // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
 
@@ -363,8 +366,7 @@ body .marketplace-table-cell-div {
             const amount = parseNumberString(offer.childNodes[2].innerText);
             priceCell.classList.add('marketplace-offer-price');
             const price = parseNumberString(priceCell.innerText);
-            let tooltip = this.priceTooltipTemplate(maxPrice, price, amount);
-            saveInsertAdjacentHTML(priceCell, 'beforeend', tooltip);    
+            saveInsertAdjacentHTML(priceCell, 'beforeend', this.priceTooltipTemplate(maxPrice, price, amount));    
         }
     }
 
@@ -462,8 +464,6 @@ body .marketplace-table-cell-div {
             return;
         }
         this.marketHistory(history);
-        // Hide vanilla table
-        history.classList.add('hidden');
         // Add observer to the original table
         const observer = new MutationObserver((mutations) => {
             this.marketHistory(history);
@@ -476,7 +476,8 @@ body .marketplace-table-cell-div {
 
     marketHistory(history) {
         const oldTrackerHistory = document.getElementsByClassName('tracker-history')[0]; // might be undefined
-        const currentHistoryPage = document.getElementsByClassName('marketplace-history-page selected')[0].textContent;
+        let currentHistoryPage = document.getElementsByClassName('marketplace-history-page selected')[0]?.textContent;
+        currentHistoryPage = currentHistoryPage ?? "1";
         // Return if the custom history already exists and the user has not changed the page
         if (oldTrackerHistory && currentHistoryPage === this.lastHistoryPage) {
             return;
@@ -489,7 +490,7 @@ body .marketplace-table-cell-div {
                 <div class="tracker-history-header">
                     DATE
                 </div>
-                <div class="tracker-history-header" style="grid-area: 1 / 2 / 2 / 4;">
+                <div class="tracker-history-header">
                     ITEM
                 </div>
                 <div class="tracker-history-header">
@@ -502,12 +503,12 @@ body .marketplace-table-cell-div {
                     TOTAL
                 </div>
             </div>`);
-        let trackerHistory = history.nextElementSibling;
+        const trackerHistory = history.nextElementSibling;
         // Copy and modify rows
-        let historyItems = history.getElementsByClassName('marketplace-history-item');
+        const historyItems = history.getElementsByClassName('marketplace-history-item');
         for (let item of historyItems) {
-            // Copy date, icon, name and quantity
-            for (let i = 0; i < 4; i++) {
+            // Copy date, name and quantity
+            for (let i = 0; i < 3; i++) {
                 trackerHistory.insertAdjacentElement('beforeend', item.childNodes[i].cloneNode(true));
             }
             // Build new price per item and total
@@ -516,7 +517,7 @@ body .marketplace-table-cell-div {
             if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
                 itemQuantity *= 2;
             }
-            const totalDiv = item.childNodes[4];
+            const totalDiv = item.childNodes[3];
             const total = parseNumberString(totalDiv.textContent);
             const type = totalDiv.classList[1]; // "purchase" or "sale"
             saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
@@ -563,15 +564,14 @@ body .marketplace-table-cell-div {
         if (warningIcon) {
             return;
         }
-        sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate("hidden"));
+        sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate());
         warningIcon = sellButton.getElementsByClassName("warning")[0];
-        const vendorPriceNode = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[4].firstChild.childNodes[2];
+        const vendorPriceNode = document.getElementById("lowest-price-npc").childNodes[2];
         const vendorPrice = parseNumberString(vendorPriceNode.textContent);
-        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
+        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[6];
         priceInput.addEventListener('input', () => {
             const price = parseNumberString(priceInput.value, {"group": ",", "decimal": "."});
             const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
-            console.log({price, vendorPrice, tooLowPrice});
             warningIcon.classList.toggle("hidden", !tooLowPrice);
         });
     }

@@ -114,8 +114,8 @@ body .scrollcrafting-container {
         const scrollId = convertItemId(recipe.firstChild.src);
         const scrollIcon = recipe.firstChild.src;
 
-        let standardResources = this.getStandardResources(recipe.childNodes[4].childNodes[0]);
-        let dynamicResources = this.getDynamicResources(recipe.childNodes[4].childNodes[1]);
+        let standardResources = this.getStandardResources(recipe.getElementsByClassName("scrollcrafting-standard-resources")[0]);
+        let dynamicResources = this.getDynamicResources(recipe.getElementsByClassName("scrollcrafting-dynamic-resources")[0]);
         // combine lists of objects into separate lists
         let resourceItemIds = ["scroll"].concat(dynamicResources.map(resource => resource.itemId));
         let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));

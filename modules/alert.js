@@ -54,7 +54,7 @@ class AlertTracker {
 }
 
 .alert-popup input[type="number"]:not(.browser-default):focus:not([readonly]) {
-    border-bottom: 1px solid var(--tracker-red);
+    border-bottom: 1px solid var(--tracker-red) !important;
     box-shadow: 0 1px 0 0 var(--tracker-red);
 }
 
@@ -94,7 +94,7 @@ class AlertTracker {
 }
 
 .alert-popup-button:hover {
-  filter: brightness(1.5);
+    filter: brightness(1.5);
 }
 
 .alert-popup-button.clear,
@@ -157,7 +157,7 @@ class AlertTracker {
                         });
                     } else {
                         console.log("Notifications not allowed");
-                        // TODO: After rewrite send ingame notification
+                        Templates.notificationTemplate("warning", "Notifications not allowed", "You can change this in your browser settings. Meanwhile we will stick to these ingame notifications.");
                     }
                 });
         }
@@ -178,7 +178,8 @@ class AlertTracker {
         const note = `
             <div class="tracker-module-setting-description">
                 Works best if you also have Market Highlights enabled.
-            </div>`
+            </div>`;
+        
         const cooldown = document.createElement('div');
         cooldown.classList.add('tracker-module-setting');
         cooldown.insertAdjacentHTML('beforeend', `
@@ -210,6 +211,7 @@ class AlertTracker {
     settingChanged(settingId, value) {
         if (settingId === 'manualMute') {
             this.settings.manualMuteEnd = Date.now() + durationToMilliseconds(value);
+            this.tracker.storeSettings();
         }
     }
 
@@ -238,19 +240,18 @@ class AlertTracker {
 
     createNotification(permission = Notification.permission) {
         if (!this.muted()) {
-            if (permission === "granted") {
-                const items = Object.keys(this.notificationInformation).map(itemId => {
-                    return this.storage.getItemName(itemId);
-                }).join(", ");
+            const items = Object.keys(this.notificationInformation).map(itemId => {
+                return this.storage.getItemName(itemId);
+            }).join(", ");
+            if (permission === "granted" && !document.hasFocus()) {
+                // notifications allowed and tab is not visible
                 const notification = new Notification("Idlescape Marketplace", {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                     
                 });
             } else {
-                console.log("Notification permission denied");
-                // TODO: After rewrite add ingame notification here
-                // Also by default if tab is visible
+                Templates.notificationTemplate("warning", "Interesting items for you", items);
             }
             // set cooldown, reduce by 30 seconds to account for possible delay
             this.settings.cooldownEnd = Date.now() + durationToMilliseconds(this.settings.cooldown) - 30 * 1000;

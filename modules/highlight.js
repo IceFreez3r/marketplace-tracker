@@ -307,25 +307,24 @@ class MarketHighlights {
         }
         if (this.quantileColorsActive) {
             const priceQuantiles = this.storage.latestPriceQuantiles();
-            for (let item of items) {
-                const itemId = convertItemId(item.firstChild.src);
-                const quantile = priceQuantiles[itemId];
-                const color = this.getHSLColor(quantile);
-                item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
-                if (this.settings.quantileDisplay === "dot") {
-                    this.quantileDot(item, color)
-                }
-                else if (this.settings.quantileDisplay === "border") {
-                    item.style.border = `3px solid ${color}`;
-                    item.classList.toggle('quantile-borders', this.quantileColorsActive);
-                }
-                else if (this.settings.quantileDisplay === "shadow") {
-                    item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
-                }
-                else if (this.settings.quantileDisplay === "party") {
-                    this.quantileDot(item, color)
-                    item.classList.toggle('quantile-borders', this.quantileColorsActive);
-                    this.partyMode(item, quantile);
+            if (this.settings.quantileDisplay === "party") {
+                this.partyMode(items, priceQuantiles);
+            } else {
+                for (let item of items) {
+                    const itemId = convertItemId(item.firstChild.src);
+                    const quantile = priceQuantiles[itemId];
+                    const color = this.getHSLColor(quantile);
+                    item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
+                    if (this.settings.quantileDisplay === "dot") {
+                        this.quantileDot(item, color)
+                    }
+                    else if (this.settings.quantileDisplay === "border") {
+                        item.style.border = `3px solid ${color}`;
+                        item.classList.toggle('quantile-borders', this.quantileColorsActive);
+                    }
+                    else if (this.settings.quantileDisplay === "shadow") {
+                        item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
+                    }
                 }
             }
         } else {
@@ -353,14 +352,21 @@ class MarketHighlights {
         return `hsl(${hue}, 80%, 40%)`;
     }
 
-    partyMode(item, quantile) {
-        const color = this.getHSLColor(quantile);
-        item.style.border = `3px solid ${color}`;
-        this.quantileDot(item, color);
-        item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
-        quantile = (quantile + 0.05) % 3;
+    partyMode(items, priceQuantiles, offset = 0) {
+        // Stop if item is no longer in DOM
+        if (!this.quantileColorsActive || !items[0].parentNode) {
+            return;
+        }
+        for (let item of items) {
+            const itemId = convertItemId(item.firstChild.src);
+            const quantile = (priceQuantiles[itemId] + offset) % 3;
+            const color = this.getHSLColor(quantile);
+            item.style.border = `3px solid ${color}`;
+            this.quantileDot(item, color);
+            item.getElementsByClassName('item-icon')[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
+        }
         setTimeout(() => {
-            this.partyMode(item, quantile);
+            this.partyMode(items, priceQuantiles, (offset + 0.05) % 3);
         }, 100);
     }
 

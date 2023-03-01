@@ -1,13 +1,13 @@
 {
     "manifest_version": 2,
     "name": "Idlescape Marketplace Tracker",
-    "version": "1.0.6",
+    "version": "1.1.0",
     "description": "Automatically tracks prices of items on the Idlescape Marketplace",
     "content_scripts": [
         {
             "matches": [
-                "https://idlescape.com/game",
-                "https://www.idlescape.com/game"
+                "https://idlescape.com/*",
+                "https://www.idlescape.com/*"
             ],
             "js": [
                 "storage.js",
