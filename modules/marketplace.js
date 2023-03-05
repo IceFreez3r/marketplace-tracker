@@ -4,17 +4,6 @@ class MarketplaceTracker {
     static icon = "<img src='/images/ui/marketplace_icon.png' alt='Marketplace Tracker Icon'>";
     static category = "economy";
     css = `
-body .marketplace-table {
-    overflow: unset;
-}
-
-body .marketplace-table-cell-div {
-    display: flex;
-    padding-top: 0;
-    flex-direction: column;
-    height: auto;
-}
-
 .marketplace-offer-low {
     background-image: linear-gradient(270deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%);
 }
@@ -138,10 +127,6 @@ body .marketplace-table-cell-div {
     justify-content: start;
 }
 
-.marketplace-history-item-per-item {
-    text-align: right;
-}
-
 .marketplace-history-item-per-item.purchase {
     color: #fa4d4d;
 }
@@ -160,15 +145,33 @@ body .marketplace-table-cell-div {
     width: 16px;
     height: 16px;
 }
+
+.marketplace-history-item-per-item,
+.marketplace-history-item-price {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    justify-content: center;
+}
     `;
 
     hideBorderCss = `
+body .marketplace-table-cell-div {
+    padding-top: 0;
+    height: auto;
+}
+
 .marketplace-sell-items-sort {
     border: none;
 }
 
 .marketplace-my-auctions {
     border: none;
+}
+
+.marketplace-content,
+.marketplace-sell-items.all-items {
+    padding-top: 5px;
 }
     `;
 
@@ -244,9 +247,11 @@ body .marketplace-table-cell-div {
         const hideBorder = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Remove border on sell page
+                    Market styling tweaks
                     <div class="tracker-module-setting-description">
-                        prevents filter from moving by 2 pixels when switching between sell and buy
+                        <div>Removes border on sell page</div>
+                        <div>Forces listings with long names to take the space they need</div>
+                        <div>Extra top padding for the full item list</div>
                     </div>
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
@@ -513,7 +518,7 @@ body .marketplace-table-cell-div {
             }
             // Build new price per item and total
             const itemId = convertItemId(item.childNodes[1].firstChild.src);
-            let itemQuantity = parseNumberString(item.childNodes[3].textContent);
+            let itemQuantity = parseNumberString(item.childNodes[2].textContent);
             if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
                 itemQuantity *= 2;
             }

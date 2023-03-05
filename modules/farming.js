@@ -54,7 +54,7 @@ body .farming-seeds .all-items {
 }
 
 .high-level-seed {
-    background-image: linear-gradient(180deg, rgba(13, 64, 12, 0.6), rgba(13, 64, 12, .6)), url(/images/ui/frame_icon.png);
+    background-image: linear-gradient(180deg, rgba(13, 64, 12, 0.6), rgba(13, 64, 12, .6)), url(/images/ui/frame_box.png);
 }
 
 .high-level-seed > img {

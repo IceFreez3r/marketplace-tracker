@@ -182,7 +182,7 @@ class MarketHighlights {
             </div>
             <div class="marker-size-slider">
                 ${Templates.sliderTemplate(MarketHighlights.id + "-markerSize", [15, 70], this.settings.markerSize)}
-                <div class="marker-size-preview item gem" data-tip="true" data-for="marketplaceBuyItemTooltip50" style="background-image: url('/images/ui/frame_icon.png'), linear-gradient(rgb(28, 32, 36), rgb(28, 32, 36));">
+                <div class="marker-size-preview item gem" data-tip="true" data-for="marketplaceBuyItemTooltip50" style="background-image: url('/images/ui/frame_box.png'), linear-gradient(rgb(28, 32, 36), rgb(28, 32, 36));">
                     <img class="item-icon" src="/images/misc/book.png" alt="Book">
                     ${Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot")}
                 </div>
@@ -314,7 +314,7 @@ class MarketHighlights {
                     const itemId = convertItemId(item.firstChild.src);
                     const quantile = priceQuantiles[itemId];
                     const color = this.getHSLColor(quantile);
-                    item.style.backgroundImage = "url(/images/ui/frame_icon.png), linear-gradient(#1c2024, #1c2024)";
+                    item.style.backgroundImage = "url(/images/ui/frame_box.png), linear-gradient(#1c2024, #1c2024)";
                     if (this.settings.quantileDisplay === "dot") {
                         this.quantileDot(item, color)
                     }
