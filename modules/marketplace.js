@@ -140,7 +140,6 @@ class MarketplaceTracker {
 }
 
 .marketplace-history-item-price-tax {
-    margin-left: 5px;
     margin-top: -3px;
     width: 16px;
     height: 16px;
@@ -169,7 +168,7 @@ body .marketplace-table-cell-div {
     border: none;
 }
 
-.marketplace-content,
+.marketplace-content .all-items,
 .marketplace-sell-items.all-items {
     padding-top: 5px;
 }
