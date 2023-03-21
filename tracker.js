@@ -554,13 +554,8 @@ input[type="time"].tracker-time:not(.browser-default) {
             this.storeSettings();
             location.reload();
         } else {
-            resetButton.innerHTML = `
-                Reset?
-                <div class="tracker-tooltip">
-                    <div class="tracker-tooltip-text">
-                        Please click again to confirm
-                    </div>
-                </div>`;
+            resetButton.firstChild.textContent = 'Reset?';
+            Templates.notificationTemplate('warning', 'Settingsreset', 'Please click again to confirm');
             this.warningShown = true;
         }
     }
