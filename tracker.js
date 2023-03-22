@@ -301,6 +301,49 @@ input[type="time"].tracker-time:not(.browser-default) {
     z-index: -1;
     inset: 0;
 }
+
+.import-export-popup {
+    text-align: center;
+    width: 100%;
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translate(-50%, 5%);
+    border: 2px solid silver;
+    z-index: 9;
+    max-width: 600px;
+    padding: 50px;
+    background-color: rgba(0,0,0,.19);
+    align-items: center;
+    border-image-source: url(/images/ui/stone-9slice.png);
+    border-image-slice: 100 fill;
+    border-image-width: 100px;
+    border-image-outset: 0;
+    border-image-repeat: repeat;
+    overflow-x: hidden;
+}
+
+.import-export-popup-title {
+    margin-top: 0;
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
+.import-export-popup-container {
+    display: grid;
+    grid-template-columns: 5fr 1fr;
+    gap: 10px 20px;
+    grid-template-areas: "settings-header settings-header"
+                         "settings-textarea settings-import"
+                         "settings-textarea settings-export"
+                         "market-header market-header"
+                         "market-textarea market-import"
+                         "market-textarea market-export"
+}
+
+.import-export-popup-textarea {
+    height: 100%;
+}
     `;
 
     constructor() {
@@ -496,6 +539,9 @@ input[type="time"].tracker-time:not(.browser-default) {
                         </div>
                     </div>
                 </div>
+                <div id="settings-import" class="tracker-settings-button idlescape-button-blue">
+                    Import/Export
+                </div>
                 <div id="settings-save" class="tracker-settings-button idlescape-button-green">
                     Save
                 </div>
@@ -505,6 +551,9 @@ input[type="time"].tracker-time:not(.browser-default) {
         this.warningShown = false;
         const resetButton = document.getElementById('settings-reset');
         resetButton.addEventListener('click', () => this.resetSettings(resetButton));
+
+        const importExportButton = document.getElementById('settings-import');
+        importExportButton.addEventListener('click', () => this.importExportPopup());
 
         const saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
@@ -558,6 +607,107 @@ input[type="time"].tracker-time:not(.browser-default) {
             Templates.notificationTemplate('warning', 'Settingsreset', 'Please click again to confirm');
             this.warningShown = true;
         }
+    }
+
+    importExportPopup() {
+        saveInsertAdjacentHTML(document.body, 'beforeend', Templates.popupTemplate(`
+            <div class="import-export-popup">
+                <div class="import-export-popup-title">
+                    Import/Export
+                </div>
+                <div class="import-export-popup-container">
+                    <div class="import-export-popup-text" style="grid-area: settings-header;">
+                        Settings
+                    </div>
+                    <textarea id="import-export-settings" class="import-export-popup-textarea" style="grid-area: settings-textarea;"></textarea>
+                    <div id="tracker-import-settings" class="tracker-settings-button idlescape-button-green" style="grid-area: settings-import;">
+                        Import
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Enter settings into the textarea
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tracker-export-settings" class="tracker-settings-button idlescape-button-blue" style="grid-area: settings-export;">
+                        Export
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Copies to clipboard
+                            </div>
+                        </div>
+                    </div>
+                    <div class="import-export-popup-text" style="grid-area: market-header;">
+                        Marketplace Data
+                    </div>
+                    <textarea id="import-export-market" class="import-export-popup-textarea" style="grid-area: market-textarea;"></textarea>
+                    <div id="tracker-import-market" class="tracker-settings-button idlescape-button-green" style="grid-area: market-import;">
+                        Import
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Enter marketplace data into the textarea
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tracker-export-market" class="tracker-settings-button idlescape-button-blue" style="grid-area: market-export;">
+                        Export
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Copies to clipboard
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="import-export-popup-message">
+                </div> 
+                <div class="import-export-popup-button-container">
+                    <div class="tracker-settings-button idlescape-button-red" id="import-export-popup-close">
+                        Close
+                    </div>
+                </div>
+            </div>`));
+        document.getElementById('tracker-import-settings').addEventListener('click', () => this.importSettings());
+        document.getElementById('tracker-export-settings').addEventListener('click', () => this.exportSettings());
+        document.getElementById('tracker-import-market').addEventListener('click', () => this.importStorage());
+        document.getElementById('tracker-export-market').addEventListener('click', () => this.exportStorage());
+        document.getElementById('import-export-popup-close').addEventListener('click', () => this.closePopup());
+        document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                this.closePopup();
+            }
+        });
+    }
+
+    importSettings() {
+        try {
+            const textarea = document.getElementById('import-export-settings');
+            const data = textarea.value;
+            const settings = JSON.parse(data);
+            this.settings = settings;
+            this.storeSettings();
+            this.settingsPage();
+            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Imported settings';
+        }
+        catch (err) {
+            console.log(err);
+            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Something went wrong';
+        }
+    }
+
+    exportSettings() {
+        navigator.clipboard.writeText(JSON.stringify(this.settings));
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied settings to clipboard';
+    }
+
+    importStorage() {
+        const textarea = document.getElementById('import-export-market');
+        const data = textarea.value;
+        const message = this.storage.importStorage(data);
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = message;
+    }
+
+    exportStorage() {
+        navigator.clipboard.writeText(this.storage.exportStorage());
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied marketplace data to clipboard';
     }
     
     saveSettings() {
