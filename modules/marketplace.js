@@ -197,10 +197,10 @@ body .marketplace-table-cell-div {
         this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Marketplace") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.marketplaceTracker();
             }
         });
