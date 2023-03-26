@@ -320,7 +320,6 @@ input[type="time"].tracker-time:not(.browser-default) {
     border-image-width: 100px;
     border-image-outset: 0;
     border-image-repeat: repeat;
-    overflow-x: hidden;
 }
 
 .import-export-popup-title {

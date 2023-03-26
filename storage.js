@@ -268,9 +268,24 @@ class Storage {
     importStorage(text) {
         try {
             const data = JSON.parse(text);
-            this.itemList = data.itemList;
-            this.idMap = data.idMap;
+            // merge itemList
+            for (let apiId in data.itemList) {
+                if (apiId in this.itemList) {
+                    // merge price arrays
+                    for (let i = 0; i < data.itemList[apiId].prices.length; i++) {
+                        if (!this.itemList[apiId].prices.some(priceTuple => priceTuple[0] === data.itemList[apiId].prices[i][0])) {
+                            this.itemList[apiId].prices.push(data.itemList[apiId].prices[i]);
+                        }
+                    }
+                    // sort price array
+                    this.sortPriceList(apiId);
+                } else {
+                    this.itemList[apiId] = data.itemList[apiId];
+                }
+            }
             this.storeItemList();
+            // merge idMap
+            Object.assign(this.idMap, data.idMap);
             this.storeIdMap();
             return "Imported marketplace data";
         }
