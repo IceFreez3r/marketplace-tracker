@@ -104,4 +104,4 @@ API calls are only stored for two weeks, to make sure, that the data of the exte
     - Improve offline time tracking
 
 ## Contact
-If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger through the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5).
+If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger through the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5). If you are a developer and want to contribute, please look into the [contribution guide](./CONTRIBUTING.md).
