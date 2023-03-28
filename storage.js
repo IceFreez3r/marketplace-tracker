@@ -3,7 +3,7 @@ class Storage {
         this.APICallback = APICallback;
         this.itemList = this.loadLocalStorage('itemList', {});
         this.filterItemList();
-
+        this.latestPriceList = {};
         this.idMap = this.loadLocalStorage('idMap', {
             "money_icon": 1,
             "heat_icon": 2,
@@ -25,9 +25,7 @@ class Storage {
 
     handleApiData(data) {
         const timestamp = Math.floor(Date.now() / 1000 / 60 / 10);
-        for (let item in this.itemList) {
-            this.itemList[item]["latestPrice"] = NaN;
-        }
+        this.latestPriceList = {};
         for (let i = 0; i < data.length; i++) {
             const apiId = data[i].itemID;
             if (!(apiId in this.itemList)) {
@@ -37,12 +35,12 @@ class Storage {
             }
             this.itemList[apiId]["prices"].push([timestamp, data[i].minPrice]);
             this.sortPriceList(apiId);
-            this.itemList[apiId]["latestPrice"] = data[i].minPrice;
+            this.latestPriceList[apiId] = data[i].minPrice;
         }
         const currentHeatValue = this.heatValue();
         this.itemList[2]["prices"].push([timestamp, currentHeatValue.heatValue]);
         this.sortPriceList(2);
-        this.itemList[2]["latestPrice"] = currentHeatValue.heatValue;
+        this.latestPriceList[2] = currentHeatValue.heatValue;
     }
 
     bestHeatItem() {
@@ -73,7 +71,7 @@ class Storage {
         ];
         const bestHeatItem = heatItems.reduce((result, heatItem) => {
             if (heatItem.apiId in this.itemList) {
-                const latestPrice = this.itemList[heatItem.apiId]["latestPrice"];
+                const latestPrice = this.latestPriceList[heatItem.apiId];
                 if (latestPrice / heatItem.heat < result.heatValue) {
                     result = {
                         apiId: heatItem.apiId,
@@ -124,6 +122,14 @@ class Storage {
     }
 
     analyzeItem(itemId) {
+        if (itemId.endsWith('_essence')) {
+            const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
+            return {
+                minPrice: talismanAnalysis.minPrice / 40000,
+                medianPrice: talismanAnalysis.medianPrice / 40000,
+                maxPrice: talismanAnalysis.maxPrice / 40000,
+            }
+        }
         if (!(itemId in this.idMap)) {
             return {
                 minPrice: NaN,
@@ -163,7 +169,7 @@ class Storage {
                 if (!(apiId in this.itemList)) {
                     return NaN;
                 }
-                return this.itemList[apiId]["latestPrice"];
+                return this.latestPriceList[apiId];
             })(itemId);
         }
         return prices;
@@ -181,7 +187,7 @@ class Storage {
                 if (!(apiId in this.itemList)) {
                     return 1;
                 }
-                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] === this.itemList[apiId]["latestPrice"]);
+                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] === this.latestPriceList[apiId]);
                 if (index === -1) {
                     return 1;
                 }
