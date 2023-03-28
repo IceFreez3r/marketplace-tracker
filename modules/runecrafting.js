@@ -176,7 +176,7 @@ body .runecrafting-essence-counter {
             return 1;
         }
         if (activeTab === "Runecrafting") {
-            return getSkillLevel("Runecrafting", true) / 20 + activeTalisman;
+            return 1 + getSkillLevel("Runecrafting", true) / 20 + activeTalisman;
         }
     }
 }

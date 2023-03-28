@@ -138,12 +138,12 @@ function detectInfiniteLoop(mutations) {
 }
 
 function formatNumber(number, options = {}) {
-    const {compactDisplay, profitType, showSign} = options;
+    const {compactDisplay, profitType, showSign, fraction} = options;
     if (isNaN(number)) {
         return "?";
     }
     let formatterOptions = {
-        maximumFractionDigits: 0,
+        maximumFractionDigits: fraction ? 2 : 0,
     };
     if (profitType === "percent") {
         Object.assign(formatterOptions, { maximumFractionDigits: 2, style: "percent" });
@@ -193,20 +193,21 @@ function getSkillLevel(skill, total) {
     const upperCaseSkill = skill.charAt(0).toUpperCase() + skill.slice(1);
     const sidebarSkill = document.getElementsByClassName("nav-drawer-container")[0].getElementsByClassName(upperCaseSkill)[0];
     if (sidebarSkill) {
+        const level = parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
         if (sidebarSkill.getElementsByClassName("mastery-bar")[0]) {
-            if (total) {
-                return 99 + parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
+            if (total && level !== 99) {
+                return 99 + level;
             }
             return 99;
         }
-        return parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
+        return level;
     }
     // Last option is the header, which might not be shown if the window is in half screen mode
     // Normal header with skills as circles
     const headerCircles = document.getElementsByClassName("exp-tooltip");
     for (const headerSkill of headerCircles) {
         if (headerSkill.dataset.for === `${skill}Header`) {
-            if (headerSkill.firstChild.classList.contains("max-skill-glow")) {
+            if (headerSkill.getElementsByClassName("standard-levels-maxed")[0]) {
                 if (total) {
                     return 99 + parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
                 }
@@ -219,13 +220,14 @@ function getSkillLevel(skill, total) {
     const headerSkillBars = document.getElementsByClassName("skill-level-bar");
     for (const headerSkill of headerSkillBars) {
         if (headerSkill.dataset.for === `${skill}Header`) {
+            const level = parseInt(headerSkill.getElementsByClassName("skill-level-bar-exp-level")[0].innerText);
             if (headerSkill.firstChild.classList.contains("max-skill-glow30")) {
-                if (total) {
-                    return 99 + parseInt(headerSkill.getElementsByClassName("skill-level-bar-exp-level")[0].innerText);
+                if (total && level !== 99) {
+                    return 99 + level;
                 }
                 return 99;
             }
-            return parseInt(headerSkill.getElementsByClassName("skill-level-bar-exp-level")[0].innerText);
+            return level;
         }
     }
     // Last fallback

@@ -124,10 +124,11 @@ class Storage {
     analyzeItem(itemId) {
         if (itemId.endsWith('_essence')) {
             const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
+            const essencePerTalisman = (35000 + 50000) / 2;
             return {
-                minPrice: talismanAnalysis.minPrice / 40000,
-                medianPrice: talismanAnalysis.medianPrice / 40000,
-                maxPrice: talismanAnalysis.maxPrice / 40000,
+                minPrice: talismanAnalysis.minPrice / essencePerTalisman,
+                medianPrice: talismanAnalysis.medianPrice / essencePerTalisman,
+                maxPrice: talismanAnalysis.maxPrice / essencePerTalisman,
             }
         }
         if (!(itemId in this.idMap)) {
