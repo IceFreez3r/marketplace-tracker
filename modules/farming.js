@@ -171,7 +171,7 @@ body .farming-seeds .all-items {
         }
         this.clearMetaElements(seedContainer);
 
-        const farmingLevel = this.getSkillLevel("farming", false);
+        const farmingLevel = getSkillLevel("farming", false);
         let existingSeeds = {};
         for (let seedName in this.seeds) {
             existingSeeds[seedName] = false;
