@@ -57,6 +57,8 @@ class SmithingTracker {
                     return;
                 }
                 this.smithingTracker();
+            } else {
+                this.ingredients = {};
             }
         });
     }

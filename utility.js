@@ -133,7 +133,6 @@ function detectInfiniteLoop(mutations) {
             }
         }
     }
-    console.log(mutations);
     return false;
 }
 
