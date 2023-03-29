@@ -131,17 +131,16 @@ class AlertTracker {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Marketplace") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 // Buy page
                 let buyHeader = document.getElementsByClassName('marketplace-buy-item-top')[0];
                 if (buyHeader) {
                     this.createAlertButton(buyHeader.parentNode);
                     return;
                 }
-
             }
         });
     }

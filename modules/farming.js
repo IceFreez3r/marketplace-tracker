@@ -133,14 +133,12 @@ body .farming-seeds .all-items {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            this.playAreaObserver.disconnect();
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Farming") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.farmingTracker();
             }
-            this.onGameReady();
         });
     }
     

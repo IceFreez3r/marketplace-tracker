@@ -135,10 +135,10 @@ class MarketHighlights {
         this.notificationInformation = {}; // comes from alert.js
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Marketplace") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.highlight();
             } else {
                 this.favoriteFilterActive = false;

@@ -38,8 +38,8 @@ body .scrollcrafting-container {
 }
 
 .enchanting-info-table-font {
-    font-size: 1.5rem;
-    line-height: 2rem;    
+    font-size: 2.25rem;
+    line-height: 2.5rem;
 }
     `;
 
@@ -53,10 +53,10 @@ body .scrollcrafting-container {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
-            if (getSelectedSkill() === "Enchanting") {
+            if (getSelectedSkill() === "Enchanting" && this.selectedTab() === "Scrollcrafting") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.enchantingTracker();
             }
         });
@@ -148,5 +148,9 @@ body .scrollcrafting-container {
             icon: node.childNodes[0].src,
             amount: node.childNodes[1].innerText
         };
+    }
+
+    selectedTab() {
+        return document.getElementsByClassName("enchanting-tab-selected")[0].lastElementChild.innerText;
     }
 }

@@ -71,10 +71,10 @@ body .crafting-container {
         this.lastSelectedNavTab = null;
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Crafting") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.craftingTracker();
             }
         });

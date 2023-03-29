@@ -120,28 +120,20 @@ function getSelectedSkill() {
 }
 
 function detectInfiniteLoop(mutations) {
-    for (let mutation of mutations) {
-        // Daels inventory prices
-        if (mutation.target.classList.contains("price")) {
+    const ignoredTargets = ["price", "heat-highlight"];
+    const ignoredNodes = ["MuiDialog-root", "react-tiny-popover-container", "scrollcrafting-totals-bar", "quantile-dot", "alert-icon", "tracker-ignore"];
+    for (const mutation of mutations) {
+        if (ignoredTargets.some(target => mutation.target.classList.contains(target))) {
             return true;
         }
-        // Heat highlight marker
-        if (mutation.target.classList.contains("heat-highlight")) {
-            return true;
-        }
-        for (let addedNode of mutation.addedNodes) {
-            if (addedNode.classList) {
-                // Quantile dots
-                if (addedNode.classList.contains("quantile-dot")) {
-                    return true;
-                }
-                // Notification marker
-                if (addedNode.classList.contains("alert-icon")) {
-                    return true;
-                }
+        const nodes = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));
+        for (const node of nodes) {
+            if (node.classList && ignoredNodes.some(target => node.classList.contains(target))) {
+                return true;
             }
         }
     }
+    console.log(mutations);
     return false;
 }
 
@@ -183,4 +175,8 @@ function millisecondsToDuration(milliseconds) {
     milliseconds -= hours * 60 * 60 * 1000;
     const minutes = Math.floor(milliseconds / 1000 / 60);
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+}
+
+function deepCompare(object1, object2) {
+    return JSON.stringify(object1) === JSON.stringify(object2);
 }
