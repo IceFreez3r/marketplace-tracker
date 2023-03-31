@@ -755,7 +755,6 @@ input[type="time"].tracker-time:not(.browser-default) {
             this.setSetting(timeInput.id, timeInput.value);
         }
         // Save settings
-        console.log(this.settings);
         this.storeSettings();
 
         // Visual feedback
@@ -794,7 +793,6 @@ input[type="time"].tracker-time:not(.browser-default) {
 
     storeSettings() {
         // Save settings
-        console.log(this.settings);
         localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
