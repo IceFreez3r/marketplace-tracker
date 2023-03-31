@@ -283,6 +283,7 @@ class Storage {
                     this.itemList[apiId] = data.itemList[apiId];
                 }
             }
+            this.filterItemList();
             this.storeItemList();
             // merge idMap
             Object.assign(this.idMap, data.idMap);

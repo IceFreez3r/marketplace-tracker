@@ -623,7 +623,8 @@ input[type="time"].tracker-time:not(.browser-default) {
                         Import
                         <div class="tracker-tooltip">
                             <div class="tracker-tooltip-text">
-                                Enter settings into the textarea
+                                <div>Enter settings into the textarea</div>
+                                <div>Reloads the page</div>
                             </div>
                         </div>
                     </div>
@@ -683,8 +684,8 @@ input[type="time"].tracker-time:not(.browser-default) {
             const settings = JSON.parse(data);
             this.settings = settings;
             this.storeSettings();
-            this.settingsPage();
             document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Imported settings';
+            setTimeout(() => location.reload(), 1500);
         }
         catch (err) {
             console.log(err);
