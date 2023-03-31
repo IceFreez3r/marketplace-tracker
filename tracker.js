@@ -62,9 +62,10 @@ class Tracker {
     justify-content: center;
 }
 
-.settings-save {
+.tracker-settings-button {
     height: 40px;
     padding: 6px 16px;
+    margin: 0 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -72,10 +73,47 @@ class Tracker {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
     cursor: pointer;
+    position: relative;
 }
 
-.settings-save:hover {
+.tracker-settings-button:hover {
     filter: brightness(1.5);
+}
+
+.tracker-tooltip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.tracker-tooltip-text {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    font-size: 1rem;
+    bottom: 100%;
+    left: -200%;
+    right: -200%;
+    margin: 0 auto;
+    width: fit-content;
+}
+
+.tracker-tooltip:hover .tracker-tooltip-text {
+    display: block;
+}
+
+.tracker-confirm-reset {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 4px;
 }
 
 .tracker-module-setting {
@@ -263,6 +301,48 @@ input[type="time"].tracker-time:not(.browser-default) {
     z-index: -1;
     inset: 0;
 }
+
+.import-export-popup {
+    text-align: center;
+    width: 100%;
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translate(-50%, 5%);
+    border: 2px solid silver;
+    z-index: 9;
+    max-width: 600px;
+    padding: 50px;
+    background-color: rgba(0,0,0,.19);
+    align-items: center;
+    border-image-source: url(/images/ui/stone-9slice.png);
+    border-image-slice: 100 fill;
+    border-image-width: 100px;
+    border-image-outset: 0;
+    border-image-repeat: repeat;
+}
+
+.import-export-popup-title {
+    margin-top: 0;
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
+.import-export-popup-container {
+    display: grid;
+    grid-template-columns: 5fr 1fr;
+    gap: 10px 20px;
+    grid-template-areas: "settings-header settings-header"
+                         "settings-textarea settings-import"
+                         "settings-textarea settings-export"
+                         "market-header market-header"
+                         "market-textarea market-import"
+                         "market-textarea market-export"
+}
+
+.import-export-popup-textarea {
+    height: 100%;
+}
     `;
 
     constructor() {
@@ -285,7 +365,7 @@ input[type="time"].tracker-time:not(.browser-default) {
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
-            const defaultSettings = isIronmanCharacter() ? {
+            this.defaultSettings = isIronmanCharacter() ? {
                 activeModules: {
                     farming_tracker: 1,
                 }
@@ -300,7 +380,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                     smithing_tracker: 1,
                 }
             };
-            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, defaultSettings);
+            this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, this.defaultSettings);
             this.settingsSidebar();
         });
     }
@@ -450,11 +530,29 @@ input[type="time"].tracker-time:not(.browser-default) {
         }
         settingsArea.insertAdjacentHTML('beforeend', `
             <div class="settings-footer">
-                <div id="settings-save" class="settings-save idlescape-button-green">
+                <div id="settings-reset" class="tracker-settings-button idlescape-button-red">
+                    Reset
+                    <div class="tracker-tooltip">
+                        <div class="tracker-tooltip-text">
+                            Requires a page refresh
+                        </div>
+                    </div>
+                </div>
+                <div id="settings-import" class="tracker-settings-button idlescape-button-blue">
+                    Import/Export
+                </div>
+                <div id="settings-save" class="tracker-settings-button idlescape-button-green">
                     Save
                 </div>
             </div>`);
         playAreaBackground.append(settingsArea);
+
+        this.warningShown = false;
+        const resetButton = document.getElementById('settings-reset');
+        resetButton.addEventListener('click', () => this.resetSettings(resetButton));
+
+        const importExportButton = document.getElementById('settings-import');
+        importExportButton.addEventListener('click', () => this.importExportPopup());
 
         const saveButton = document.getElementById('settings-save');
         saveButton.addEventListener('click', () => this.saveSettings());
@@ -496,6 +594,120 @@ input[type="time"].tracker-time:not(.browser-default) {
                 }
             }
         };
+    }
+
+    resetSettings(resetButton) {
+        if (this.warningShown) {
+            this.settings = this.defaultSettings;
+            this.storeSettings();
+            location.reload();
+        } else {
+            resetButton.firstChild.textContent = 'Reset?';
+            Templates.notificationTemplate('warning', 'Settingsreset', 'Please click again to confirm');
+            this.warningShown = true;
+        }
+    }
+
+    importExportPopup() {
+        saveInsertAdjacentHTML(document.body, 'beforeend', Templates.popupTemplate(`
+            <div class="import-export-popup">
+                <div class="import-export-popup-title">
+                    Import/Export
+                </div>
+                <div class="import-export-popup-container">
+                    <div class="import-export-popup-text" style="grid-area: settings-header;">
+                        Settings
+                    </div>
+                    <textarea id="import-export-settings" class="import-export-popup-textarea" style="grid-area: settings-textarea;"></textarea>
+                    <div id="tracker-import-settings" class="tracker-settings-button idlescape-button-green" style="grid-area: settings-import;">
+                        Import
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                <div>Enter settings into the textarea</div>
+                                <div>Reloads the page</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tracker-export-settings" class="tracker-settings-button idlescape-button-blue" style="grid-area: settings-export;">
+                        Export
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Copies to clipboard
+                            </div>
+                        </div>
+                    </div>
+                    <div class="import-export-popup-text" style="grid-area: market-header;">
+                        Marketplace Data
+                    </div>
+                    <textarea id="import-export-market" class="import-export-popup-textarea" style="grid-area: market-textarea;"></textarea>
+                    <div id="tracker-import-market" class="tracker-settings-button idlescape-button-green" style="grid-area: market-import;">
+                        Import
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Enter marketplace data into the textarea
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tracker-export-market" class="tracker-settings-button idlescape-button-blue" style="grid-area: market-export;">
+                        Export
+                        <div class="tracker-tooltip">
+                            <div class="tracker-tooltip-text">
+                                Copies to clipboard
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="import-export-popup-message">
+                </div> 
+                <div class="import-export-popup-button-container">
+                    <div class="tracker-settings-button idlescape-button-red" id="import-export-popup-close">
+                        Close
+                    </div>
+                </div>
+            </div>`));
+        document.getElementById('tracker-import-settings').addEventListener('click', () => this.importSettings());
+        document.getElementById('tracker-export-settings').addEventListener('click', () => this.exportSettings());
+        document.getElementById('tracker-import-market').addEventListener('click', () => this.importStorage());
+        document.getElementById('tracker-export-market').addEventListener('click', () => this.exportStorage());
+        document.getElementById('import-export-popup-close').addEventListener('click', () => this.closePopup());
+        document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
+            if (event.target === event.currentTarget) {
+                this.closePopup();
+            }
+        });
+    }
+
+    importSettings() {
+        try {
+            const textarea = document.getElementById('import-export-settings');
+            const data = textarea.value;
+            const settings = JSON.parse(data);
+            this.settings = settings;
+            this.storeSettings();
+            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Imported settings';
+            setTimeout(() => location.reload(), 1500);
+        }
+        catch (err) {
+            console.log(err);
+            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Something went wrong';
+        }
+    }
+
+    exportSettings() {
+        navigator.clipboard.writeText(JSON.stringify(this.settings));
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied settings to clipboard';
+    }
+
+    importStorage() {
+        const textarea = document.getElementById('import-export-market');
+        const data = textarea.value;
+        const message = this.storage.importStorage(data);
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = message;
+    }
+
+    exportStorage() {
+        navigator.clipboard.writeText(this.storage.exportStorage());
+        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied marketplace data to clipboard';
     }
     
     saveSettings() {
@@ -543,7 +755,6 @@ input[type="time"].tracker-time:not(.browser-default) {
             this.setSetting(timeInput.id, timeInput.value);
         }
         // Save settings
-        console.log(this.settings);
         this.storeSettings();
 
         // Visual feedback
@@ -578,6 +789,11 @@ input[type="time"].tracker-time:not(.browser-default) {
                 module.settingChanged(settingId.slice(settingId.indexOf('-') + 1), value);
             }
         }
+    }
+
+    storeSettings() {
+        // Save settings
+        localStorage.setItem(this.settingsIdentifier, JSON.stringify(this.settings));
     }
 
     /**

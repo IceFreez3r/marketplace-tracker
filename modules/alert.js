@@ -67,7 +67,7 @@ class AlertTracker {
     grid-template-columns: 1fr 1fr;
     column-gap: 20px;
     grid-template-areas: "input-below input-above"
-                         "label-below label-above"
+                         "label-below label-above";
 }
 
 .alert-popup-button-container {
@@ -322,6 +322,7 @@ class AlertTracker {
                     <div class="alert-popup-button cancel idlescape-button-gray">Close</div>
                     <div class="alert-popup-button clear idlescape-button-red">Clear</div>
                     <div class="alert-popup-button save idlescape-button-green">Save</div>
+                </div>
             </div>`));
         const alertPopup = document.getElementsByClassName("alert-popup")[0];
         const priceBelowInput = document.getElementById("price-below");
@@ -344,7 +345,7 @@ class AlertTracker {
             this.tracker.closePopup();
         });
         document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
-            if (event.target == event.currentTarget) {
+            if (event.target === event.currentTarget) {
                 this.tracker.closePopup();
             }
         });
@@ -356,7 +357,7 @@ class AlertTracker {
     }
     
     save(itemId, priceBelow, priceAbove) {
-        if ((priceBelow == 0 || priceBelow == "") && (priceAbove == 0 || priceAbove == "")) {
+        if ((priceBelow === 0 || priceBelow === "") && (priceAbove === 0 || priceAbove === "")) {
             delete this.allAlerts[itemId];
         } else {
             this.allAlerts[itemId] = {

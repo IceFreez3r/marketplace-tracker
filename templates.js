@@ -238,7 +238,7 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
             <div class="tracker-options">`;
         for (let option in options) {
             content += `
-                <div class="tracker-option${option == currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
+                <div class="tracker-option${option === currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
                     ${options[option]}
                 </div>`;
         }

@@ -25,16 +25,19 @@ class Storage {
 
     handleApiData(data) {
         const timestamp = Math.floor(Date.now() / 1000 / 60 / 10);
+        for (let item in this.itemList) {
+            this.itemList[item]["latestPrice"] = NaN;
+        }
         for (let i = 0; i < data.length; i++) {
-            // data[i].itemID == apiId
-            if (!(data[i].itemID in this.itemList)) {
-                this.itemList[data[i].itemID] = {};
-                this.itemList[data[i].itemID]["name"] = data[i].name
-                this.itemList[data[i].itemID]["prices"] = [];
+            const apiId = data[i].itemID;
+            if (!(apiId in this.itemList)) {
+                this.itemList[apiId] = {};
+                this.itemList[apiId]["name"] = data[i].name
+                this.itemList[apiId]["prices"] = [];
             }
-            this.itemList[data[i].itemID]["prices"].push([timestamp, data[i].minPrice]);
-            this.sortPriceList(data[i].itemID);
-            this.itemList[data[i].itemID]["latestPrice"] = data[i].minPrice;
+            this.itemList[apiId]["prices"].push([timestamp, data[i].minPrice]);
+            this.sortPriceList(apiId);
+            this.itemList[apiId]["latestPrice"] = data[i].minPrice;
         }
         const currentHeatValue = this.heatValue();
         this.itemList[2]["prices"].push([timestamp, currentHeatValue.heatValue]);
@@ -178,7 +181,7 @@ class Storage {
                 if (!(apiId in this.itemList)) {
                     return 1;
                 }
-                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] == this.itemList[apiId]["latestPrice"]);
+                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] === this.itemList[apiId]["latestPrice"]);
                 if (index === -1) {
                     return 1;
                 }
@@ -260,5 +263,43 @@ class Storage {
             return fallback;
         }
         return JSON.parse(value);
+    }
+
+    importStorage(text) {
+        try {
+            const data = JSON.parse(text);
+            // merge itemList
+            for (let apiId in data.itemList) {
+                if (apiId in this.itemList) {
+                    // merge price arrays
+                    for (let i = 0; i < data.itemList[apiId].prices.length; i++) {
+                        if (!this.itemList[apiId].prices.some(priceTuple => priceTuple[0] === data.itemList[apiId].prices[i][0])) {
+                            this.itemList[apiId].prices.push(data.itemList[apiId].prices[i]);
+                        }
+                    }
+                    // sort price array
+                    this.sortPriceList(apiId);
+                } else {
+                    this.itemList[apiId] = data.itemList[apiId];
+                }
+            }
+            this.filterItemList();
+            this.storeItemList();
+            // merge idMap
+            Object.assign(this.idMap, data.idMap);
+            this.storeIdMap();
+            return "Imported marketplace data";
+        }
+        catch (err) {
+            console.error(err);
+            return "Something went wrong";
+        }
+    }
+
+    exportStorage() {
+        return JSON.stringify({
+            itemList: this.itemList,
+            idMap: this.idMap
+        });
     }
 }
