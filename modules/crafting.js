@@ -59,7 +59,7 @@ body .crafting-container {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
-        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
+        if (this.settings.profit === undefined) {
             this.settings.profit = "off";
         }
         if (this.settings.goldPerXP === undefined) {

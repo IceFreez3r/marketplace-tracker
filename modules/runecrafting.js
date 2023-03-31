@@ -64,7 +64,7 @@ body .runecrafting-essence-counter {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
-        if (this.settings.profit === undefined) { // 2nd check for backwards compatibility
+        if (this.settings.profit === undefined) {
             this.settings.profit = "flat";
         }
         this.cssNode = injectCSS(this.css);
@@ -149,6 +149,7 @@ body .runecrafting-essence-counter {
         for (const resource of resources) {
             const ingredientId = convertItemId(resource.firstElementChild.src);
             if (ingredientId === "RuneCraftingIcon") {
+                // required runecrafting level, irrelevant for us
                 continue;
             }
             if (ingredientId === "clock") {
