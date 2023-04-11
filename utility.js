@@ -20,7 +20,7 @@ function parseCompactNumberString(numberString) {
         'P': 15,
         'E': 18,
     }
-    const scale = parseScale[numberString.slice(-1)] || 0;
+    const scale = parseScale[numberString.slice(-1).toUpperCase()] || 0;
     return Math.round(baseNumber * Math.pow(10, scale));
 }
 
@@ -64,7 +64,7 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
 
 /**
  * Returns the profit including market fee as a string
- * 
+ *
  * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
  * @param {number} buyPrice
  * @param {number} sellPrice

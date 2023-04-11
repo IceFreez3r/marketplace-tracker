@@ -128,7 +128,7 @@ class MarketHighlights {
             this.settings.markerSize = 40;
         }
         this.cssNode = injectCSS(this.css);
-        
+
         this.favorites = this.storage.loadLocalStorage('favorites', []);
         this.favoriteFilterActive = false;
         this.quantileColorsActive = false;
@@ -146,7 +146,7 @@ class MarketHighlights {
             }
         });
     }
-    
+
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
@@ -380,7 +380,7 @@ class MarketHighlights {
         }
         const itemId = convertItemId(offer.childNodes[1].firstChild.src);
         const isFavorite = this.isFavorite(itemId);
-        const refreshButton = document.getElementById("marketplace-refresh-button");
+        const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
             <button id="marketplace-favorite-button" class="marketplace-favorite-button ${isFavorite ? '' : 'svg-inactive'}">
                 ${Templates.favoriteTemplate()}
@@ -427,7 +427,7 @@ class MarketHighlights {
             }
         });
     }
-    
+
     isFavorite(itemId) {
         return this.favorites.indexOf(itemId) > -1
     }
