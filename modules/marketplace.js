@@ -137,26 +137,6 @@ class MarketplaceTracker {
 }
     `;
 
-    hideBorderCss = `
-body .marketplace-table-cell-div {
-    padding-top: 0;
-    height: auto;
-}
-
-.marketplace-sell-items-sort {
-    border: none;
-}
-
-.marketplace-my-auctions {
-    border: none;
-}
-
-.marketplace-content .all-items,
-.marketplace-sell-items.all-items {
-    padding-top: 5px;
-}
-    `;
-
     constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
@@ -164,17 +144,12 @@ body .marketplace-table-cell-div {
         if (this.settings.history === undefined) {
             this.settings.history = 1;
         }
-        if (this.settings.hideBorder === undefined) {
-            this.settings.hideBorder = 0;
-        }
         if (this.settings.vendorWarning === undefined) {
             this.settings.vendorWarning = 1;
         }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged('history', this.settings.history);
-        this.hideBorderCssNode = undefined;
-        this.settingChanged('hideBorder', this.settings.hideBorder);
 
         this.createMap = true;
         this.lastHistoryPage = 0;
@@ -226,19 +201,7 @@ body .marketplace-table-cell-div {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + '-vendorWarning', this.settings.vendorWarning)}
             </div>`;
-        const hideBorder = `
-            <div class="tracker-module-setting">
-                <div class="tracker-module-setting-name">
-                    Market styling tweaks
-                    <div class="tracker-module-setting-description">
-                        <div>Removes border on sell page</div>
-                        <div>Forces listings with long names to take the space they need</div>
-                        <div>Extra top padding for the full item list</div>
-                    </div>
-                </div>
-                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-hideBorder', this.settings.hideBorder)}
-            </div>`;
-        return history + vendorWarning + hideBorder;
+        return history + vendorWarning;
     }
 
     settingChanged(setting, value) {
@@ -248,13 +211,6 @@ body .marketplace-table-cell-div {
                     this.historyCssNode = injectCSS(this.historyCss);
                 } else {
                     this.historyCssNode?.remove();
-                }
-                break;
-            case 'hideBorder':
-                if (value) {
-                    this.hideBorderCssNode = injectCSS(this.hideBorderCss);
-                } else {
-                    this.hideBorderCssNode?.remove();
                 }
                 break;
             case 'vendorWarning':
@@ -504,7 +460,7 @@ body .marketplace-table-cell-div {
             if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
                 itemQuantity *= 2;
             }
-            const totalDiv = item.childNodes[3];
+            const totalDiv = item.childNodes[4];
             const total = parseNumberString(totalDiv.textContent);
             const type = totalDiv.classList[1]; // "purchase" or "sale"
             saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
