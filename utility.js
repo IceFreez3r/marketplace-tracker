@@ -20,7 +20,7 @@ function parseCompactNumberString(numberString) {
         'P': 15,
         'E': 18,
     }
-    const scale = parseScale[numberString.slice(-1)] || 0;
+    const scale = parseScale[numberString.slice(-1).toUpperCase()] || 0;
     return Math.round(baseNumber * Math.pow(10, scale));
 }
 
@@ -64,7 +64,7 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
 
 /**
  * Returns the profit including market fee as a string
- * 
+ *
  * @param {string} type Specifies how the profit is calculated. Allowed options are: `percent`, `flat`, `per_hour`
  * @param {number} buyPrice
  * @param {number} sellPrice
@@ -179,4 +179,57 @@ function millisecondsToDuration(milliseconds) {
 
 function deepCompare(object1, object2) {
     return JSON.stringify(object1) === JSON.stringify(object2);
+}
+
+function getSkillLevel(skill, total) {
+    // Dael's script attaches the skill levels to window
+    if (window.ISState) {
+        if (total) {
+            return 99 + window.ISstate.skills[skill].masteryLevel;
+        }
+        return window.ISstate.skills[skill].level;
+    }
+    // If the user activated levels in the sidebar, the skill level is always accessible from there
+    const upperCaseSkill = skill.charAt(0).toUpperCase() + skill.slice(1);
+    const sidebarSkill = document.getElementsByClassName("nav-drawer-container")[0].getElementsByClassName(upperCaseSkill)[0];
+    if (sidebarSkill) {
+        const level = parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
+        if (sidebarSkill.getElementsByClassName("mastery-bar")[0]) {
+            if (total && level !== 99) {
+                return 99 + level;
+            }
+            return 99;
+        }
+        return level;
+    }
+    // Last option is the header, which might not be shown if the window is in half screen mode
+    // Normal header with skills as circles
+    const headerCircles = document.getElementsByClassName("exp-tooltip");
+    for (const headerSkill of headerCircles) {
+        if (headerSkill.dataset.for === `${skill}Header`) {
+            if (headerSkill.getElementsByClassName("standard-levels-maxed")[0]) {
+                if (total) {
+                    return 99 + parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
+                }
+                return 99;
+            }
+            return parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
+        }
+    }
+    // Compact header with skills as bars
+    const headerSkillBars = document.getElementsByClassName("skill-level-bar");
+    for (const headerSkill of headerSkillBars) {
+        if (headerSkill.dataset.for === `${skill}Header`) {
+            const level = parseInt(headerSkill.getElementsByClassName("skill-level-bar-exp-level")[0].innerText);
+            if (headerSkill.firstChild.classList.contains("max-skill-glow30")) {
+                if (total && level !== 99) {
+                    return 99 + level;
+                }
+                return 99;
+            }
+            return level;
+        }
+    }
+    // Last fallback
+    return 99;
 }

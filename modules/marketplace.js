@@ -24,23 +24,6 @@ class MarketplaceTracker {
     background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(128, 0, 0, .938), rgba(128, 0, 0, 0) 70%);
 }
 
-.marketplace-offer-price-tooltip {
-    visibility: hidden;
-    position: absolute;
-    bottom: 0%;
-    left: 50%;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-}
-
-.marketplace-offer-price {
-    position: relative;
-}
-
-.marketplace-offer-price:hover .marketplace-offer-price-tooltip {
-    visibility: visible;
-}
-
 .marketplace-analysis-table {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -212,7 +195,7 @@ body .marketplace-table-cell-div {
             }
         });
     }
-    
+
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
@@ -370,7 +353,7 @@ body .marketplace-table-cell-div {
             const amount = parseNumberString(offer.childNodes[2].innerText);
             priceCell.classList.add('marketplace-offer-price');
             const price = parseNumberString(priceCell.innerText);
-            saveInsertAdjacentHTML(priceCell, 'beforeend', this.priceTooltipTemplate(maxPrice, price, amount));    
+            saveInsertAdjacentHTML(priceCell, 'beforeend', this.priceTooltipTemplate(maxPrice, price, amount));
         }
     }
 
@@ -406,7 +389,7 @@ body .marketplace-table-cell-div {
                                 ${formatNumber(maxPrice)}
                             </span>
                             <span>
-                                * 0.95 - 
+                                * 0.95 -
                             </span>
                             <span class="text-red">
                                 ${formatNumber(price)}
@@ -570,11 +553,13 @@ body .marketplace-table-cell-div {
         }
         sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate());
         warningIcon = sellButton.getElementsByClassName("warning")[0];
-        const vendorPriceNode = document.getElementById("lowest-price-npc").childNodes[2];
-        const vendorPrice = parseNumberString(vendorPriceNode.textContent);
-        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[6];
+        const vendorPriceString = document.getElementById("lowest-price-npc").textContent
+            .replace("This item sells to NPCs for:", "")
+            .replaceAll(" ", "");
+        const vendorPrice = parseNumberString(vendorPriceString);
+        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
         priceInput.addEventListener('input', () => {
-            const price = parseNumberString(priceInput.value, {"group": ",", "decimal": "."});
+            const price = parseCompactNumberString(priceInput.value);
             const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
             warningIcon.classList.toggle("hidden", !tooLowPrice);
         });

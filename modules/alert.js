@@ -178,7 +178,7 @@ class AlertTracker {
             <div class="tracker-module-setting-description">
                 Works best if you also have Market Highlights enabled.
             </div>`;
-        
+
         const cooldown = document.createElement('div');
         cooldown.classList.add('tracker-module-setting');
         cooldown.insertAdjacentHTML('beforeend', `
@@ -186,7 +186,7 @@ class AlertTracker {
                 Cooldown between notifications
             </div>`);
         cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + '-cooldown', this.settings.cooldown));
-        
+
         const doNotDisturb = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
@@ -194,7 +194,7 @@ class AlertTracker {
                 </div>
                 ${Templates.timeRangeTemplate(AlertTracker.id + '-doNotDisturb', this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
             </div>`;
-        
+
         const manualMute = document.createElement('div');
         manualMute.classList.add('tracker-module-setting');
         manualMute.insertAdjacentHTML('beforeend', `
@@ -247,7 +247,7 @@ class AlertTracker {
                 const notification = new Notification("Idlescape Marketplace", {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
-                    
+
                 });
             } else {
                 Templates.notificationTemplate("warning", "Interesting items for you", items);
@@ -293,9 +293,9 @@ class AlertTracker {
             return;
         }
         const itemId = convertItemId(offer.childNodes[1].firstChild.src);
-        const refreshButton = document.getElementById("marketplace-refresh-button");
+        const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
-        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" > 
+        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" >
             ${Templates.alertTemplate()}
         </button>`);
         const alertButton = document.getElementById("marketplace-alert-button");
@@ -355,7 +355,7 @@ class AlertTracker {
             }
         });
     }
-    
+
     save(itemId, priceBelow, priceAbove) {
         if ((priceBelow === 0 || priceBelow === "") && (priceAbove === 0 || priceAbove === "")) {
             delete this.allAlerts[itemId];
@@ -370,7 +370,7 @@ class AlertTracker {
         localStorage.setItem(this.storageKey, JSON.stringify(this.allAlerts));
         this.tracker.closePopup();
     }
-    
+
     hasActiveAlert(itemId) {
         return itemId in this.allAlerts;
     }
