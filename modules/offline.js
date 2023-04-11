@@ -106,10 +106,7 @@ class OfflineTracker {
         const items = {};
         for (let itemNode of offlineProgressBox.childNodes) {
             const itemId = convertItemId(itemNode.firstChild.src);
-            if (itemId.includes('essence')) {
-                continue;
-            }
-            if (!this.settings.include_gold && itemId.includes('money_icon')) {
+            if (!this.settings.include_gold && itemId === 'money_icon') {
                 continue;
             }
             const itemCount = parseCompactNumberString(itemNode.childNodes[1].innerText);

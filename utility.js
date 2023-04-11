@@ -133,17 +133,16 @@ function detectInfiniteLoop(mutations) {
             }
         }
     }
-    console.log(mutations);
     return false;
 }
 
 function formatNumber(number, options = {}) {
-    const {compactDisplay, profitType, showSign} = options;
+    const {compactDisplay, profitType, showSign, fraction} = options;
     if (isNaN(number)) {
         return "?";
     }
     let formatterOptions = {
-        maximumFractionDigits: 0,
+        maximumFractionDigits: fraction ? 2 : 0,
     };
     if (profitType === "percent") {
         Object.assign(formatterOptions, { maximumFractionDigits: 2, style: "percent" });
@@ -182,7 +181,7 @@ function deepCompare(object1, object2) {
 }
 
 function getSkillLevel(skill, total) {
-    // Dael's script attaches the skill levels to window
+    // Dael's script attaches the skill levels to window 
     if (window.ISState) {
         if (total) {
             return 99 + window.ISstate.skills[skill].masteryLevel;
@@ -212,7 +211,7 @@ function getSkillLevel(skill, total) {
                     return 99 + parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
                 }
                 return 99;
-            }
+            }   
             return parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
         }
     }

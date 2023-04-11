@@ -171,7 +171,7 @@ body .farming-seeds .all-items {
         }
         this.clearMetaElements(seedContainer);
 
-        const farmingLevel = this.getFarmingLevel();
+        const farmingLevel = getSkillLevel("farming", false);
         let existingSeeds = {};
         for (let seedName in this.seeds) {
             existingSeeds[seedName] = false;
@@ -234,46 +234,5 @@ body .farming-seeds .all-items {
         for (let i = fakeItems.length; i > 0; i--) {
             fakeItems[i - 1].remove();
         }
-    }
-
-    getFarmingLevel() {
-        // Dael's script attaches the farming level to window 
-        if (window.ISState) {
-            return window.ISstate.skills.farming.level;
-        }
-        // If the user activated levels in the sidebar, the farming level is always accessible from there
-        const sidebarFarming = document.getElementById('farmingHeaderundefined');
-        if (sidebarFarming) {
-            if (sidebarFarming.parentNode.getElementsByClassName("mastery-bar")[0]) {
-                return 99;
-            }
-            return parseInt(sidebarFarming.previousElementSibling.innerText);
-        }
-        // Last option is the header, which might not be shown if the window is in half screen mode
-        const header = document.getElementById('farmingHeader');
-        if (header) {
-            if (header.previousSibling.firstChild.classList.contains('standard-levels-maxed')) {
-                return 99;
-            }
-            return parseInt(header.previousSibling.firstChild.lastChild.innerText);
-        }
-        // Fallback
-        return 99;
-    }
-
-    getEffectiveFarmingLevel() {
-        if (window.ISState) {
-            return window.ISstate.skills.farming.masteryLevel;
-        }
-        const sidebarFarming = document.getElementById('farmingHeaderundefined');
-        if (sidebarFarming) {
-            return parseInt(sidebarFarming.getElementsByTagName("span")[1].innerHTML.replace(/[^0-9]/g, ""));
-        }
-        const header = document.getElementById('farmingHeader');
-        if (header) {
-            return document.getElementById('farmingHeader').childNodes[3].lastChild.textContent;
-        }
-        // Fallback
-        return this.getFarmingLevel();
     }
 }

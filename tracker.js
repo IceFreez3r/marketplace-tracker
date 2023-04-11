@@ -377,6 +377,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                     market_highlights: 1,
                     marketplace_tracker: 1,
                     offline_tracker: 1,
+                    runecrafting_tracker: 1,
                     smithing_tracker: 1,
                 }
             };
