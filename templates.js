@@ -135,13 +135,13 @@ class Templates {
 static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
     let row = "";
     // Ingredients
-    row += ingredientPrices.map(price => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay }))).join("");
+    row += ingredientPrices.map(price => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay, fraction: true }))).join("");
     // Total crafting cost
     const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
     const totalProductPrice = productPrice * productCount;
     row += Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
     // Product
-    row += Templates.infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay }));
+    row += Templates.infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay, fraction: true }));
     if (productCount > 1) {
         row += Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
     }
@@ -238,7 +238,7 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
             <div class="tracker-options">`;
         for (let option in options) {
             content += `
-                <div class="tracker-option${option == currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
+                <div class="tracker-option${option === currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
                     ${options[option]}
                 </div>`;
         }

@@ -14,8 +14,8 @@ Please visit the marketplace once afterwards to initialize the extension.
 ## Features
 
 ### Marketplace
-Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click. 
-Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview. 
+Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click.
+Furthermore the heat item that had the best gold/heat ratio in the last API call is also highlighted in the overview.
 
 Allows to define lower and upper limits for the price of items and sends desktop notifications when the price is within the defined range.
 
@@ -29,8 +29,6 @@ On the buy tab low cost items are highlighted in relation to the maximum price i
 - <95% of maximum price &rarr; red 🔴
 - <80% of maximum price &rarr; yellow 🟡
 - <60% of maximum price &rarr; green 🟢
-
-There is also a popup when hovering entries, which shows you the theoretical profit if you would buy the entire stack and resell for max price. This is already on the [todo list](#planned-features) to be reworked. 
 
 <img src="./images/readme/marketplace_buy.png" alt="Marketplace Buy" width="600">
 
@@ -51,11 +49,16 @@ Shows the cost for buying all ingredients for crafting a scroll compared to the 
 <img src="./images/readme/enchanting_tracker.png" alt="Enchanting Tracker" width="600">
 
 ### Smithing
-*Needs rework for the new smithing system. Currently disabled*
 
-Same thing once again. Compact prices to fit into the small space.
+Same thing once again.
 
 <img src="./images/readme/smithing_tracker.png" alt="Smithing Tracker" width="600">
+
+### Runecrafting
+
+Same thing once again.
+
+<img src="./images/readme/runecrafting_tracker.png" alt="Runecrafting Tracker" width="600">
 
 ### Farming
 Sorts the seeds based on their type into categories:
@@ -108,9 +111,6 @@ API calls are only stored for two weeks, to make sure, that the data of the exte
     - Collect data for mysterious seeds and crack the algorithm behind them
 - Crafting
     - store recipes to be able to highlight the best XP/Gold recipe
-- Runecrafting
-    - add profit table
-    - calculate price of essence by using the price of the talismans
 
 ## Contact
 If you have any questions, suggestions or comments, please open an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) on GitHub or contact IceFreez3r, Z3krom991 or Pinguinflieger through the official [Idlescape Discord](https://discord.com/invite/pwX6Xg5). If you are a developer and want to contribute, please look into the [contribution guide](./CONTRIBUTING.md).

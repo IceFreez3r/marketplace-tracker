@@ -44,13 +44,13 @@ class OfflineTracker {
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
-        if (this.settings.lastLogin === undefined) {
-            this.settings.lastLogin = {};
+        if (this.settings.lastLogin === undefined || typeof(this.settings.lastLogin) !== 'number') {
+            this.settings.lastLogin = Date.now();
         }
         this.cssNode = injectCSS(this.css);
 
         window.addEventListener('beforeunload', () => {
-            this.settings.lastLogin[getCharacterName()] = Date.now();
+            this.settings.lastLogin = Date.now();
             this.tracker.storeSettings();
         });
 
@@ -106,10 +106,7 @@ class OfflineTracker {
         const items = {};
         for (let itemNode of offlineProgressBox.childNodes) {
             const itemId = convertItemId(itemNode.firstChild.src);
-            if (itemId.includes('essence')) {
-                continue;
-            }
-            if (!this.settings.include_gold && itemId.includes('money_icon')) {
+            if (!this.settings.include_gold && itemId === 'money_icon') {
                 continue;
             }
             const itemCount = parseCompactNumberString(itemNode.childNodes[1].innerText);
@@ -135,11 +132,10 @@ class OfflineTracker {
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
         if (!isDaelsTracker) {
-            const lastLogin = this.settings.lastLogin[getCharacterName()];
-            if (!lastLogin) {
+            if (!this.settings.lastLogin) {
                 offlineTime = offlineTimeScrapped;
             } else {
-                const offlineTimeBackground = Date.now() - lastLogin;
+                const offlineTimeBackground = Date.now() - this.settings.lastLogin;
                 offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
             }
         } else {

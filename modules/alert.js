@@ -67,7 +67,7 @@ class AlertTracker {
     grid-template-columns: 1fr 1fr;
     column-gap: 20px;
     grid-template-areas: "input-below input-above"
-                         "label-below label-above"
+                         "label-below label-above";
 }
 
 .alert-popup-button-container {
@@ -131,17 +131,16 @@ class AlertTracker {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Marketplace") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 // Buy page
                 let buyHeader = document.getElementsByClassName('marketplace-buy-item-top')[0];
                 if (buyHeader) {
                     this.createAlertButton(buyHeader.parentNode);
                     return;
                 }
-
             }
         });
     }
@@ -179,7 +178,7 @@ class AlertTracker {
             <div class="tracker-module-setting-description">
                 Works best if you also have Market Highlights enabled.
             </div>`;
-        
+
         const cooldown = document.createElement('div');
         cooldown.classList.add('tracker-module-setting');
         cooldown.insertAdjacentHTML('beforeend', `
@@ -187,7 +186,7 @@ class AlertTracker {
                 Cooldown between notifications
             </div>`);
         cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + '-cooldown', this.settings.cooldown));
-        
+
         const doNotDisturb = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
@@ -195,7 +194,7 @@ class AlertTracker {
                 </div>
                 ${Templates.timeRangeTemplate(AlertTracker.id + '-doNotDisturb', this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
             </div>`;
-        
+
         const manualMute = document.createElement('div');
         manualMute.classList.add('tracker-module-setting');
         manualMute.insertAdjacentHTML('beforeend', `
@@ -248,7 +247,7 @@ class AlertTracker {
                 const notification = new Notification("Idlescape Marketplace", {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
-                    
+
                 });
             } else {
                 Templates.notificationTemplate("warning", "Interesting items for you", items);
@@ -294,9 +293,9 @@ class AlertTracker {
             return;
         }
         const itemId = convertItemId(offer.childNodes[1].firstChild.src);
-        const refreshButton = document.getElementById("marketplace-refresh-button");
+        const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(refreshButton, 'afterend', `
-        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" > 
+        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" >
             ${Templates.alertTemplate()}
         </button>`);
         const alertButton = document.getElementById("marketplace-alert-button");
@@ -323,6 +322,7 @@ class AlertTracker {
                     <div class="alert-popup-button cancel idlescape-button-gray">Close</div>
                     <div class="alert-popup-button clear idlescape-button-red">Clear</div>
                     <div class="alert-popup-button save idlescape-button-green">Save</div>
+                </div>
             </div>`));
         const alertPopup = document.getElementsByClassName("alert-popup")[0];
         const priceBelowInput = document.getElementById("price-below");
@@ -345,7 +345,7 @@ class AlertTracker {
             this.tracker.closePopup();
         });
         document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
-            if (event.target == event.currentTarget) {
+            if (event.target === event.currentTarget) {
                 this.tracker.closePopup();
             }
         });
@@ -355,9 +355,9 @@ class AlertTracker {
             }
         });
     }
-    
+
     save(itemId, priceBelow, priceAbove) {
-        if ((priceBelow == 0 || priceBelow == "") && (priceAbove == 0 || priceAbove == "")) {
+        if ((priceBelow === 0 || priceBelow === "") && (priceAbove === 0 || priceAbove === "")) {
             delete this.allAlerts[itemId];
         } else {
             this.allAlerts[itemId] = {
@@ -370,7 +370,7 @@ class AlertTracker {
         localStorage.setItem(this.storageKey, JSON.stringify(this.allAlerts));
         this.tracker.closePopup();
     }
-    
+
     hasActiveAlert(itemId) {
         return itemId in this.allAlerts;
     }

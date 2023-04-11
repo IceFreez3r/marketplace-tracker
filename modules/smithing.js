@@ -4,68 +4,19 @@ class SmithingTracker {
     static icon = "<img src='/images/smithing/smithing_icon.png' alt='Smithing Tracker Icon'>";
     static category = "recipe";
     css = `
-.theme-smithing .resource-list {
-    grid-template-columns: repeat(auto-fill, 300px);
-}
-
-.theme-smithing .resource-wrapper {
-    position: unset;
-    height: unset;
-    width: unset;
-    overflow: unset;
-}
-
-.theme-smithing .resource-container {
-    width: 100%;
-    height: unset;
-}
-
-.theme-smithing .resource-required-resources {
-    position: unset;
-    display: flex;
-    flex-direction: column;
-    height: 6rem;
-    width: min-content;
-    float: left;
-    justify-content: flex-end;
-}
-
-.theme-smithing .resource-property {
-    width: fit-content;
-    margin-top: 3px;
-    margin-bottom: unset;
-}
-
-.theme-smithing .resource-container-image {
-    height: 6rem;
-    margin: 0 5px 5px 0;
-    float: right;
-}
-
-.theme-smithing .resource-container-progress[aria-valuenow="0"] {
-    display: none;
-}
-
-.theme-smithing .resource-container-button {
-    position: unset;
-}
-
 .smithing-info-table {
     display: grid;
     /* Grid Layout specified by js */
     grid-gap: 3px;
-    margin: 5px;
-    padding: 5px;
-    background-color: rgba(66, 66, 66, .2);
-    border: 2px solid rgba(99, 99, 99, .2);
-    border-radius: 10px;
-    clear: both;
-    font-size: 13px;
+    grid-column: 1 / -1;
     place-items: center;
+    background-color: rgba(0,0,0,.3);
+    padding: 5px;
 }
 
 .smithing-info-table-content {
     display: flex;
+    align-items: center;
 }
 
 .smithing-info-table-content:first-child {
@@ -73,8 +24,20 @@ class SmithingTracker {
 }
 
 .smithing-info-table-icon {
-    height: 16px;
+    height: 40px;
+    width: 40px;
+    object-fit: contain;
     padding-right: 2px;
+}
+
+.smithing-info-table-font {
+    font-size: 2.25rem;
+    line-height: 2rem;
+}
+
+.smithing-intensity {
+    width: 95%;
+    margin: auto;
 }
     `;
 
@@ -82,17 +45,20 @@ class SmithingTracker {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
-        if (this.settings.profit === undefined || this.settings.profit === "none") { // 2nd check for backwards compatibility
+        if (this.settings.profit === undefined) {
             this.settings.profit = "percent";
         }
         this.cssNode = injectCSS(this.css);
+        this.ingredients = {};
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (detectInfiniteLoop(mutations)) {
-                return;
-            }
             if (getSelectedSkill() === "Smithing") {
+                if (detectInfiniteLoop(mutations)) {
+                    return;
+                }
                 this.smithingTracker();
+            } else {
+                this.ingredients = {};
             }
         });
     }
@@ -101,6 +67,7 @@ class SmithingTracker {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
+            attributes: true,
             subtree: true
         });
     }
@@ -134,42 +101,44 @@ class SmithingTracker {
         return;
     }
 
-   smithingTracker() {
-        let recipes = document.getElementsByClassName('resource-container');
-        for (let i = 0; i < recipes.length; i++) {
-            this.processSmithingRecipe(recipes[i]);
+    smithingTracker() {
+        const smithingInfo = document.getElementsByClassName('smithing-information')[0];
+        const inputContainer = smithingInfo.getElementsByClassName('smithing-information-inputs')[0];
+        const inputs = inputContainer.getElementsByClassName('smithing-information-input');
+        const ingredientIds = [];
+        const ingredientIcons = [];
+        const ingredientCounts = [];
+        for(const input of inputs) {
+            ingredientIds.push(convertItemId(input.getElementsByClassName('smithing-information-input-icon')[0].src));
+            ingredientIcons.push(input.getElementsByClassName('smithing-information-input-icon')[0].src);
+            ingredientCounts.push(parseInt(input.getElementsByClassName('smithing-information-input-amount')[0].innerText));
         }
-    }
 
-    processSmithingRecipe(recipe) {
-        if (recipe.getElementsByClassName("smithing-info-table").length !== 0) {
+        const outputContainer = smithingInfo.getElementsByClassName('smithing-information-output')[0];
+        // game reuses the input css classes for the output
+        const outputs = outputContainer.getElementsByClassName('smithing-information-input');
+        const productId = convertItemId(outputs[0].getElementsByClassName('smithing-information-input-icon')[0].src);
+        const productIcon = outputs[0].getElementsByClassName('smithing-information-input-icon')[0].src;
+        let productCount = parseInt(outputs[0].getElementsByClassName('smithing-information-input-amount')[0].innerText);
+        // more than one output -> second one is chance to get an extra bar
+        if (outputs.length > 1) {
+            productCount += parseInt(outputs[1].getElementsByClassName('smithing-information-input-owned')[0].childNodes[2].textContent) / 100;
+        }
+
+        const recipePrices = this.storage.handleRecipe(ingredientIds, productId);
+        const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientCounts });
+        if (deepCompare(this.ingredients, ingredients)) {
             return;
         }
-        const barId = convertItemId(recipe.getElementsByClassName('resource-container-image')[0].src);
-        const barIcon = recipe.getElementsByClassName('resource-container-image')[0].src;
-        let resourceNodes = recipe.getElementsByClassName('resource-node-time-tooltip');
-        // Parse time per action
-        let timePerAction = parseFloat(resourceNodes[1].lastChild.innerText);
-        let resourceIds = [];
-        let resourceIcons = [];
-        let resourceCounts = [];
-        // Scrape resource info, skip level and time
-        for (let i = 2; i < resourceNodes.length; i++) {
-            resourceIds.push(convertItemId(resourceNodes[i].firstChild.src));
-            resourceIcons.push(resourceNodes[i].firstChild.src);
-            resourceCounts.push(parseInt(resourceNodes[i].lastChild.innerText));
-        }
-        // Delete resource nodes except level and time
-        for (let i = resourceNodes.length - 1; i >= 2; i--) {
-            resourceNodes[i].parentNode.remove();
-        }
-        // Move level and time nodes up
-        let craftingImage = recipe.getElementsByClassName('resource-container-image')[0];
-        let requiredResourceNode = recipe.getElementsByClassName('resource-required-resources')[0];
-        craftingImage.parentNode.insertBefore(requiredResourceNode, craftingImage);
-        const recipePrices = this.storage.handleRecipe(resourceIds, barId);
-        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceIcons, counts: resourceCounts});
-        const product = Object.assign(recipePrices.product, {icon: barIcon, count: 1});
-        saveInsertAdjacentHTML(craftingImage, 'afterend', Templates.infoTableTemplate('smithing', ingredients, product, this.settings.profit, true, true, timePerAction));
+        this.ingredients = ingredients;
+
+        const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
+        const timePerAction = parseFloat(smithingInfo.getElementsByClassName('smithing-information-calculations')[0].getElementsByClassName('smithing-information-input-amount')[0].firstChild.textContent);
+
+        document.getElementsByClassName("smithing-info-table")[0]?.parentElement.remove();
+        saveInsertAdjacentHTML(smithingInfo, 'afterend', `
+            <div class="idlescape-container tracker-ignore">
+                ${Templates.infoTableTemplate('smithing', this.ingredients, product, this.settings.profit, false, false, timePerAction)}
+            </div>`);
     }
 }
