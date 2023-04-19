@@ -1,16 +1,19 @@
 class AlertTracker {
-    static id = "alert_tracker"
+    static id = "alert_tracker";
     static displayName = "Alert Tracker";
     static icon = "<img src='/images/combat/equipment/fire_orb.png' alt='Alert Tracker Icon'/>";
     static category = "economy";
     css = `
 .marketplace-alert-button {
     order: 1; /* always at the end */
-    margin-top: 8px;
     color: #fff;
     height: 45px;
     width: 45px;
     background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
+}
+
+.marketplace-buy-item-top .chakra-input__group {
+    order: 2;
 }
 
 .alert-sound {
@@ -118,25 +121,25 @@ class AlertTracker {
         if (this.settings.doNotDisturb === undefined) {
             this.settings.doNotDisturb = {
                 start: "23:00",
-                end: "07:00"
+                end: "07:00",
             };
         }
         if (this.settings.manualMuteEnd === undefined) {
             this.settings.manualMuteEnd = 0;
             this.settings.manualMute = "";
         }
-        this.storageKey = 'TrackerAlerts';
+        this.storageKey = "TrackerAlerts";
         this.allAlerts = this.storage.loadLocalStorage(this.storageKey, {});
 
         this.cssNode = injectCSS(this.css);
 
-        this.playAreaObserver = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() === "Marketplace") {
                 if (detectInfiniteLoop(mutations)) {
                     return;
                 }
                 // Buy page
-                let buyHeader = document.getElementsByClassName('marketplace-buy-item-top')[0];
+                let buyHeader = document.getElementsByClassName("marketplace-buy-item-top")[0];
                 if (buyHeader) {
                     this.createAlertButton(buyHeader.parentNode);
                     return;
@@ -147,18 +150,21 @@ class AlertTracker {
 
     onGameReady() {
         if (Notification.permission === "default") {
-            Notification.requestPermission()
-                .then((permission) => {
-                    if (permission === "granted") {
-                        const notification = new Notification("Notifications allowed", {
-                            body: "Thanks for using our extension!",
-                            icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
-                        });
-                    } else {
-                        console.log("Notifications not allowed");
-                        Templates.notificationTemplate("warning", "Notifications not allowed", "You can change this in your browser settings. Meanwhile we will stick to these ingame notifications.");
-                    }
-                });
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    const notification = new Notification("Notifications allowed", {
+                        body: "Thanks for using our extension!",
+                        icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
+                    });
+                } else {
+                    console.log("Notifications not allowed");
+                    Templates.notificationTemplate(
+                        "warning",
+                        "Notifications not allowed",
+                        "You can change this in your browser settings. Meanwhile we will stick to these ingame notifications."
+                    );
+                }
+            });
         }
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
@@ -179,36 +185,36 @@ class AlertTracker {
                 Works best if you also have Market Highlights enabled.
             </div>`;
 
-        const cooldown = document.createElement('div');
-        cooldown.classList.add('tracker-module-setting');
-        cooldown.insertAdjacentHTML('beforeend', `
+        const cooldown = document.createElement("div");
+        cooldown.classList.add("tracker-module-setting");
+        cooldown.insertAdjacentHTML("beforeend", `
             <div class="tracker-module-setting-name">
                 Cooldown between notifications
             </div>`);
-        cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + '-cooldown', this.settings.cooldown));
+        cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + "-cooldown", this.settings.cooldown));
 
         const doNotDisturb = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
                     Do not disturb between
                 </div>
-                ${Templates.timeRangeTemplate(AlertTracker.id + '-doNotDisturb', this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
+                ${Templates.timeRangeTemplate(AlertTracker.id + "-doNotDisturb", this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
             </div>`;
 
-        const manualMute = document.createElement('div');
-        manualMute.classList.add('tracker-module-setting');
-        manualMute.insertAdjacentHTML('beforeend', `
+        const manualMute = document.createElement("div");
+        manualMute.classList.add("tracker-module-setting");
+        manualMute.insertAdjacentHTML("beforeend", `
             <div class="tracker-module-setting-name">
                 Manually mute notifications for
             </div>`);
         const remainingMute = this.settings.manualMuteEnd - Date.now();
         this.settings.manualMute = remainingMute > 0 ? millisecondsToDuration(remainingMute) : "";
-        manualMute.append(Templates.timeDurationTemplate(AlertTracker.id + '-manualMute', this.settings.manualMute));
+        manualMute.append(Templates.timeDurationTemplate(AlertTracker.id + "-manualMute", this.settings.manualMute));
         return [note, cooldown, doNotDisturb, manualMute];
     }
 
     settingChanged(settingId, value) {
-        if (settingId === 'manualMute') {
+        if (settingId === "manualMute") {
             this.settings.manualMuteEnd = Date.now() + durationToMilliseconds(value);
             this.tracker.storeSettings();
         }
@@ -239,15 +245,16 @@ class AlertTracker {
 
     createNotification(permission = Notification.permission) {
         if (!this.muted()) {
-            const items = Object.keys(this.notificationInformation).map(itemId => {
-                return this.storage.getItemName(itemId);
-            }).join(", ");
+            const items = Object.keys(this.notificationInformation)
+                .map((itemId) => {
+                    return this.storage.getItemName(itemId);
+                })
+                .join(", ");
             if (permission === "granted" && !document.hasFocus()) {
                 // notifications allowed and tab is not visible
                 const notification = new Notification("Idlescape Marketplace", {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
-
                 });
             } else {
                 Templates.notificationTemplate("warning", "Interesting items for you", items);
@@ -271,7 +278,7 @@ class AlertTracker {
         if (this.settings.doNotDisturb.start === "" || this.settings.doNotDisturb.end === "") {
             return false;
         }
-        const nowTimeString = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'});
+        const nowTimeString = now.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
         if (this.settings.doNotDisturb.start <= this.settings.doNotDisturb.end) {
             if (nowTimeString > this.settings.doNotDisturb.start && nowTimeString < this.settings.doNotDisturb.end) {
                 return true;
@@ -288,24 +295,27 @@ class AlertTracker {
         if (document.getElementById("marketplace-alert-button")) {
             return;
         }
-        const offer = buyContainer.getElementsByTagName('tbody')[0].getElementsByTagName('tr')[0];
-        if (!offer) { // not loaded yet
+        const offer = buyContainer.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0];
+        if (!offer) {
+            // not loaded yet
             return;
         }
         const itemId = convertItemId(offer.childNodes[1].firstChild.src);
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
-        saveInsertAdjacentHTML(refreshButton, 'afterend', `
-        <button id="marketplace-alert-button" class="marketplace-alert-button ${this.hasActiveAlert(itemId) ? "" : "svg-inactive"}" style="stroke: #ccffff; fill: #ccffff;" >
-            ${Templates.alertTemplate()}
-        </button>`);
+        saveInsertAdjacentHTML(refreshButton, "afterend", `
+            <button id="marketplace-alert-button" class="marketplace-alert-button ${
+                this.hasActiveAlert(itemId) ? "" : "svg-inactive"
+            }" style="stroke: #ccffff; fill: #ccffff;" >
+                ${Templates.alertTemplate()}
+            </button>`);
         const alertButton = document.getElementById("marketplace-alert-button");
-        alertButton.addEventListener('click', () => {
+        alertButton.addEventListener("click", () => {
             this.openPopUp(itemId);
         });
     }
 
     openPopUp(itemId) {
-        saveInsertAdjacentHTML(document.body, 'beforeend', Templates.popupTemplate(`
+        saveInsertAdjacentHTML(document.body, "beforeend", Templates.popupTemplate(`
             <div class="alert-popup">
                 <div class="alert-popup-title">Notification thresholds</div>
                 <div class="alert-input-container">
@@ -335,21 +345,21 @@ class AlertTracker {
             priceAboveInput.value = this.allAlerts[itemId].above;
         }
 
-        document.getElementsByClassName("save")[0].addEventListener('click', () => {
+        document.getElementsByClassName("save")[0].addEventListener("click", () => {
             this.save(itemId, priceBelowInput.value, priceAboveInput.value);
         });
-        document.getElementsByClassName("clear")[0].addEventListener('click', () => {
+        document.getElementsByClassName("clear")[0].addEventListener("click", () => {
             this.save(itemId, 0, 0);
         });
-        document.getElementsByClassName("cancel")[0].addEventListener('click', () => {
+        document.getElementsByClassName("cancel")[0].addEventListener("click", () => {
             this.tracker.closePopup();
         });
-        document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
+        document.getElementsByClassName("tracker-popup-background")[0].addEventListener("click", (event) => {
             if (event.target === event.currentTarget) {
                 this.tracker.closePopup();
             }
         });
-        alertPopup.addEventListener('keydown', (event) => {
+        alertPopup.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 this.save(itemId, priceBelowInput.value, priceAboveInput.value);
             }

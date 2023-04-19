@@ -53,6 +53,10 @@ class Tracker {
     object-fit: contain;
 }
 
+.tracker-settings-checkbox {
+    display: none;
+}
+
 .settings-module-content > :last-child {
     margin-bottom: -5px;
 }
@@ -175,6 +179,7 @@ class Tracker {
 
 .tracker-slider[type="range"] {
     width: 150px;
+    height: 3px;
     border: unset;
     color: var(--tracker-red);
     box-shadow: unset;
@@ -256,7 +261,7 @@ class Tracker {
 
 input[type="text"].tracker-time-duration:not(.browser-default) {
     position: relative;
-    width: 42px;
+    width: 45px;
     text-align: center;
     border: 1px solid var(--tracker-red) !important;
     border-radius: 5px;
@@ -355,9 +360,9 @@ input[type="time"].tracker-time:not(.browser-default) {
 
         this.storage = new Storage(() => this.onApiUpdate());
 
-        window.addEventListener('beforeunload', () => this.storage.handleClose());
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
+        window.addEventListener("beforeunload", () => this.storage.handleClose());
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
                 this.closePopup();
             }
         });
@@ -365,22 +370,24 @@ input[type="time"].tracker-time:not(.browser-default) {
         injectCSS(this.css);
         this.onGameReady(() => {
             this.settingsIdentifier = `TrackerSettings${getCharacterName()}`;
-            this.defaultSettings = isIronmanCharacter() ? {
-                activeModules: {
-                    farming_tracker: 1,
-                }
-            } : {
-                activeModules: {
-                    crafting_tracker: 1,
-                    enchanting_tracker: 1,
-                    farming_tracker: 1,
-                    market_highlights: 1,
-                    marketplace_tracker: 1,
-                    offline_tracker: 1,
-                    runecrafting_tracker: 1,
-                    smithing_tracker: 1,
-                }
-            };
+            this.defaultSettings = isIronmanCharacter()
+                ? {
+                      activeModules: {
+                          farming_tracker: 1,
+                      },
+                  }
+                : {
+                      activeModules: {
+                          crafting_tracker: 1,
+                          enchanting_tracker: 1,
+                          farming_tracker: 1,
+                          market_highlights: 1,
+                          marketplace_tracker: 1,
+                          offline_tracker: 1,
+                          runecrafting_tracker: 1,
+                          smithing_tracker: 1,
+                      },
+                  };
             this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, this.defaultSettings);
             this.settingsSidebar();
         });
@@ -415,7 +422,7 @@ input[type="time"].tracker-time:not(.browser-default) {
             this.activeModules[moduleId].deactivate();
             delete this.activeModules[moduleId];
             console.log(`Deactivated module ${moduleId}`);
-            return true;    
+            return true;
         }
         return false;
     }
@@ -433,34 +440,34 @@ input[type="time"].tracker-time:not(.browser-default) {
     }
 
     settingsSidebar() {
-        let oldSidebarItem = document.getElementById('tracker-settings-sidebar');
+        let oldSidebarItem = document.getElementById("tracker-settings-sidebar");
         oldSidebarItem?.remove();
 
         const vanillaSettings = document.getElementsByClassName("Settings")[0];
-        vanillaSettings.insertAdjacentHTML('afterend', `
+        vanillaSettings.insertAdjacentHTML("afterend", `
             <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
                 <div class="drawer-item-left">
-                    ${Templates.trackerLogoTemplate('drawer-item-icon')}
+                    ${Templates.trackerLogoTemplate("drawer-item-icon")}
                     Marketplace Tracker
                 </div>
             </div>`);
-        document.getElementById('tracker-settings-sidebar').addEventListener('click', () => {
+        document.getElementById("tracker-settings-sidebar").addEventListener("click", () => {
             // Hide sidebar unless it's pinned
-            if (!document.getElementsByClassName('drawer-item center')[0].lastChild.classList.contains('pressed')) {
-                document.getElementsByClassName('nav-drawer')[0].classList.add('drawer-closed');
+            if (!document.getElementsByClassName("drawer-item center")[0].lastChild.classList.contains("pressed")) {
+                document.getElementsByClassName("nav-drawer")[0].classList.add("drawer-closed");
             }
             this.settingsPage();
         });
     }
 
     settingsPage() {
-        let oldNavTabContainer = document.getElementById('tracker-settings-nav-tab-container');
+        let oldNavTabContainer = document.getElementById("tracker-settings-nav-tab-container");
         oldNavTabContainer?.remove();
-        let oldSettingsArea = document.getElementById('tracker-settings-area');
+        let oldSettingsArea = document.getElementById("tracker-settings-area");
         oldSettingsArea?.remove();
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        const navTabContainer = playAreaContainer.getElementsByClassName('nav-tab-container')[0];
+        const navTabContainer = playAreaContainer.getElementsByClassName("nav-tab-container")[0];
         if (document.getElementsByClassName("game-container")[0].classList.contains("navbar-disabled")) {
             navTabContainer.style.display = "none";
         }
@@ -468,52 +475,52 @@ input[type="time"].tracker-time:not(.browser-default) {
         navTabContainer.insertAdjacentHTML("afterend", `
             <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
                 <div class="nav-tab noselect selected-tab tracker">
-                    ${Templates.trackerLogoTemplate('nav-tab-icon icon-border')}
+                    ${Templates.trackerLogoTemplate("nav-tab-icon icon-border")}
                     Tracker
                 </div>
             </div>`);
         const selectedSkill = getSelectedSkill();
 
-        const playAreaBackground = playAreaContainer.getElementsByClassName('play-area-background')[0];
-        const playAreas = playAreaBackground.getElementsByClassName('play-area');
+        const playAreaBackground = playAreaContainer.getElementsByClassName("play-area-background")[0];
+        const playAreas = playAreaBackground.getElementsByClassName("play-area");
         for (let i = 0; i < playAreas.length; i++) {
             playAreas[i].style.display = "none";
         }
         console.log(this.settings);
-        const settingsArea = document.createElement('div');
-        settingsArea.id = 'tracker-settings-area';
-        settingsArea.className = 'play-area theme-default tracker';
+        const settingsArea = document.createElement("div");
+        settingsArea.id = "tracker-settings-area";
+        settingsArea.className = "play-area theme-default tracker";
 
         const settingCategories = {
-            "economy": {
-                "name": "Economy",
-                "div": undefined,
+            economy: {
+                name: "Economy",
+                div: undefined,
             },
-            "recipe": {
-                "name": "Recipes",
-                "div": undefined,
+            recipe: {
+                name: "Recipes",
+                div: undefined,
             },
-            "visual": {
-                "name": "Visual Changes",
-                "div": undefined,
-            }
+            visual: {
+                name: "Visual Changes",
+                div: undefined,
+            },
         };
         for (let moduleId in this.modules) {
             const module = this.modules[moduleId];
             // Create new category block if the category doesn't exist yet
             if (settingCategories[module.category].div === undefined) {
-                const category = document.createElement('div');
-                category.className = 'tracker-settings-category';
-                const categoryHeader = document.createElement('div');
-                categoryHeader.className = 'tracker-settings-category-header';
+                const category = document.createElement("div");
+                category.className = "tracker-settings-category";
+                const categoryHeader = document.createElement("div");
+                categoryHeader.className = "tracker-settings-category-header";
                 categoryHeader.innerText = settingCategories[module.category].name;
                 category.append(categoryHeader);
                 settingsArea.append(category);
                 settingCategories[module.category].div = category;
             }
-            const moduleSettings = document.createElement('div');
-            moduleSettings.className = 'settings-module';
-            saveInsertAdjacentHTML(moduleSettings, 'beforeend', `
+            const moduleSettings = document.createElement("div");
+            moduleSettings.className = "settings-module";
+            saveInsertAdjacentHTML(moduleSettings, "beforeend", `
                 <div class="settings-module-header">
                     <div class="settings-module-header-toggle-icon">
                         ${module.icon}
@@ -523,13 +530,13 @@ input[type="time"].tracker-time:not(.browser-default) {
                     </div>
                     ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
                 </div>`);
-            const moduleSettingsContent = document.createElement('div');
-            moduleSettingsContent.className = 'settings-module-content';
+            const moduleSettingsContent = document.createElement("div");
+            moduleSettingsContent.className = "settings-module-content";
             this.addModuleSettings(moduleId, moduleSettingsContent);
             moduleSettings.append(moduleSettingsContent);
             settingCategories[module.category].div.append(moduleSettings);
         }
-        settingsArea.insertAdjacentHTML('beforeend', `
+        settingsArea.insertAdjacentHTML("beforeend", `
             <div class="settings-footer">
                 <div id="settings-reset" class="tracker-settings-button idlescape-button-red">
                     Reset
@@ -549,24 +556,24 @@ input[type="time"].tracker-time:not(.browser-default) {
         playAreaBackground.append(settingsArea);
 
         this.warningShown = false;
-        const resetButton = document.getElementById('settings-reset');
-        resetButton.addEventListener('click', () => this.resetSettings(resetButton));
+        const resetButton = document.getElementById("settings-reset");
+        resetButton.addEventListener("click", () => this.resetSettings(resetButton));
 
-        const importExportButton = document.getElementById('settings-import');
-        importExportButton.addEventListener('click', () => this.importExportPopup());
+        const importExportButton = document.getElementById("settings-import");
+        importExportButton.addEventListener("click", () => this.importExportPopup());
 
-        const saveButton = document.getElementById('settings-save');
-        saveButton.addEventListener('click', () => this.saveSettings());
+        const saveButton = document.getElementById("settings-save");
+        saveButton.addEventListener("click", () => this.saveSettings());
 
         this.settingsResetObserver?.disconnect();
-        this.settingsResetObserver = new MutationObserver(mutations => {
+        this.settingsResetObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() !== selectedSkill) {
-                navTabContainer.style.display = '';
+                navTabContainer.style.display = "";
                 for (let i = 0; i < playAreas.length; i++) {
                     playAreas[i].style.display = "block";
                 }
-                document.getElementById('tracker-settings-nav-tab-container').remove();
-                document.getElementById('tracker-settings-area').remove();
+                document.getElementById("tracker-settings-nav-tab-container").remove();
+                document.getElementById("tracker-settings-area").remove();
                 clearTimeout(this.saveCheckmarkTimeout);
                 // Stop observing
                 this.settingsResetObserver.disconnect();
@@ -574,27 +581,27 @@ input[type="time"].tracker-time:not(.browser-default) {
         });
         this.settingsResetObserver.observe(navTabContainer, {
             childList: true,
-            subtree: true
+            subtree: true,
         });
     }
 
     addModuleSettings(moduleId, element) {
         if (this.settings.activeModules[moduleId]) {
             const menuContent = this.activeModules[moduleId].settingsMenuContent();
-            if (typeof menuContent === 'string') {
-                saveInsertAdjacentHTML(element, 'beforeend', menuContent);
+            if (typeof menuContent === "string") {
+                saveInsertAdjacentHTML(element, "beforeend", menuContent);
             } else if (menuContent instanceof HTMLElement) {
                 element.append(menuContent);
             } else if (menuContent instanceof Array) {
                 for (let content of menuContent) {
-                    if (typeof content === 'string') {
-                        saveInsertAdjacentHTML(element, 'beforeend', content);
+                    if (typeof content === "string") {
+                        saveInsertAdjacentHTML(element, "beforeend", content);
                     } else if (content instanceof HTMLElement) {
                         element.append(content);
                     }
                 }
             }
-        };
+        }
     }
 
     resetSettings(resetButton) {
@@ -603,14 +610,14 @@ input[type="time"].tracker-time:not(.browser-default) {
             this.storeSettings();
             location.reload();
         } else {
-            resetButton.firstChild.textContent = 'Reset?';
-            Templates.notificationTemplate('warning', 'Settingsreset', 'Please click again to confirm');
+            resetButton.firstChild.textContent = "Reset?";
+            Templates.notificationTemplate("warning", "Settingsreset", "Please click again to confirm");
             this.warningShown = true;
         }
     }
 
     importExportPopup() {
-        saveInsertAdjacentHTML(document.body, 'beforeend', Templates.popupTemplate(`
+        saveInsertAdjacentHTML(document.body, "beforeend", Templates.popupTemplate(`
             <div class="import-export-popup">
                 <div class="import-export-popup-title">
                     Import/Export
@@ -659,19 +666,19 @@ input[type="time"].tracker-time:not(.browser-default) {
                     </div>
                 </div>
                 <div class="import-export-popup-message">
-                </div> 
+                </div>
                 <div class="import-export-popup-button-container">
                     <div class="tracker-settings-button idlescape-button-red" id="import-export-popup-close">
                         Close
                     </div>
                 </div>
             </div>`));
-        document.getElementById('tracker-import-settings').addEventListener('click', () => this.importSettings());
-        document.getElementById('tracker-export-settings').addEventListener('click', () => this.exportSettings());
-        document.getElementById('tracker-import-market').addEventListener('click', () => this.importStorage());
-        document.getElementById('tracker-export-market').addEventListener('click', () => this.exportStorage());
-        document.getElementById('import-export-popup-close').addEventListener('click', () => this.closePopup());
-        document.getElementsByClassName("tracker-popup-background")[0].addEventListener('click', (event) => {
+        document.getElementById("tracker-import-settings").addEventListener("click", () => this.importSettings());
+        document.getElementById("tracker-export-settings").addEventListener("click", () => this.exportSettings());
+        document.getElementById("tracker-import-market").addEventListener("click", () => this.importStorage());
+        document.getElementById("tracker-export-market").addEventListener("click", () => this.exportStorage());
+        document.getElementById("import-export-popup-close").addEventListener("click", () => this.closePopup());
+        document.getElementsByClassName("tracker-popup-background")[0].addEventListener("click", (event) => {
             if (event.target === event.currentTarget) {
                 this.closePopup();
             }
@@ -680,42 +687,41 @@ input[type="time"].tracker-time:not(.browser-default) {
 
     importSettings() {
         try {
-            const textarea = document.getElementById('import-export-settings');
+            const textarea = document.getElementById("import-export-settings");
             const data = textarea.value;
             const settings = JSON.parse(data);
             this.settings = settings;
             this.storeSettings();
-            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Imported settings';
+            document.getElementsByClassName("import-export-popup-message")[0].textContent = "Imported settings";
             setTimeout(() => location.reload(), 1500);
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
-            document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Something went wrong';
+            document.getElementsByClassName("import-export-popup-message")[0].textContent = "Something went wrong";
         }
     }
 
     exportSettings() {
         navigator.clipboard.writeText(JSON.stringify(this.settings));
-        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied settings to clipboard';
+        document.getElementsByClassName("import-export-popup-message")[0].textContent = "Copied settings to clipboard";
     }
 
     importStorage() {
-        const textarea = document.getElementById('import-export-market');
+        const textarea = document.getElementById("import-export-market");
         const data = textarea.value;
         const message = this.storage.importStorage(data);
-        document.getElementsByClassName('import-export-popup-message')[0].textContent = message;
+        document.getElementsByClassName("import-export-popup-message")[0].textContent = message;
     }
 
     exportStorage() {
         navigator.clipboard.writeText(this.storage.exportStorage());
-        document.getElementsByClassName('import-export-popup-message')[0].textContent = 'Copied marketplace data to clipboard';
+        document.getElementsByClassName("import-export-popup-message")[0].textContent = "Copied marketplace data to clipboard";
     }
-    
+
     saveSettings() {
         // checkboxes
-        const checkboxes = document.getElementsByClassName('tracker-settings-checkbox');
+        const checkboxes = document.getElementsByClassName("tracker-settings-checkbox");
         for (const checkbox of checkboxes) {
-            if(checkbox.id.includes('-')) {
+            if (checkbox.id.includes("-")) {
                 // Normal setting
                 this.setSetting(checkbox.id, checkbox.checked ? 1 : 0);
             } else {
@@ -725,13 +731,13 @@ input[type="time"].tracker-time:not(.browser-default) {
                         const changed = this.activateModule(checkbox.id);
                         if (changed) {
                             // Add module settings
-                            this.addModuleSettings(checkbox.id, checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0]);
+                            this.addModuleSettings(checkbox.id, checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0]);
                         }
                     } else {
                         const changed = this.deactivateModule(checkbox.id);
                         if (changed) {
                             // Remove module settings
-                            const settingsModuleContent = checkbox.parentNode.parentNode.getElementsByClassName('settings-module-content')[0];
+                            const settingsModuleContent = checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0];
                             while (settingsModuleContent.firstChild) {
                                 settingsModuleContent.lastChild.remove();
                             }
@@ -741,17 +747,17 @@ input[type="time"].tracker-time:not(.browser-default) {
             }
         }
         // Select menus
-        const selectMenus = document.getElementsByClassName('tracker-select-menu-selection');
+        const selectMenus = document.getElementsByClassName("tracker-select-menu-selection");
         for (const selectMenu of selectMenus) {
             this.setSetting(selectMenu.id, selectMenu.dataset.for);
         }
         // Slider
-        const sliders = document.getElementsByClassName('tracker-slider');
+        const sliders = document.getElementsByClassName("tracker-slider");
         for (const slider of sliders) {
             this.setSetting(slider.id, slider.value);
         }
         // Time inputs
-        const timeInputs = document.querySelectorAll('.tracker-time, .tracker-time-duration');
+        const timeInputs = document.querySelectorAll(".tracker-time, .tracker-time-duration");
         for (const timeInput of timeInputs) {
             this.setSetting(timeInput.id, timeInput.value);
         }
@@ -759,17 +765,17 @@ input[type="time"].tracker-time:not(.browser-default) {
         this.storeSettings();
 
         // Visual feedback
-        const saveButton = document.getElementById('settings-save');
-        const checkmark = saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0];
+        const saveButton = document.getElementById("settings-save");
+        const checkmark = saveButton.parentElement.getElementsByClassName("settings-save-checkmark")[0];
         if (checkmark) {
             // Restart animation
-            checkmark.getElementsByTagName('animate')[0].beginElement()
+            checkmark.getElementsByTagName("animate")[0].beginElement();
             clearTimeout(this.saveCheckmarkTimeout);
         } else {
-            saveButton.insertAdjacentHTML('beforeend', Templates.checkmarkTemplate("settings-save-checkmark"));
+            saveButton.insertAdjacentHTML("beforeend", Templates.checkmarkTemplate("settings-save-checkmark"));
         }
         this.saveCheckmarkTimeout = setTimeout(() => {
-            saveButton.parentElement.getElementsByClassName('settings-save-checkmark')[0].remove();
+            saveButton.parentElement.getElementsByClassName("settings-save-checkmark")[0].remove();
         }, 5000);
     }
 
@@ -779,7 +785,7 @@ input[type="time"].tracker-time:not(.browser-default) {
 
     setSetting(settingId, value) {
         let setting = this.settings;
-        const idArray = settingId.split('-');
+        const idArray = settingId.split("-");
         for (let j = 0; j < idArray.length - 1; j++) {
             setting = setting[idArray[j]];
         }
@@ -787,7 +793,7 @@ input[type="time"].tracker-time:not(.browser-default) {
             setting[idArray[idArray.length - 1]] = value;
             const module = this.activeModules[idArray[0]];
             if (module) {
-                module.settingChanged(settingId.slice(settingId.indexOf('-') + 1), value);
+                module.settingChanged(settingId.slice(settingId.indexOf("-") + 1), value);
             }
         }
     }
@@ -799,7 +805,7 @@ input[type="time"].tracker-time:not(.browser-default) {
 
     /**
      * Queue callback functions until the game is ready.
-     * 
+     *
      * @param {callback} callback The callback function to call when the game has finished loading. Ommited in recursive calls.
      */
     onGameReady(callback) {
@@ -821,6 +827,6 @@ input[type="time"].tracker-time:not(.browser-default) {
     }
 
     closePopup() {
-        document.getElementById('tracker-popup')?.remove();
+        document.getElementById("tracker-popup")?.remove();
     }
 }
