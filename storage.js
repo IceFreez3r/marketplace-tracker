@@ -4,15 +4,28 @@ class Storage {
         this.itemList = this.loadLocalStorage('itemList', {});
         this.filterItemList();
         this.latestPriceList = {};
-        this.idMap = this.loadLocalStorage('idMap', {
-            "money_icon": 1,
-            "heat_icon": 2,
-        });
 
         this.lastLogin = this.loadLocalStorage('lastLogin', Date.now());
 
         this.fetchAPI();
         const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
+    }
+
+    onGameReady() {
+        const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
+        this.idMap = Object.values(vanillaItemsList).reduce((acc, item) => {
+            const itemId = convertItemId(item.itemImage);
+            const apiId = item.id;
+            if (!this.itemList[apiId]) {
+                this.itemList[apiId] = {
+                    itemId: itemId,
+                    name: item.name,
+                    prices: [],
+                };
+            }
+            acc[itemId] = apiId;
+            return acc;
+        }, {});
     }
 
     getLastLogin() {
@@ -28,11 +41,6 @@ class Storage {
         this.latestPriceList = {};
         for (let i = 0; i < data.length; i++) {
             const apiId = data[i].itemID;
-            if (!(apiId in this.itemList)) {
-                this.itemList[apiId] = {};
-                this.itemList[apiId]["name"] = data[i].name
-                this.itemList[apiId]["prices"] = [];
-            }
             this.itemList[apiId]["prices"].push([timestamp, data[i].minPrice]);
             this.sortPriceList(apiId);
             this.latestPriceList[apiId] = data[i].minPrice;
@@ -84,18 +92,6 @@ class Storage {
         return bestHeatItem;
     }
 
-    updateIdMap(map) {
-        for (let i = 0; i < map.length; i++) {
-            if (map[i].apiId in this.itemList) {
-                // itemId -> apiId
-                this.idMap[map[i].itemId] = map[i].apiId;
-                // apiId -> itemId
-                this.itemList[map[i].apiId].itemId = map[i].itemId;
-            }
-        }
-        this.storeIdMap();
-    }
-
     handleRecipe(ingredientItemIds, productItemId) {
         return {
             ingredients: this.analyzeItems(ingredientItemIds),
@@ -108,11 +104,6 @@ class Storage {
         localStorage.setItem('itemList', JSON.stringify(this.itemList));
     }
 
-    storeIdMap() {
-        this.idMap = sortObj(this.idMap);
-        localStorage.setItem('idMap', JSON.stringify(this.idMap));
-    }
-
     getItemName(itemId) {
         if (!(itemId in this.idMap)) {
             return null;
@@ -122,6 +113,13 @@ class Storage {
     }
 
     analyzeItem(itemId) {
+        if (itemId === 'money_icon') {
+            return {
+                minPrice: 1,
+                medianPrice: 1,
+                maxPrice: 1,
+            }
+        }
         if (itemId.endsWith('_essence')) {
             const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
             const essencePerTalisman = (35000 + 50000) / 2;
@@ -159,7 +157,7 @@ class Storage {
     }
 
     /**
-     * 
+     *
      * @returns {Object} Object with pairs of itemIds and their latest prices
      */
     latestPrices() {
@@ -177,7 +175,7 @@ class Storage {
     }
 
     /**
-     * 
+     *
      * @returns {Object} Object with pairs of itemIds and their latest price quantiles
      */
     latestPriceQuantiles() {
@@ -217,27 +215,6 @@ class Storage {
                     i--;
                 }
             }
-            if (Object.keys(this.itemList[apiId]["prices"]).length === 0) {
-                delete this.itemList[apiId];
-            }
-        }
-        this.addHardcodedItems();
-    }
-
-    addHardcodedItems() {
-        if (!(1 in this.itemList)) {
-            this.itemList[1] = {
-                "name": "Gold",
-                "itemId": "money_icon",
-                "prices": [[0, 1]]
-            };
-        }
-        if (!(2 in this.itemList)) {
-            this.itemList[2] = {
-                "name": "Heat",
-                "itemId": "heat_icon",
-                "prices": []
-            };
         }
     }
 
@@ -292,9 +269,6 @@ class Storage {
             }
             this.filterItemList();
             this.storeItemList();
-            // merge idMap
-            Object.assign(this.idMap, data.idMap);
-            this.storeIdMap();
             return "Imported marketplace data";
         }
         catch (err) {
@@ -305,8 +279,7 @@ class Storage {
 
     exportStorage() {
         return JSON.stringify({
-            itemList: this.itemList,
-            idMap: this.idMap
+            itemList: this.itemList
         });
     }
 }

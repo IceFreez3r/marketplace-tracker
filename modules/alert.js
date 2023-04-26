@@ -295,7 +295,7 @@ class AlertTracker {
         if (document.getElementById("marketplace-alert-button")) {
             return;
         }
-        const offer = buyContainer.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0];
+        const offer = buyContainer.getElementsByClassName("marketplace-table-row")[0];
         if (!offer) {
             // not loaded yet
             return;

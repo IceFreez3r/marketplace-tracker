@@ -390,6 +390,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                   };
             this.settings = this.storage.loadLocalStorage(this.settingsIdentifier, this.defaultSettings);
             this.settingsSidebar();
+            this.storage.onGameReady();
         });
     }
 

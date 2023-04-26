@@ -238,7 +238,7 @@ function insertTrackerButtons() {
     if (trackerButtons) {
         return trackerButtons;
     }
-    const sortingContainer = document.getElementsByClassName("marketplace-buy-info")[0];
-    sortingContainer.insertAdjacentHTML("afterend", '<div id="tracker-buttons"/>');
+    const marketplaceFilter = document.getElementsByClassName("anchor-marketplace-filter")[0] ?? document.getElementsByClassName("marketplace-buy-info")[0];
+    marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
     return document.getElementById("tracker-buttons");
 }

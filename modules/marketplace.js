@@ -1,5 +1,5 @@
 class MarketplaceTracker {
-    static id = "marketplace_tracker"
+    static id = "marketplace_tracker";
     static displayName = "Marketplace Tracker";
     static icon = "<img src='/images/ui/marketplace_icon.png' alt='Marketplace Tracker Icon'>";
     static category = "economy";
@@ -149,12 +149,11 @@ class MarketplaceTracker {
         }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
-        this.settingChanged('history', this.settings.history);
+        this.settingChanged("history", this.settings.history);
 
-        this.createMap = true;
         this.lastHistoryPage = 0;
 
-        this.playAreaObserver = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() === "Marketplace") {
                 if (detectInfiniteLoop(mutations)) {
                     return;
@@ -162,7 +161,7 @@ class MarketplaceTracker {
                 this.marketplaceTracker();
             }
         });
-        this.sellDialogChecker = new MutationObserver(mutations => {
+        this.sellDialogChecker = new MutationObserver((mutations) => {
             if (document.getElementById("lowest-price")) {
                 this.sellDialogChecker.disconnect();
                 this.belowVendorWarning();
@@ -175,9 +174,9 @@ class MarketplaceTracker {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
-            subtree: true
+            subtree: true,
         });
-        this.settingChanged('vendorWarning', this.settings.vendorWarning);
+        this.settingChanged("vendorWarning", this.settings.vendorWarning);
     }
 
     deactivate() {
@@ -192,28 +191,28 @@ class MarketplaceTracker {
                 <div class="tracker-module-setting-name">
                     More infos in history
                 </div>
-                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-history', this.settings.history)}
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + "-history", this.settings.history)}
             </div>`;
         const vendorWarning = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
                     Warning when selling below vendor price
                 </div>
-                ${Templates.checkboxTemplate(MarketplaceTracker.id + '-vendorWarning', this.settings.vendorWarning)}
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + "-vendorWarning", this.settings.vendorWarning)}
             </div>`;
         return history + vendorWarning;
     }
 
     settingChanged(setting, value) {
         switch (setting) {
-            case 'history':
+            case "history":
                 if (value) {
                     this.historyCssNode = injectCSS(this.historyCss);
                 } else {
                     this.historyCssNode?.remove();
                 }
                 break;
-            case 'vendorWarning':
+            case "vendorWarning":
                 if (value) {
                     this.connectSellDialogChecker();
                 } else {
@@ -227,7 +226,6 @@ class MarketplaceTracker {
     }
 
     marketplaceTracker() {
-        this.scanMarketplaceLists();
         this.scanOfferList();
         if (this.settings.history) {
             this.initMarketHistory();
@@ -235,28 +233,27 @@ class MarketplaceTracker {
     }
 
     scanOfferList() {
-        const marketplaceTable = document.getElementsByClassName('marketplace-table')[0]
+        const marketplaceTable = document.getElementsByClassName("marketplace-table")[0];
         if (!marketplaceTable) {
             return;
         }
         // Ignore offer table on sell page
-        if (marketplaceTable.classList.contains('marketplace-my-auctions-table')) {
+        if (document.getElementsByClassName("anchor-sell-all-items")[0]) {
             return;
         }
-        let offers = marketplaceTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        const offers = marketplaceTable.getElementsByClassName("marketplace-table-row");
         if (offers.length === 0) {
             return;
         }
         const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
         const analysis = this.storage.analyzeItem(itemId);
-        if (document.getElementsByClassName('marketplace-analysis-table').length === 0) {
-            let marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+        if (document.getElementsByClassName("marketplace-analysis-table").length === 0) {
+            const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
             saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
         }
         this.markOffers(offers, analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
-
 
     priceAnalysisTableTemplate(analysis) {
         return `
@@ -285,17 +282,15 @@ class MarketplaceTracker {
     markOffers(offers, maxPrice) {
         for (let i = 0; i < offers.length; i++) {
             let offer = offers[i];
-            offer.classList.remove('marketplace-offer-low', 'marketplace-offer-medium', 'marketplace-offer-high');
-            let offerPrice = offer.childNodes[3].innerText
+            offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
+            let offerPrice = offer.childNodes[3].innerText;
             offerPrice = parseNumberString(offerPrice);
             if (offerPrice < maxPrice * 0.6) {
-                offer.classList.add('marketplace-offer-low');
-            }
-            else if (offerPrice < maxPrice * 0.8) {
-                offer.classList.add('marketplace-offer-medium');
-            }
-            else if (offerPrice < maxPrice * 0.95) {
-                offer.classList.add('marketplace-offer-high');
+                offer.classList.add("marketplace-offer-low");
+            } else if (offerPrice < maxPrice * 0.8) {
+                offer.classList.add("marketplace-offer-medium");
+            } else if (offerPrice < maxPrice * 0.95) {
+                offer.classList.add("marketplace-offer-high");
             }
         }
     }
@@ -303,19 +298,19 @@ class MarketplaceTracker {
     priceHoverListener(offers, maxPrice) {
         for (let offer of offers) {
             let priceCell = offer.childNodes[3];
-            if (priceCell.getElementsByClassName('marketplace-offer-price-tooltip').length > 0) {
+            if (priceCell.getElementsByClassName("marketplace-offer-price-tooltip").length > 0) {
                 continue;
             }
             const amount = parseNumberString(offer.childNodes[2].innerText);
-            priceCell.classList.add('marketplace-offer-price');
+            priceCell.classList.add("marketplace-offer-price");
             const price = parseNumberString(priceCell.innerText);
-            saveInsertAdjacentHTML(priceCell, 'beforeend', this.priceTooltipTemplate(maxPrice, price, amount));
+            saveInsertAdjacentHTML(priceCell, "beforeend", this.priceTooltipTemplate(maxPrice, price, amount));
         }
     }
 
     priceTooltipTemplate(maxPrice, price, amount) {
         let profit = Math.floor((maxPrice * 0.95 - price) * amount);
-        let color = profit > 0 ? 'text-green' : 'text-red';
+        let color = profit > 0 ? "text-green" : "text-red";
         return `
             <div class="marketplace-offer-price-tooltip">
                 <div style="pointer-events: none; padding: 0px 0px 8px;">
@@ -365,44 +360,14 @@ class MarketplaceTracker {
 
     // ###########################################################################
 
-    scanMarketplaceLists() {
-        if (this.createMap) {
-            let items = document.getElementsByClassName('marketplace-content')[0]; // Overview page
-            if (items) {
-                items = items.firstChild;
-                this.iconToIdMap(items);
-            }
-        }
-    }
-
-    iconToIdMap(items) {
-        if (items.childNodes.length === 0) {
-            return;
-        }
-        let map = [];
-        for (let item of items.childNodes) {
-            const itemId = convertItemId(item.firstChild.firstChild.src);
-            // this will give something like 'marketplaceBuyItemTooltip50'
-            const apiIdString = item.firstChild.dataset['for'];
-            // so we extract the id from the string
-            const apiId = apiIdString.replace('marketplaceBuyItemTooltip', '');
-            map.push({
-                itemId: itemId,
-                apiId: apiId
-            });
-        }
-        this.storage.updateIdMap(map);
-        this.createMap = false;
-    }
-
     initMarketHistory() {
         // Return if current page isn't the market history page
-        let history = document.getElementsByClassName('marketplace-history')[0];
+        let history = document.getElementsByClassName("marketplace-history")[0];
         if (!history) {
             return;
         }
         // Return if the header isn't loaded yet
-        const header = document.getElementsByClassName('marketplace-history-header')[0];
+        const header = document.getElementsByClassName("marketplace-history-header")[0];
         if (!header) {
             return;
         }
@@ -418,8 +383,8 @@ class MarketplaceTracker {
     }
 
     marketHistory(history) {
-        const oldTrackerHistory = document.getElementsByClassName('tracker-history')[0]; // might be undefined
-        let currentHistoryPage = document.getElementsByClassName('marketplace-history-page selected')[0]?.textContent;
+        const oldTrackerHistory = document.getElementsByClassName("tracker-history")[0]; // might be undefined
+        let currentHistoryPage = document.getElementsByClassName("marketplace-history-page selected")[0]?.textContent;
         currentHistoryPage = currentHistoryPage ?? "1";
         // Return if the custom history already exists and the user has not changed the page
         if (oldTrackerHistory && currentHistoryPage === this.lastHistoryPage) {
@@ -428,7 +393,9 @@ class MarketplaceTracker {
         // Delete old history if it exists
         oldTrackerHistory?.remove();
         // Create new table
-        history.insertAdjacentHTML('afterend', `
+        history.insertAdjacentHTML(
+            "afterend",
+            `
             <div class="tracker-history">
                 <div class="tracker-history-header">
                     DATE
@@ -445,49 +412,62 @@ class MarketplaceTracker {
                 <div class="tracker-history-header">
                     TOTAL
                 </div>
-            </div>`);
+            </div>`
+        );
         const trackerHistory = history.nextElementSibling;
         // Copy and modify rows
-        const historyItems = history.getElementsByClassName('marketplace-history-item');
+        const historyItems = history.getElementsByClassName("marketplace-history-item");
         for (let item of historyItems) {
             // Copy date, name and quantity
             for (let i = 0; i < 3; i++) {
-                trackerHistory.insertAdjacentElement('beforeend', item.childNodes[i].cloneNode(true));
+                trackerHistory.insertAdjacentElement("beforeend", item.childNodes[i].cloneNode(true));
             }
             // Build new price per item and total
             const itemId = convertItemId(item.childNodes[1].firstChild.src);
             let itemQuantity = parseNumberString(item.childNodes[2].textContent);
-            if (itemId.includes('dagger') || itemId.includes('boot') || itemId.includes('gloves') || itemId.includes('World_Walkers')) {
+            if (itemId.includes("dagger") || itemId.includes("boot") || itemId.includes("gloves") || itemId.includes("World_Walkers")) {
                 itemQuantity *= 2;
             }
             const totalDiv = item.childNodes[4];
             const total = parseNumberString(totalDiv.textContent);
             const type = totalDiv.classList[1]; // "purchase" or "sale"
-            saveInsertAdjacentHTML(trackerHistory, 'beforeend', `
+            saveInsertAdjacentHTML(
+                trackerHistory,
+                "beforeend",
+                `
                 <div class="marketplace-history-item-per-item ${type}">
                     <div>
                         ${formatNumber(total / itemQuantity, { showSign: true })}
                         <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
                     </div>
-                    ${type === "sale" ? `
+                    ${
+                        type === "sale"
+                            ? `
                     <div>
                         ~ ${formatNumber(profit("flat", 0, total / itemQuantity), { showSign: true })}
                         <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
                     </div>
-                    ` : ''}
+                    `
+                            : ""
+                    }
                 </div>
                 <div class="marketplace-history-item-price ${type}">
                     <div>
                         ${formatNumber(total, { showSign: true })}
                         <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
                     </div>
-                    ${type === "sale" ? `
+                    ${
+                        type === "sale"
+                            ? `
                     <div>
                         ${formatNumber(profit("flat", 0, total), { showSign: true })}
                         <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
                     </div>
-                    ` : ''}
-                </div>`);
+                    `
+                            : ""
+                    }
+                </div>`
+            );
         }
         // Save current history page
         this.lastHistoryPage = currentHistoryPage;
@@ -496,7 +476,7 @@ class MarketplaceTracker {
     connectSellDialogChecker() {
         this.sellDialogChecker.observe(document.body, {
             childList: true,
-            subtree: true
+            subtree: true,
         });
     }
 
@@ -507,14 +487,14 @@ class MarketplaceTracker {
         if (warningIcon) {
             return;
         }
-        sellButton.insertAdjacentHTML('beforeend', Templates.warningTemplate());
+        sellButton.insertAdjacentHTML("beforeend", Templates.warningTemplate());
         warningIcon = sellButton.getElementsByClassName("warning")[0];
-        const vendorPriceString = document.getElementById("lowest-price-npc").textContent
-            .replace("This item sells to NPCs for:", "")
-            .replaceAll(" ", "");
+        const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("This item sells to NPCs for:", "").replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
-        const priceInput = document.getElementsByClassName("MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded")[0].childNodes[1].childNodes[5];
-        priceInput.addEventListener('input', () => {
+        const priceInput = document.getElementsByClassName(
+            "MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"
+        )[0].childNodes[1].childNodes[5];
+        priceInput.addEventListener("input", () => {
             const price = parseCompactNumberString(priceInput.value);
             const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
             warningIcon.classList.toggle("hidden", !tooLowPrice);
