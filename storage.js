@@ -6,9 +6,6 @@ class Storage {
         this.latestPriceList = {};
 
         this.lastLogin = this.loadLocalStorage('lastLogin', Date.now());
-
-        this.fetchAPI();
-        const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
     }
 
     onGameReady() {
@@ -19,13 +16,16 @@ class Storage {
             if (!this.itemList[apiId]) {
                 this.itemList[apiId] = {
                     itemId: itemId,
-                    name: item.name,
                     prices: [],
                 };
             }
+            this.itemList[apiId].name = item.name,
+            this.itemList[apiId].vendorPrice = item.value,
             acc[itemId] = apiId;
             return acc;
         }, {});
+        this.fetchAPI();
+        const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
     }
 
     getLastLogin() {
@@ -118,7 +118,8 @@ class Storage {
                 minPrice: 1,
                 medianPrice: 1,
                 maxPrice: 1,
-            }
+                vendorPrice: NaN,
+            };
         }
         if (itemId.endsWith('_essence')) {
             const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
@@ -127,24 +128,27 @@ class Storage {
                 minPrice: talismanAnalysis.minPrice / essencePerTalisman,
                 medianPrice: talismanAnalysis.medianPrice / essencePerTalisman,
                 maxPrice: talismanAnalysis.maxPrice / essencePerTalisman,
-            }
+                vendorPrice: NaN,
+            };
         }
         if (!(itemId in this.idMap)) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
-            }
+                vendorPrice: NaN,
+            };
         }
         const apiId = this.idMap[itemId];
-        const minQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.05);
-        const medianQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.5);
-        const maxQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.95);
+        const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);
+        const medianQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.5);
+        const maxQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.95);
         return {
-            minPrice: this.itemList[apiId]?.prices[minQuantile][1],
-            medianPrice: this.itemList[apiId]?.prices[medianQuantile][1],
-            maxPrice: this.itemList[apiId]?.prices[maxQuantile][1]
-        }
+            minPrice: this.itemList[apiId].prices[minQuantile][1],
+            medianPrice: this.itemList[apiId].prices[medianQuantile][1],
+            maxPrice: this.itemList[apiId].prices[maxQuantile][1],
+            vendorPrice: this.itemList[apiId].vendorPrice,
+        };
     }
 
     analyzeItems(itemIds) {
@@ -153,7 +157,8 @@ class Storage {
             minPrices: analysisArray.map(analysis => analysis.minPrice),
             medianPrices: analysisArray.map(analysis => analysis.medianPrice),
             maxPrices: analysisArray.map(analysis => analysis.maxPrice),
-        }
+            vendorPrices: analysisArray.map(analysis => analysis.vendorPrice),
+        };
     }
 
     /**
@@ -165,36 +170,31 @@ class Storage {
         for (let itemId in this.idMap) {
             prices[itemId] = ((itemId) => {
                 const apiId = this.idMap[itemId];
-                if (!(apiId in this.itemList)) {
-                    return NaN;
-                }
-                return this.latestPriceList[apiId];
+                return this.latestPriceList[apiId] ?? NaN;
             })(itemId);
         }
         return prices;
     }
 
     /**
-     *
      * @returns {Object} Object with pairs of itemIds and their latest price quantiles
      */
     latestPriceQuantiles() {
-        const quantiles = {};
-        for (let itemId in this.idMap) {
-            quantiles[itemId] = ((itemId) => {
-                const apiId = this.idMap[itemId];
-                if (!(apiId in this.itemList)) {
-                    return 1;
-                }
-                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] === this.latestPriceList[apiId]);
-                if (index === -1) {
-                    return 1;
-                }
-                const quantile = index / (this.itemList[apiId]["prices"].length - 1);
-                return quantile;
-            })(itemId);
-        }
-        return quantiles;
+        return Object.keys(this.idMap).reduce((result, itemId) => {
+            const apiId = this.idMap[itemId];
+            if (!(apiId in this.itemList)) {
+                result[itemId] = 1;
+                return result;
+            }
+            const index = this.itemList[apiId]["prices"].findLastIndex((priceTuple) => priceTuple[1] === this.latestPriceList[apiId]);
+            if (index === -1) {
+                result[itemId] = 1;
+                return result;
+            }
+            const quantile = index / (this.itemList[apiId]["prices"].length - 1);
+            result[itemId] = quantile;
+            return result;
+        }, {});
     }
 
     sortPriceList(apiId) {
