@@ -8,7 +8,7 @@ class Storage {
         this.lastLogin = this.loadLocalStorage('lastLogin', Date.now());
     }
 
-    onGameReady() {
+    async onGameReady() {
         const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
         this.idMap = Object.values(vanillaItemsList).reduce((acc, item) => {
             const itemId = convertItemId(item.itemImage);
@@ -24,7 +24,7 @@ class Storage {
             acc[itemId] = apiId;
             return acc;
         }, {});
-        this.fetchAPI();
+        await this.fetchAPI();
         const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
     }
 
@@ -131,7 +131,8 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        if (!(itemId in this.idMap)) {
+        const apiId = this.idMap[itemId];
+        if (this.itemList[apiId].prices.length === 0) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
@@ -139,7 +140,6 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        const apiId = this.idMap[itemId];
         const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);
         const medianQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.5);
         const maxQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.95);
@@ -182,7 +182,7 @@ class Storage {
     latestPriceQuantiles() {
         return Object.keys(this.idMap).reduce((result, itemId) => {
             const apiId = this.idMap[itemId];
-            if (!(apiId in this.itemList)) {
+            if (this.itemList[apiId]["prices"].length <= 1) {
                 result[itemId] = 1;
                 return result;
             }
@@ -218,9 +218,9 @@ class Storage {
         }
     }
 
-    fetchAPI() {
+    async fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
-        fetch(apiUrl)
+        await fetch(apiUrl)
             .then((response) => {
                 return response.json();
             })

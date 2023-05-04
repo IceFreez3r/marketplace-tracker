@@ -60,13 +60,13 @@ class OfflineTracker {
             }
             this.offlineTracker();
         });
-        this.offlineTracker();
     };
-    
+
     onGameReady() {
         this.bodyObserver.observe(document.body, {
             childList: true
         });
+        this.offlineTracker();
     }
 
     deactivate() {
@@ -141,8 +141,8 @@ class OfflineTracker {
         } else {
             offlineTime = offlineTimeScrapped;
         }
-        saveInsertAdjacentHTML(offlineProgressBox, 'afterend', this.offlineInfoTemplate(totalMinValue, 
-                                                                                        totalMaxValue, 
+        saveInsertAdjacentHTML(offlineProgressBox, 'afterend', this.offlineInfoTemplate(totalMinValue,
+                                                                                        totalMaxValue,
                                                                                         offlineTime));
     }
 

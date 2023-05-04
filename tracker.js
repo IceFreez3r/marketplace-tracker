@@ -809,7 +809,7 @@ input[type="time"].tracker-time:not(.browser-default) {
      *
      * @param {callback} callback The callback function to call when the game has finished loading. Ommited in recursive calls.
      */
-    onGameReady(callback) {
+    async onGameReady(callback) {
         // Manual call -> reset existing timer and add callback to the queue
         if (callback) {
             clearTimeout(this.gameReadyTimeout);
@@ -821,7 +821,7 @@ input[type="time"].tracker-time:not(.browser-default) {
         } else {
             this.gameReadyTimeout = undefined;
             for (const callback of this.gameReadyCallbacks) {
-                callback();
+                await callback();
             }
             this.gameReadyCallbacks = [];
         }
