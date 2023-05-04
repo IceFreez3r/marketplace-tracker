@@ -4,14 +4,27 @@ class Storage {
         this.itemList = this.loadLocalStorage('itemList', {});
         this.filterItemList();
         this.latestPriceList = {};
-        this.idMap = this.loadLocalStorage('idMap', {
-            "money_icon": 1,
-            "heat_icon": 2,
-        });
 
         this.lastLogin = this.loadLocalStorage('lastLogin', Date.now());
+    }
 
-        this.fetchAPI();
+    async onGameReady() {
+        const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
+        this.idMap = Object.values(vanillaItemsList).reduce((acc, item) => {
+            const itemId = convertItemId(item.itemImage);
+            const apiId = item.id;
+            if (!this.itemList[apiId]) {
+                this.itemList[apiId] = {
+                    itemId: itemId,
+                    prices: [],
+                };
+            }
+            this.itemList[apiId].name = item.name,
+            this.itemList[apiId].vendorPrice = item.value,
+            acc[itemId] = apiId;
+            return acc;
+        }, {});
+        await this.fetchAPI();
         const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
     }
 
@@ -28,11 +41,6 @@ class Storage {
         this.latestPriceList = {};
         for (let i = 0; i < data.length; i++) {
             const apiId = data[i].itemID;
-            if (!(apiId in this.itemList)) {
-                this.itemList[apiId] = {};
-                this.itemList[apiId]["name"] = data[i].name
-                this.itemList[apiId]["prices"] = [];
-            }
             this.itemList[apiId]["prices"].push([timestamp, data[i].minPrice]);
             this.sortPriceList(apiId);
             this.latestPriceList[apiId] = data[i].minPrice;
@@ -84,18 +92,6 @@ class Storage {
         return bestHeatItem;
     }
 
-    updateIdMap(map) {
-        for (let i = 0; i < map.length; i++) {
-            if (map[i].apiId in this.itemList) {
-                // itemId -> apiId
-                this.idMap[map[i].itemId] = map[i].apiId;
-                // apiId -> itemId
-                this.itemList[map[i].apiId].itemId = map[i].itemId;
-            }
-        }
-        this.storeIdMap();
-    }
-
     handleRecipe(ingredientItemIds, productItemId) {
         return {
             ingredients: this.analyzeItems(ingredientItemIds),
@@ -108,11 +104,6 @@ class Storage {
         localStorage.setItem('itemList', JSON.stringify(this.itemList));
     }
 
-    storeIdMap() {
-        this.idMap = sortObj(this.idMap);
-        localStorage.setItem('idMap', JSON.stringify(this.idMap));
-    }
-
     getItemName(itemId) {
         if (!(itemId in this.idMap)) {
             return null;
@@ -122,6 +113,14 @@ class Storage {
     }
 
     analyzeItem(itemId) {
+        if (itemId === 'money_icon') {
+            return {
+                minPrice: 1,
+                medianPrice: 1,
+                maxPrice: 1,
+                vendorPrice: NaN,
+            };
+        }
         if (itemId.endsWith('_essence')) {
             const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
             const essencePerTalisman = (35000 + 50000) / 2;
@@ -129,24 +128,27 @@ class Storage {
                 minPrice: talismanAnalysis.minPrice / essencePerTalisman,
                 medianPrice: talismanAnalysis.medianPrice / essencePerTalisman,
                 maxPrice: talismanAnalysis.maxPrice / essencePerTalisman,
-            }
+                vendorPrice: NaN,
+            };
         }
-        if (!(itemId in this.idMap)) {
+        const apiId = this.idMap[itemId];
+        if (this.itemList[apiId].prices.length === 0) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
-            }
+                vendorPrice: NaN,
+            };
         }
-        const apiId = this.idMap[itemId];
-        const minQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.05);
-        const medianQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.5);
-        const maxQuantile = Math.floor((this.itemList[apiId]?.prices.length - 1) * 0.95);
+        const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);
+        const medianQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.5);
+        const maxQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.95);
         return {
-            minPrice: this.itemList[apiId]?.prices[minQuantile][1],
-            medianPrice: this.itemList[apiId]?.prices[medianQuantile][1],
-            maxPrice: this.itemList[apiId]?.prices[maxQuantile][1]
-        }
+            minPrice: this.itemList[apiId].prices[minQuantile][1],
+            medianPrice: this.itemList[apiId].prices[medianQuantile][1],
+            maxPrice: this.itemList[apiId].prices[maxQuantile][1],
+            vendorPrice: this.itemList[apiId].vendorPrice,
+        };
     }
 
     analyzeItems(itemIds) {
@@ -155,11 +157,12 @@ class Storage {
             minPrices: analysisArray.map(analysis => analysis.minPrice),
             medianPrices: analysisArray.map(analysis => analysis.medianPrice),
             maxPrices: analysisArray.map(analysis => analysis.maxPrice),
-        }
+            vendorPrices: analysisArray.map(analysis => analysis.vendorPrice),
+        };
     }
 
     /**
-     * 
+     *
      * @returns {Object} Object with pairs of itemIds and their latest prices
      */
     latestPrices() {
@@ -167,36 +170,31 @@ class Storage {
         for (let itemId in this.idMap) {
             prices[itemId] = ((itemId) => {
                 const apiId = this.idMap[itemId];
-                if (!(apiId in this.itemList)) {
-                    return NaN;
-                }
-                return this.latestPriceList[apiId];
+                return this.latestPriceList[apiId] ?? NaN;
             })(itemId);
         }
         return prices;
     }
 
     /**
-     * 
      * @returns {Object} Object with pairs of itemIds and their latest price quantiles
      */
     latestPriceQuantiles() {
-        const quantiles = {};
-        for (let itemId in this.idMap) {
-            quantiles[itemId] = ((itemId) => {
-                const apiId = this.idMap[itemId];
-                if (!(apiId in this.itemList)) {
-                    return 1;
-                }
-                const index = this.itemList[apiId]["prices"].findLastIndex(priceTuple => priceTuple[1] === this.latestPriceList[apiId]);
-                if (index === -1) {
-                    return 1;
-                }
-                const quantile = index / (this.itemList[apiId]["prices"].length - 1);
-                return quantile;
-            })(itemId);
-        }
-        return quantiles;
+        return Object.keys(this.idMap).reduce((result, itemId) => {
+            const apiId = this.idMap[itemId];
+            if (this.itemList[apiId]["prices"].length <= 1) {
+                result[itemId] = 1;
+                return result;
+            }
+            const index = this.itemList[apiId]["prices"].findLastIndex((priceTuple) => priceTuple[1] === this.latestPriceList[apiId]);
+            if (index === -1) {
+                result[itemId] = 1;
+                return result;
+            }
+            const quantile = index / (this.itemList[apiId]["prices"].length - 1);
+            result[itemId] = quantile;
+            return result;
+        }, {});
     }
 
     sortPriceList(apiId) {
@@ -217,33 +215,12 @@ class Storage {
                     i--;
                 }
             }
-            if (Object.keys(this.itemList[apiId]["prices"]).length === 0) {
-                delete this.itemList[apiId];
-            }
-        }
-        this.addHardcodedItems();
-    }
-
-    addHardcodedItems() {
-        if (!(1 in this.itemList)) {
-            this.itemList[1] = {
-                "name": "Gold",
-                "itemId": "money_icon",
-                "prices": [[0, 1]]
-            };
-        }
-        if (!(2 in this.itemList)) {
-            this.itemList[2] = {
-                "name": "Heat",
-                "itemId": "heat_icon",
-                "prices": []
-            };
         }
     }
 
-    fetchAPI() {
+    async fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
-        fetch(apiUrl)
+        await fetch(apiUrl)
             .then((response) => {
                 return response.json();
             })
@@ -292,9 +269,6 @@ class Storage {
             }
             this.filterItemList();
             this.storeItemList();
-            // merge idMap
-            Object.assign(this.idMap, data.idMap);
-            this.storeIdMap();
             return "Imported marketplace data";
         }
         catch (err) {
@@ -305,8 +279,7 @@ class Storage {
 
     exportStorage() {
         return JSON.stringify({
-            itemList: this.itemList,
-            idMap: this.idMap
+            itemList: this.itemList
         });
     }
 }

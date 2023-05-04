@@ -181,7 +181,7 @@ function deepCompare(object1, object2) {
 }
 
 function getSkillLevel(skill, total) {
-    // Dael's script attaches the skill levels to window 
+    // Dael's script attaches the skill levels to window
     if (window.ISState) {
         if (total) {
             return 99 + window.ISstate.skills[skill].masteryLevel;
@@ -211,7 +211,7 @@ function getSkillLevel(skill, total) {
                     return 99 + parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
                 }
                 return 99;
-            }   
+            }
             return parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
         }
     }
@@ -231,4 +231,14 @@ function getSkillLevel(skill, total) {
     }
     // Last fallback
     return 99;
+}
+
+function insertTrackerButtons() {
+    const trackerButtons = document.getElementById("tracker-buttons");
+    if (trackerButtons) {
+        return trackerButtons;
+    }
+    const marketplaceFilter = document.getElementsByClassName("anchor-marketplace-filter")[0] ?? document.getElementsByClassName("marketplace-buy-info")[0];
+    marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
+    return document.getElementById("tracker-buttons");
 }

@@ -1,5 +1,5 @@
 class FarmingTracker {
-    static id = "farming_tracker"
+    static id = "farming_tracker";
     static displayName = "Farming Tracker";
     static icon = "<img src='/images/farming/farming_icon.png' alt='Farming Tracker Icon'>";
     static category = "visual";
@@ -53,6 +53,14 @@ body .farming-seeds .all-items {
     overflow-x: hidden;
 }
 
+.farming-seeds-title {
+    font-family: var(--chakra-fonts-heading);
+    font-weight: var(--chakra-fontWeights-bold);
+    font-size: var(--chakra-fontSizes-xl);
+    line-height: 1.2;
+    margin: 0px;
+}
+
 .high-level-seed {
     background-image: linear-gradient(180deg, rgba(13, 64, 12, 0.6), rgba(13, 64, 12, .6)), url(/images/ui/frame_box.png);
 }
@@ -79,52 +87,52 @@ body .farming-seeds .all-items {
     `;
 
     seeds = {
-        "mysterious-seed-1x1": {img: "/images/farming/mysterious_seed.png",          minLevel: 1 },
-        "mysterious-seed-2x1": {img: "/images/farming/mysterious_seed.png",          minLevel: 1 },
-        "mysterious-seed-3x1": {img: "/images/farming/mysterious_seed.png",          minLevel: 20},
-        "mysterious-seed-4x1": {img: "/images/farming/mysterious_seed.png",          minLevel: 40},
-        "mysterious-seed-1x2": {img: "/images/farming/mysterious_seed.png",          minLevel: 10},
-        "mysterious-seed-2x2": {img: "/images/farming/mysterious_seed.png",          minLevel: 10},
-        "mysterious-seed-3x2": {img: "/images/farming/mysterious_seed.png",          minLevel: 20},
-        "mysterious-seed-4x2": {img: "/images/farming/mysterious_seed.png",          minLevel: 40},
-        "mysterious-seed-1x3": {img: "/images/farming/mysterious_seed.png",          minLevel: 30},
-        "mysterious-seed-2x3": {img: "/images/farming/mysterious_seed.png",          minLevel: 30},
-        "mysterious-seed-3x3": {img: "/images/farming/mysterious_seed.png",          minLevel: 30},
-        "mysterious-seed-4x3": {img: "/images/farming/mysterious_seed.png",          minLevel: 40},
-        "mysterious-seed-1x4": {img: "/images/farming/mysterious_seed.png",          minLevel: 50},
-        "mysterious-seed-2x4": {img: "/images/farming/mysterious_seed.png",          minLevel: 50},
-        "mysterious-seed-3x4": {img: "/images/farming/mysterious_seed.png",          minLevel: 50},
-        "mysterious-seed-4x4": {img: "/images/farming/mysterious_seed.png",          minLevel: 50},
-        "carrot-seed":         {img: "/images/farming/carrot_seed.png",              minLevel: 1 },
-        "potato-seed":         {img: "/images/farming/potato_seed.png",              minLevel: 3 },
-        "wheat-seed":          {img: "/images/farming/wheat_seed.png",               minLevel: 8 },
-        "tomato-seed":         {img: "/images/farming/tomato_seed.png",              minLevel: 12},
-        "mushroom-spore":      {img: "/images/farming/mushroom_spore.png",           minLevel: 15},
-        "sugarcane-seed":      {img: "/images/farming/sugarcane_seed.png",           minLevel: 20},
-        "chili-pepper-seed":   {img: "/images/farming/chili_pepper_seed.png",        minLevel: 20},
-        "rice-seed":           {img: "/images/farming/rice_seed.png",                minLevel: 25},
-        "pumpkin-seed":        {img: "/images/farming/pumpkin_seed.png",             minLevel: 25},
-        "peppercorn-seed":     {img: "/images/farming/peppercorn_seed.png",          minLevel: 30},
-        "wildberry-bush-seed": {img: "/images/farming/wildberry_bush_seed.png",      minLevel: 5 },
-        "sageberry-bush-seed": {img: "/images/farming/sageberry_seed.png",           minLevel: 25},
-        "tree-seed":           {img: "/images/farming/tree_seed.png",                minLevel: 10},
-        "oak-tree-seed":       {img: "/images/farming/oak_tree_seed.png",            minLevel: 17},
-        "willow-tree-seed":    {img: "/images/farming/willow_tree_seed.png",         minLevel: 20},
-        "banana-tree-seed":    {img: "/images/farming/banana_tree_seed.png",         minLevel: 20},
-        "apple-tree-seed":     {img: "/images/farming/apple_tree_seed.png",          minLevel: 20},
-        "maple-tree-seed":     {img: "/images/farming/maple_tree_seed.png",          minLevel: 25},
-        "yew-tree-seed":       {img: "/images/farming/yew_tree_seed.png",            minLevel: 35},
-        "elder-tree-seed":     {img: "/images/farming/elder_tree_seed.png",          minLevel: 50},
-        "box-trap":            {img: "/images/farming/hunting/box_trap.png",         minLevel: 1 },
-        "pitfall-trap":        {img: "/images/farming/hunting/pitfall.png",          minLevel: 10},
-        "bird-trap":           {img: "/images/farming/hunting/bird_trap.png",        minLevel: 20},
-        "net-trap":            {img: "/images/farming/hunting/net_trap.png",         minLevel: 25},
-        "bear-trap":           {img: "/images/farming/hunting/metal_trap.png",       minLevel: 35},
-        "water-totem":         {img: "/images/farming/totem/water_totem_mj_v2.png",  minLevel: 40},
-        "nature-totem":        {img: "/images/farming/totem/nature_orb.png",         minLevel: 40},
-        "earth-totem":         {img: "/images/farming/totem/earth_orb.png",          minLevel: 40},
-        "coalescing-totem":    {img: "/images/farming/totem/condensed_orb.png",      minLevel: 40},
-    }
+        "mysterious-seed-1x1": { img: "/images/farming/mysterious_seed.png", minLevel: 1 },
+        "mysterious-seed-2x1": { img: "/images/farming/mysterious_seed.png", minLevel: 1 },
+        "mysterious-seed-3x1": { img: "/images/farming/mysterious_seed.png", minLevel: 20 },
+        "mysterious-seed-4x1": { img: "/images/farming/mysterious_seed.png", minLevel: 40 },
+        "mysterious-seed-1x2": { img: "/images/farming/mysterious_seed.png", minLevel: 10 },
+        "mysterious-seed-2x2": { img: "/images/farming/mysterious_seed.png", minLevel: 10 },
+        "mysterious-seed-3x2": { img: "/images/farming/mysterious_seed.png", minLevel: 20 },
+        "mysterious-seed-4x2": { img: "/images/farming/mysterious_seed.png", minLevel: 40 },
+        "mysterious-seed-1x3": { img: "/images/farming/mysterious_seed.png", minLevel: 30 },
+        "mysterious-seed-2x3": { img: "/images/farming/mysterious_seed.png", minLevel: 30 },
+        "mysterious-seed-3x3": { img: "/images/farming/mysterious_seed.png", minLevel: 30 },
+        "mysterious-seed-4x3": { img: "/images/farming/mysterious_seed.png", minLevel: 40 },
+        "mysterious-seed-1x4": { img: "/images/farming/mysterious_seed.png", minLevel: 50 },
+        "mysterious-seed-2x4": { img: "/images/farming/mysterious_seed.png", minLevel: 50 },
+        "mysterious-seed-3x4": { img: "/images/farming/mysterious_seed.png", minLevel: 50 },
+        "mysterious-seed-4x4": { img: "/images/farming/mysterious_seed.png", minLevel: 50 },
+        "carrot-seed": { img: "/images/farming/carrot_seed.png", minLevel: 1 },
+        "potato-seed": { img: "/images/farming/potato_seed.png", minLevel: 3 },
+        "wheat-seed": { img: "/images/farming/wheat_seed.png", minLevel: 8 },
+        "tomato-seed": { img: "/images/farming/tomato_seed.png", minLevel: 12 },
+        "mushroom-spore": { img: "/images/farming/mushroom_spore.png", minLevel: 15 },
+        "sugarcane-seed": { img: "/images/farming/sugarcane_seed.png", minLevel: 20 },
+        "chili-pepper-seed": { img: "/images/farming/chili_pepper_seed.png", minLevel: 20 },
+        "rice-seed": { img: "/images/farming/rice_seed.png", minLevel: 25 },
+        "pumpkin-seed": { img: "/images/farming/pumpkin_seed.png", minLevel: 25 },
+        "peppercorn-seed": { img: "/images/farming/peppercorn_seed.png", minLevel: 30 },
+        "wildberry-bush-seed": { img: "/images/farming/wildberry_bush_seed.png", minLevel: 5 },
+        "sageberry-bush-seed": { img: "/images/farming/sageberry_seed.png", minLevel: 25 },
+        "tree-seed": { img: "/images/farming/tree_seed.png", minLevel: 10 },
+        "oak-tree-seed": { img: "/images/farming/oak_tree_seed.png", minLevel: 17 },
+        "willow-tree-seed": { img: "/images/farming/willow_tree_seed.png", minLevel: 20 },
+        "banana-tree-seed": { img: "/images/farming/banana_tree_seed.png", minLevel: 20 },
+        "apple-tree-seed": { img: "/images/farming/apple_tree_seed.png", minLevel: 20 },
+        "maple-tree-seed": { img: "/images/farming/maple_tree_seed.png", minLevel: 25 },
+        "yew-tree-seed": { img: "/images/farming/yew_tree_seed.png", minLevel: 35 },
+        "elder-tree-seed": { img: "/images/farming/elder_tree_seed.png", minLevel: 50 },
+        "box-trap": { img: "/images/farming/hunting/box_trap.png", minLevel: 1 },
+        "pitfall-trap": { img: "/images/farming/hunting/pitfall.png", minLevel: 10 },
+        "bird-trap": { img: "/images/farming/hunting/bird_trap.png", minLevel: 20 },
+        "net-trap": { img: "/images/farming/hunting/net_trap.png", minLevel: 25 },
+        "bear-trap": { img: "/images/farming/hunting/metal_trap.png", minLevel: 35 },
+        "water-totem": { img: "/images/farming/totem/water_totem_mj_v2.png", minLevel: 40 },
+        "nature-totem": { img: "/images/farming/totem/nature_orb.png", minLevel: 40 },
+        "earth-totem": { img: "/images/farming/totem/earth_orb.png", minLevel: 40 },
+        "coalescing-totem": { img: "/images/farming/totem/condensed_orb.png", minLevel: 40 },
+    };
     numGridElements = 45 + 5 + 5; // seeds (45) + headers (5) + borders (5)
 
     constructor(tracker, settings, storage) {
@@ -132,7 +140,7 @@ body .farming-seeds .all-items {
         this.settings = settings;
         this.cssNode = injectCSS(this.css);
 
-        this.playAreaObserver = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() === "Farming") {
                 if (detectInfiniteLoop(mutations)) {
                     return;
@@ -141,12 +149,12 @@ body .farming-seeds .all-items {
             }
         });
     }
-    
+
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
-            subtree: true
+            subtree: true,
         });
     }
 
@@ -221,6 +229,8 @@ body .farming-seeds .all-items {
     }
 
     clearMetaElements(seedContainer) {
+        const vanillaHeader = seedContainer.parentNode.getElementsByClassName("chakra-heading")[0];
+        vanillaHeader?.remove();
         // remove old headers, borders, fake-items
         let titles = seedContainer.parentNode.getElementsByClassName("farming-seeds-title");
         for (let i = titles.length; i > 0; i--) {
