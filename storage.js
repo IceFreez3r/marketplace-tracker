@@ -10,20 +10,24 @@ class Storage {
 
     async onGameReady() {
         const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
-        this.idMap = Object.values(vanillaItemsList).reduce((acc, item) => {
-            const itemId = convertItemId(item.itemImage);
-            const apiId = item.id;
-            if (!this.itemList[apiId]) {
-                this.itemList[apiId] = {
-                    itemId: itemId,
-                    prices: [],
-                };
+        this.idMap = {};
+        for (const item in vanillaItemsList) {
+            this.itemList[item] ??= {
+                prices: [],
+            };
+            if (vanillaItemsList[item].itemImage) {
+                const itemImage = convertItemId(vanillaItemsList[item].itemImage);
+                this.idMap[itemImage] = item;
+                this.itemList[item].itemImage = itemImage;
             }
-            this.itemList[apiId].name = item.name,
-            this.itemList[apiId].vendorPrice = item.value,
-            acc[itemId] = apiId;
-            return acc;
-        }, {});
+            if (vanillaItemsList[item].itemIcon) {
+                const itemIcon = convertItemId(vanillaItemsList[item].itemIcon);
+                this.idMap[itemIcon] = item;
+                this.itemList[item].itemIcon = itemIcon;
+            }
+            this.itemList[item].name = vanillaItemsList[item].name;
+            this.itemList[item].vendorPrice = vanillaItemsList[item].value;
+        }
         await this.fetchAPI();
         const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
     }
