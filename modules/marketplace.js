@@ -481,19 +481,16 @@ class MarketplaceTracker {
     }
 
     belowVendorWarning() {
-        // very hardcoded way to get nodes here, because there are no descriptive classes
-        const sellButton = document.getElementsByClassName("item-dialogue-button idlescape-button idlescape-button-green")[1];
+        const sellButton = document.getElementsByClassName("anchor-sell-confirm-button")[0];
         let warningIcon = sellButton.getElementsByClassName("warning")[0];
         if (warningIcon) {
             return;
         }
         sellButton.insertAdjacentHTML("beforeend", Templates.warningTemplate());
         warningIcon = sellButton.getElementsByClassName("warning")[0];
-        const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("This item sells to NPCs for:", "").replaceAll(" ", "");
+        const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("Item sells to NPCs for:", "").replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
-        const priceInput = document.getElementsByClassName(
-            "MuiPaper-root MuiDialog-paper MuiDialog-paperScrollPaper MuiDialog-paperWidthSm MuiPaper-elevation24 MuiPaper-rounded"
-        )[0].childNodes[1].childNodes[5];
+        const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
         priceInput.addEventListener("input", () => {
             const price = parseCompactNumberString(priceInput.value);
             const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;

@@ -272,8 +272,7 @@ class MarketHighlights {
             return;
         }
         // Overview Page
-        // const buyItems = document.getElementsByClassName("anchor-buy-all-items")[0];
-        const buyItems = document.getElementsByClassName("marketplace-container")[0].getElementsByClassName("all-items")[0];
+        const buyItems = document.getElementsByClassName("anchor-buy-all-items")[0];
         if (buyItems) {
             this.highlightFavorites(buyItems);
             this.filterFavoritesButton();
@@ -310,8 +309,7 @@ class MarketHighlights {
     }
 
     filterFavorites() {
-        const notFavoriteItems = document.querySelectorAll(".marketplace-container .item:not(.favorite-highlight)");
-        // const notFavoriteItems = document.querySelectorAll(".anchor-buy-all-items .item:not(.favorite-highlight)");
+        const notFavoriteItems = document.querySelectorAll(".anchor-buy-all-items .item:not(.favorite-highlight)");
         for (let i = 0; i < notFavoriteItems.length; i++) {
             notFavoriteItems[i].parentNode.classList.toggle("hidden", this.favoriteFilterActive);
         }
@@ -362,8 +360,7 @@ class MarketHighlights {
     }
 
     quantileColors() {
-        const items = document.querySelectorAll(".marketplace-container .item");
-        // const items = document.querySelectorAll(".anchor-buy-all-items .item");
+        const items = document.querySelectorAll(".anchor-buy-all-items .item");
         if (items.length === 0) {
             return;
         }
