@@ -154,12 +154,9 @@ class MarketplaceTracker {
         this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
-            if (getSelectedSkill() === "Marketplace") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.marketplaceTracker();
-            }
+            this.playAreaObserver.disconnect();
+            this.checkForMarketplace(mutations);
+            this.connectPlayAreaObserver();
         });
         this.sellDialogChecker = new MutationObserver((mutations) => {
             if (document.getElementById("lowest-price")) {
@@ -171,11 +168,7 @@ class MarketplaceTracker {
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.playAreaObserver.observe(playAreaContainer, {
-            childList: true,
-            subtree: true,
-        });
+        this.connectPlayAreaObserver();
         this.settingChanged("vendorWarning", this.settings.vendorWarning);
     }
 
@@ -222,7 +215,24 @@ class MarketplaceTracker {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForMarketplace();
+    }
+
+    connectPlayAreaObserver() {
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.playAreaObserver.observe(playAreaContainer, {
+            childList: true,
+            subtree: true,
+        });
+    }
+
+    checkForMarketplace(mutations) {
+        if (getSelectedSkill() === "Marketplace") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.marketplaceTracker();
+        }
     }
 
     marketplaceTracker() {
@@ -245,12 +255,14 @@ class MarketplaceTracker {
         if (offers.length === 0) {
             return;
         }
-        const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
-        const analysis = this.storage.analyzeItem(itemId);
-        if (document.getElementsByClassName("marketplace-analysis-table").length === 0) {
-            const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
-            saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
+        let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
+        if (this.storage.itemRequiresFallback(itemId)) {
+            itemId = offers[0].firstChild.firstChild.textContent;
         }
+        const analysis = this.storage.analyzeItem(itemId);
+        document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
+        const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
         this.markOffers(offers, analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
@@ -280,11 +292,9 @@ class MarketplaceTracker {
     }
 
     markOffers(offers, maxPrice) {
-        for (let i = 0; i < offers.length; i++) {
-            let offer = offers[i];
+        for (const offer of offers) {
             offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
-            let offerPrice = offer.childNodes[3].innerText;
-            offerPrice = parseNumberString(offerPrice);
+            const offerPrice = parseNumberString(offer.childNodes[3].innerText);
             if (offerPrice < maxPrice * 0.6) {
                 offer.classList.add("marketplace-offer-low");
             } else if (offerPrice < maxPrice * 0.8) {
@@ -491,10 +501,15 @@ class MarketplaceTracker {
         const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("Item sells to NPCs for:", "").replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
         const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
+        this.checkPrice(warningIcon, priceInput, vendorPrice);
         priceInput.addEventListener("input", () => {
-            const price = parseCompactNumberString(priceInput.value);
-            const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
-            warningIcon.classList.toggle("hidden", !tooLowPrice);
+            this.checkPrice(warningIcon, priceInput, vendorPrice);
         });
+    }
+
+    checkPrice(warningIcon, priceInput, vendorPrice) {
+        const price = parseCompactNumberString(priceInput.value);
+        const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
+        warningIcon.classList.toggle("hidden", !tooLowPrice);
     }
 }

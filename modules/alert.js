@@ -370,10 +370,13 @@ class AlertTracker {
         if ((priceBelow === 0 || priceBelow === "") && (priceAbove === 0 || priceAbove === "")) {
             delete this.allAlerts[itemId];
         } else {
-            this.allAlerts[itemId] = {
-                below: priceBelow,
-                above: priceAbove,
-            };
+            this.allAlerts[itemId] = {};
+            if (priceBelow !== 0 && priceBelow !== "") {
+                this.allAlerts[itemId].below = priceBelow;
+            }
+            if (priceAbove !== 0 && priceAbove !== "") {
+                this.allAlerts[itemId].above = priceAbove;
+            }
         }
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(itemId));

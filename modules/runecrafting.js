@@ -55,7 +55,7 @@ body .runecrafting-essence-counter {
 
 .runecrafting-info-table-font {
     font-size: 1.5rem;
-    line-height: 2rem;    
+    line-height: 2rem;
 }
 
     `;
@@ -70,21 +70,14 @@ body .runecrafting-essence-counter {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (getSelectedSkill() === "Runecrafting") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.runecraftingTracker();
-            }
+            this.playAreaObserver.disconnect();
+            this.checkForRunecrafting(mutations);
+            this.connectPlayAreaObserver();
         });
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.playAreaObserver.observe(playAreaContainer, {
-            childList: true,
-            subtree: true,
-        });
+        this.connectPlayAreaObserver();
     }
 
     deactivate() {
@@ -113,7 +106,24 @@ body .runecrafting-essence-counter {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForRunecrafting();
+    }
+
+    connectPlayAreaObserver() {
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.playAreaObserver.observe(playAreaContainer, {
+            childList: true,
+            subtree: true,
+        });
+    }
+
+    checkForRunecrafting(mutations) {
+        if (getSelectedSkill() === "Runecrafting") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.runecraftingTracker();
+        }
     }
 
     runecraftingTracker() {
@@ -133,9 +143,7 @@ body .runecrafting-essence-counter {
     }
 
     processRecipe(recipe, activeTab, activeTalisman) {
-        if (recipe.getElementsByClassName("runecrafting-info-table")[0]) {
-            return;
-        }
+        recipe.getElementsByClassName("runecrafting-info-table")[0]?.remove();
 
         const productId = convertItemId(recipe.getElementsByClassName("resource-as-row-image")[0].src);
         const productIcon = recipe.getElementsByClassName("resource-as-row-image")[0].src;

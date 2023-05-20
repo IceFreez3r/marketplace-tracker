@@ -51,24 +51,17 @@ class SmithingTracker {
         this.cssNode = injectCSS(this.css);
         this.ingredients = {};
 
-        this.playAreaObserver = new MutationObserver(mutations => {
-            if (getSelectedSkill() === "Smithing") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.smithingTracker();
-            } else {
-                this.ingredients = {};
-            }
+        this.playAreaObserver = new MutationObserver((mutations) => {
+            this.checkForSmithing(mutations);
         });
     }
-    
+
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             attributes: true,
-            subtree: true
+            subtree: true,
         });
     }
 
@@ -78,18 +71,27 @@ class SmithingTracker {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement('div');
-        moduleSetting.classList.add('tracker-module-setting');
-        moduleSetting.insertAdjacentHTML('beforeend', `
+        let moduleSetting = document.createElement("div");
+        moduleSetting.classList.add("tracker-module-setting");
+        moduleSetting.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="tracker-module-setting-name">
                 Profit
-            </div>`);
-        moduleSetting.append(Templates.selectMenu(SmithingTracker.id + "-profit", {
-            off: "Off",
-            percent: "Percent",
-            flat: "Flat",
-            per_hour: "Per Hour",
-        }, this.settings.profit));
+            </div>`
+        );
+        moduleSetting.append(
+            Templates.selectMenu(
+                SmithingTracker.id + "-profit",
+                {
+                    off: "Off",
+                    percent: "Percent",
+                    flat: "Flat",
+                    per_hour: "Per Hour",
+                },
+                this.settings.profit
+            )
+        );
         return moduleSetting;
     }
 
@@ -98,47 +100,65 @@ class SmithingTracker {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForSmithing(null, true);
     }
 
-    smithingTracker() {
-        const smithingInfo = document.getElementsByClassName('smithing-information')[0];
-        const inputContainer = smithingInfo.getElementsByClassName('smithing-information-inputs')[0];
-        const inputs = inputContainer.getElementsByClassName('smithing-information-input');
+    checkForSmithing(mutations, forceUpdate = false) {
+        if (getSelectedSkill() === "Smithing") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.smithingTracker(forceUpdate);
+        } else {
+            this.ingredients = {};
+        }
+    }
+
+    smithingTracker(forceUpdate = false) {
+        const smithingInfo = document.getElementsByClassName("smithing-information")[0];
+        const inputContainer = smithingInfo.getElementsByClassName("smithing-information-inputs")[0];
+        const inputs = inputContainer.getElementsByClassName("smithing-information-input");
         const ingredientIds = [];
         const ingredientIcons = [];
         const ingredientCounts = [];
-        for(const input of inputs) {
-            ingredientIds.push(convertItemId(input.getElementsByClassName('smithing-information-input-icon')[0].src));
-            ingredientIcons.push(input.getElementsByClassName('smithing-information-input-icon')[0].src);
-            ingredientCounts.push(parseInt(input.getElementsByClassName('smithing-information-input-amount')[0].innerText));
+        for (const input of inputs) {
+            ingredientIds.push(convertItemId(input.getElementsByClassName("smithing-information-input-icon")[0].src));
+            ingredientIcons.push(input.getElementsByClassName("smithing-information-input-icon")[0].src);
+            ingredientCounts.push(parseNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText));
         }
 
-        const outputContainer = smithingInfo.getElementsByClassName('smithing-information-output')[0];
+        const outputContainer = smithingInfo.getElementsByClassName("smithing-information-output")[0];
         // game reuses the input css classes for the output
-        const outputs = outputContainer.getElementsByClassName('smithing-information-input');
-        const productId = convertItemId(outputs[0].getElementsByClassName('smithing-information-input-icon')[0].src);
-        const productIcon = outputs[0].getElementsByClassName('smithing-information-input-icon')[0].src;
-        let productCount = parseInt(outputs[0].getElementsByClassName('smithing-information-input-amount')[0].innerText);
+        const outputs = outputContainer.getElementsByClassName("smithing-information-input");
+        const productId = convertItemId(outputs[0].getElementsByClassName("smithing-information-input-icon")[0].src);
+        const productIcon = outputs[0].getElementsByClassName("smithing-information-input-icon")[0].src;
+        let productCount = parseInt(outputs[0].getElementsByClassName("smithing-information-input-amount")[0].innerText);
         // more than one output -> second one is chance to get an extra bar
         if (outputs.length > 1) {
-            productCount += parseInt(outputs[1].getElementsByClassName('smithing-information-input-owned')[0].childNodes[2].textContent) / 100;
+            productCount += parseInt(outputs[1].getElementsByClassName("smithing-information-input-owned")[0].childNodes[2].textContent) / 100;
         }
 
         const recipePrices = this.storage.handleRecipe(ingredientIds, productId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientCounts });
-        if (deepCompare(this.ingredients, ingredients)) {
+        if (!forceUpdate && deepCompare(this.ingredients, ingredients)) {
             return;
         }
         this.ingredients = ingredients;
 
         const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
-        const timePerAction = parseFloat(smithingInfo.getElementsByClassName('smithing-information-calculations')[0].getElementsByClassName('smithing-information-input-amount')[0].firstChild.textContent);
+        const timePerAction = parseFloat(
+            smithingInfo.getElementsByClassName("smithing-information-calculations")[0].getElementsByClassName("smithing-information-input-amount")[0]
+                .firstChild.textContent
+        );
 
         document.getElementsByClassName("smithing-info-table")[0]?.parentElement.remove();
-        saveInsertAdjacentHTML(smithingInfo, 'afterend', `
+        saveInsertAdjacentHTML(
+            smithingInfo,
+            "afterend",
+            `
             <div class="idlescape-container tracker-ignore">
-                ${Templates.infoTableTemplate('smithing', this.ingredients, product, this.settings.profit, false, false, timePerAction)}
-            </div>`);
+                ${Templates.infoTableTemplate("smithing", this.ingredients, product, this.settings.profit, false, false, timePerAction)}
+            </div>`
+        );
     }
 }

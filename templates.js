@@ -26,7 +26,7 @@ class Templates {
 
     /**
      * Creates a checkbox template
-     * 
+     *
      * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
      *                    e.g. a checkbox with id "module-css-header" will store `1` or `0` in `this.settings.module.css.header`.
      *                    The setting needs to be set to a default value in the constructor of the corresponding module if it's
@@ -63,14 +63,14 @@ class Templates {
                 <rect class="rect-first" x="12" y="38" width="50" height="50" rx="5" ry="5"/>
             </svg>`;
         }
-    
+
     static dotTemplate(size, classes = "", color = "hsl(40, 80%, 40%)") {
         return `
             <svg class="${classes}" viewbox="0 0 100 100" style="width: ${size}; height: ${size}; fill: ${color};">
                 <circle cx="50" cy="50" r="50"/>
             </svg>`;
     }
-    
+
     static favoriteTemplate(classes = "") {
         return `
             <svg class="${classes}" stroke="rgb(255,255,0)" stroke-width="30px" fill="rgb(255,255,0)" x="0px" y="0px" width="24px" heigth="24px" viewBox="-15 -10 366 366">
@@ -79,7 +79,7 @@ class Templates {
     }
 
     /**
-     * 
+     *
      * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
      * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
      * @param {Object} product icon, count, minPrice and maxPrice of the product
@@ -90,7 +90,7 @@ class Templates {
      * @param {Number=} chance chance to successfully craft the product
      * @returns {string} html string
      */
-    static infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1) {
+    static infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1, classes = "") {
         const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
         const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice } = product;
         // Ingredients
@@ -123,7 +123,7 @@ class Templates {
         const minPrice = Templates.infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
         const maxPrice = Templates.infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
         return `
-            <div class="${classId}-info-table" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")}, 1fr)">
+            <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")}, 1fr)">
                 ${header}
                 ${Templates.infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
                 ${minPrice}
@@ -161,7 +161,7 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
 
     /**
      * Creates a notification with the provided message that disappears after 10 seconds or when the user clicks on it.
-     * 
+     *
      * @param {string} type options are `success` (green), `info` (blue), `warning` (yellow) and `danger` (red)
      * @param {string} title string
      * @param {string} message string
@@ -199,7 +199,7 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
     /**
      * Creates a popup with the provided content that can be closed by clicking on the background.
      * The relevant css classes are defined in tracker.js.
-     * 
+     *
      * @param {string} content html string
      * @returns {string} html string
      */
@@ -213,10 +213,10 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
 
     /**
      * Creates a select menu with the provided options.
-     * 
+     *
      * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
-     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at 
-     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of 
+     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at
+     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of
      *                    the corresponding module if it's not set.
      *                    !! This will not check if the path exists in the settings !!
      * @param {Object} options object with pairs of the internal settingsname and a string for the display
@@ -267,8 +267,8 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
      * Creates a template for a slider
      *
      * @param {string} id When saving settings the id gets split at all '-' and then saved in the settings menu at that position
-     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at 
-     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of 
+     *                    e.g. the selected value of the select menu with id "module-css-header" will be stored at
+     *                    `this.settings.module.css.header`. The setting needs to be set to a default value in the constructor of
      *                    the corresponding module if it's not set.
      *                    !! This will not check if the path exists in the settings !!
      * @param {Array} range minimum and maximum value of the slider, a third value can be provided to set the step size
@@ -282,7 +282,7 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
 
     static timeDurationTemplate(id, value = "", classes = "") {
         const durationInput = document.createElement('input');
-        durationInput.id = id; 
+        durationInput.id = id;
         durationInput.classList = `tracker-time-duration ${classes}`;
         durationInput.type = 'text';
         durationInput.value = value;

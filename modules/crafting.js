@@ -1,26 +1,18 @@
 class CraftingTracker {
-    static id = "crafting_tracker"
+    static id = "crafting_tracker";
     static displayName = "Crafting Tracker";
     static icon = "<img src='images/ui/crafting_icon.png' alt='Crafting Tracker Icon'/>";
     static category = "recipe";
     css = `
-.crafting-item-container {
-    display: flex;
-    flex-direction: column;
-}
-
-body .crafting-container {
-    height: auto;
-    flex: 1 0 auto;
+.crafting-container {
+    grid-template-rows: 1fr max-content;
 }
 
 .crafting-info-table {
+    grid-column: span 2;
     display: grid; /* Grid Layout specified by js */
     grid-gap: 5px;
-    /* combination of rgba(36, 36, 36, .671) in front of rgba(0, 0, 0, .705) */
-    background: rgba(24.156, 24.156, 24.156, .902945);
-    border: 2px solid gray;
-    padding: 6px;
+    padding: 15px 20px;
     margin-top: 6px;
     border-radius: 6px;
     place-items: center;
@@ -70,13 +62,8 @@ body .crafting-container {
         this.lastCraftedItemId = null;
         this.lastSelectedNavTab = null;
 
-        this.playAreaObserver = new MutationObserver(mutations => {
-            if (getSelectedSkill() === "Crafting") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.craftingTracker();
-            }
+        this.playAreaObserver = new MutationObserver((mutations) => {
+            this.checkForCrafting(mutations);
         });
     }
 
@@ -84,7 +71,7 @@ body .crafting-container {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             attributes: true,
-            attributeFilter: ['src'],
+            attributeFilter: ["src"],
             childList: true,
             subtree: true,
         });
@@ -96,17 +83,26 @@ body .crafting-container {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement('div');
-        moduleSetting.classList.add('tracker-module-setting');
-        moduleSetting.insertAdjacentHTML('beforeend',`
+        let moduleSetting = document.createElement("div");
+        moduleSetting.classList.add("tracker-module-setting");
+        moduleSetting.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="tracker-module-setting-name">
                 Profit
-            </div>`);
-        moduleSetting.append(Templates.selectMenu(CraftingTracker.id + "-profit", {
-                off: "Off",
-                percent: "Percent",
-                flat: "Flat",
-            }, this.settings.profit));
+            </div>`
+        );
+        moduleSetting.append(
+            Templates.selectMenu(
+                CraftingTracker.id + "-profit",
+                {
+                    off: "Off",
+                    percent: "Percent",
+                    flat: "Flat",
+                },
+                this.settings.profit
+            )
+        );
 
         const goldPerXP = `
             <div class="tracker-module-setting">
@@ -123,19 +119,31 @@ body .crafting-container {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForCrafting(null, true);
     }
 
-    craftingTracker(){
+    checkForCrafting(mutations, forceUpdate = false) {
+        if (getSelectedSkill() === "Crafting") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.craftingTracker(forceUpdate);
+        }
+    }
+
+    craftingTracker(forceUpdate = false) {
         let recipeNode = document.getElementsByClassName("crafting-container")[0];
         if (!recipeNode) {
             this.lastCraftedItemId = null;
             return;
         }
-        const craftedItemId = convertItemId(recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src);
-        let craftingAmount = 1;
+        const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].getElementsByTagName("img")[0].src;
+        let craftedItemId = convertItemId(craftedItemIcon);
+        if (this.storage.itemRequiresFallback(craftedItemId)) {
+            craftedItemId = recipeNode.getElementsByClassName("crafting-item-name")[0].innerText;
+        }
         // prevent repeated calls
-        if (craftedItemId === this.lastCraftedItemId) {
+        if (!forceUpdate && craftedItemId === this.lastCraftedItemId) {
             // for items with multiple recipes
             const selectedNavTab = recipeNode.getElementsByClassName("selected-tab")[0];
             if (!selectedNavTab) {
@@ -145,19 +153,9 @@ body .crafting-container {
                 return;
             }
             this.lastSelectedNavTab = selectedNavTab.innerText;
-            // amount of crafts might be higher than one when only switching recipes for the same item
-            craftingAmount = document.getElementById('craftCount').value;
         }
         this.lastCraftedItemId = craftedItemId;
-
-        const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].firstChild.src;
-        let craftedItemCount = 1;
-        // for recipes which result in more than one item (usually baits)
-        const description = recipeNode.getElementsByClassName('crafting-item-description')[0].innerText;
-        const regex = /(?<=Each craft results in )\d+/.exec(description);
-        if (regex !== null) {
-            craftedItemCount = parseInt(regex[0]);
-        }
+        const craftingAmount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) || 1;
 
         const resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
         let resourceItemIds = [];
@@ -165,43 +163,47 @@ body .crafting-container {
         let resourceItemCounts = [];
         for (let i = 0; i < resourceItemNodes.length; i++) {
             let resourceItemId = convertItemId(resourceItemNodes[i].childNodes[1].src);
-            if (resourceItemId.includes('essence')) {
-                continue;
-            }
             resourceItemIds.push(resourceItemId);
             resourceItemIcons.push(resourceItemNodes[i].childNodes[1].src);
             resourceItemCounts.push(parseNumberString(resourceItemNodes[i].firstChild.textContent) / craftingAmount);
         }
 
-        const recipePrices = this.storage.handleRecipe(resourceItemIds, craftedItemId)
+        const recipePrices = this.storage.handleRecipe(resourceItemIds, craftedItemId);
         // TODO: use vendor price where appropriate
 
         // crafting info table
         document.getElementsByClassName("crafting-info-table")[0]?.remove();
-        let craftingContainer = document.getElementsByClassName("crafting-item-container")[0];
-        const ingredients = Object.assign(recipePrices.ingredients, {icons: resourceItemIcons, counts: resourceItemCounts});
-        const product = Object.assign(recipePrices.product, {icon: craftedItemIcon, count: craftedItemCount});
-        saveInsertAdjacentHTML(craftingContainer, 'beforeend', Templates.infoTableTemplate('crafting', ingredients, product, this.settings.profit));
-        
+        const craftingContainer = document.getElementsByClassName("crafting-container")[0];
+        const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
+        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: craftingAmount });
+        saveInsertAdjacentHTML(
+            craftingContainer,
+            "beforeend",
+            Templates.infoTableTemplate("crafting", ingredients, product, this.settings.profit, false, false, undefined, undefined, "idlescape-container")
+        );
+
         if (this.settings.goldPerXP) {
             this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
         }
     }
-    
+
     goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {
-        document.getElementsByClassName('crafting-gold-per-exp')[0]?.remove();
+        document.getElementsByClassName("crafting-gold-per-exp")[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
         const experience = parseNumberString(experienceNode.childNodes[0].textContent);
         if (experience === 0) {
             return;
         }
-        let minCost = - profit('flat', totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
-        let maxCost = - profit('flat', totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
+        let minCost = -profit("flat", totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
+        let maxCost = -profit("flat", totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
         // swap min and max if min is higher than max
         if (minCost > maxCost) {
             [minCost, maxCost] = [maxCost, minCost];
         }
-        saveInsertAdjacentHTML(experienceNode, 'afterend', `
+        saveInsertAdjacentHTML(
+            experienceNode,
+            "afterend",
+            `
             <div class="crafting-gold-per-exp">
                 <span>
                     ${formatNumber(minCost / experience, true)} ~ ${formatNumber(maxCost / experience, true)}
@@ -209,6 +211,7 @@ body .crafting-container {
                 <img class="crafting-gold-per-exp-icon" src="/images/money_icon.png">
                 <span>/</span>
                 <img class="crafting-gold-per-exp-icon" src="/images/total_level.png">
-            </div>`);
+            </div>`
+        );
     }
 }
