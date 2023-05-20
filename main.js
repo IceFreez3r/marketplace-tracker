@@ -4,7 +4,7 @@ tracker.addModule(MarketHighlights);
 tracker.addModule(OfflineTracker);
 tracker.addModule(EnchantingTracker);
 tracker.addModule(SmithingTracker);
-// tracker.addModule(CraftingTracker);
+tracker.addModule(CraftingTracker);
 tracker.addModule(RunecraftingTracker);
 tracker.addModule(FarmingTracker);
 tracker.addModule(AlertTracker);
