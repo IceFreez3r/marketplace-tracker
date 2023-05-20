@@ -11,11 +11,7 @@ class Tracker {
     width: 100%;
 }
 
-.drawer-item {
-    justify-content: space-between;
-}
-
-.drawer-item-left {
+.tracker-drawer-item-left {
     width: 100%;
 }
 
@@ -444,13 +440,16 @@ input[type="time"].tracker-time:not(.browser-default) {
         oldSidebarItem?.remove();
 
         const vanillaSettings = document.getElementsByClassName("Settings")[0];
-        vanillaSettings.insertAdjacentHTML("afterend", `
+        vanillaSettings.insertAdjacentHTML(
+            "afterend",
+            `
             <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
-                <div class="drawer-item-left">
+                <div class="drawer-item-left tracker-drawer-item-left">
                     ${Templates.trackerLogoTemplate("drawer-item-icon")}
                     Marketplace Tracker
                 </div>
-            </div>`);
+            </div>`
+        );
         document.getElementById("tracker-settings-sidebar").addEventListener("click", () => {
             // Hide sidebar unless it's pinned
             if (!document.getElementsByClassName("drawer-item center")[0].lastChild.classList.contains("pressed")) {
@@ -472,13 +471,16 @@ input[type="time"].tracker-time:not(.browser-default) {
             navTabContainer.style.display = "none";
         }
 
-        navTabContainer.insertAdjacentHTML("afterend", `
+        navTabContainer.insertAdjacentHTML(
+            "afterend",
+            `
             <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
                 <div class="nav-tab noselect selected-tab tracker">
                     ${Templates.trackerLogoTemplate("nav-tab-icon icon-border")}
                     Tracker
                 </div>
-            </div>`);
+            </div>`
+        );
         const selectedSkill = getSelectedSkill();
 
         const playAreaBackground = playAreaContainer.getElementsByClassName("play-area-background")[0];
@@ -520,7 +522,10 @@ input[type="time"].tracker-time:not(.browser-default) {
             }
             const moduleSettings = document.createElement("div");
             moduleSettings.className = "settings-module";
-            saveInsertAdjacentHTML(moduleSettings, "beforeend", `
+            saveInsertAdjacentHTML(
+                moduleSettings,
+                "beforeend",
+                `
                 <div class="settings-module-header">
                     <div class="settings-module-header-toggle-icon">
                         ${module.icon}
@@ -529,14 +534,17 @@ input[type="time"].tracker-time:not(.browser-default) {
                         ${module.displayName}
                     </div>
                     ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
-                </div>`);
+                </div>`
+            );
             const moduleSettingsContent = document.createElement("div");
             moduleSettingsContent.className = "settings-module-content";
             this.addModuleSettings(moduleId, moduleSettingsContent);
             moduleSettings.append(moduleSettingsContent);
             settingCategories[module.category].div.append(moduleSettings);
         }
-        settingsArea.insertAdjacentHTML("beforeend", `
+        settingsArea.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="settings-footer">
                 <div id="settings-reset" class="tracker-settings-button idlescape-button-red">
                     Reset
@@ -552,7 +560,8 @@ input[type="time"].tracker-time:not(.browser-default) {
                 <div id="settings-save" class="tracker-settings-button idlescape-button-green">
                     Save
                 </div>
-            </div>`);
+            </div>`
+        );
         playAreaBackground.append(settingsArea);
 
         this.warningShown = false;
@@ -617,7 +626,10 @@ input[type="time"].tracker-time:not(.browser-default) {
     }
 
     importExportPopup() {
-        saveInsertAdjacentHTML(document.body, "beforeend", Templates.popupTemplate(`
+        saveInsertAdjacentHTML(
+            document.body,
+            "beforeend",
+            Templates.popupTemplate(`
             <div class="import-export-popup">
                 <div class="import-export-popup-title">
                     Import/Export
@@ -672,7 +684,8 @@ input[type="time"].tracker-time:not(.browser-default) {
                         Close
                     </div>
                 </div>
-            </div>`));
+            </div>`)
+        );
         document.getElementById("tracker-import-settings").addEventListener("click", () => this.importSettings());
         document.getElementById("tracker-export-settings").addEventListener("click", () => this.exportSettings());
         document.getElementById("tracker-import-market").addEventListener("click", () => this.importStorage());
