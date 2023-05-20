@@ -154,7 +154,9 @@ class MarketplaceTracker {
         this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
+            this.playAreaObserver.disconnect();
             this.checkForMarketplace(mutations);
+            this.connectPlayAreaObserver();
         });
         this.sellDialogChecker = new MutationObserver((mutations) => {
             if (document.getElementById("lowest-price")) {
@@ -166,11 +168,7 @@ class MarketplaceTracker {
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.playAreaObserver.observe(playAreaContainer, {
-            childList: true,
-            subtree: true,
-        });
+        this.connectPlayAreaObserver();
         this.settingChanged("vendorWarning", this.settings.vendorWarning);
     }
 
@@ -220,6 +218,14 @@ class MarketplaceTracker {
         this.checkForMarketplace();
     }
 
+    connectPlayAreaObserver() {
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.playAreaObserver.observe(playAreaContainer, {
+            childList: true,
+            subtree: true,
+        });
+    }
+
     checkForMarketplace(mutations) {
         if (getSelectedSkill() === "Marketplace") {
             if (mutations && detectInfiniteLoop(mutations)) {
@@ -249,7 +255,10 @@ class MarketplaceTracker {
         if (offers.length === 0) {
             return;
         }
-        const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
+        let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
+        if (this.storage.itemRequiresFallback(itemId)) {
+            itemId = offers[0].firstChild.firstChild.textContent;
+        }
         const analysis = this.storage.analyzeItem(itemId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];

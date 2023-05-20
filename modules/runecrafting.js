@@ -70,16 +70,14 @@ body .runecrafting-essence-counter {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
+            this.playAreaObserver.disconnect();
             this.checkForRunecrafting(mutations);
+            this.connectPlayAreaObserver();
         });
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.playAreaObserver.observe(playAreaContainer, {
-            childList: true,
-            subtree: true,
-        });
+        this.connectPlayAreaObserver();
     }
 
     deactivate() {
@@ -109,6 +107,14 @@ body .runecrafting-essence-counter {
 
     onAPIUpdate() {
         this.checkForRunecrafting();
+    }
+
+    connectPlayAreaObserver() {
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.playAreaObserver.observe(playAreaContainer, {
+            childList: true,
+            subtree: true,
+        });
     }
 
     checkForRunecrafting(mutations) {

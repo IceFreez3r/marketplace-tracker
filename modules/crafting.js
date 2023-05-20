@@ -134,7 +134,10 @@ class CraftingTracker {
             return;
         }
         const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].getElementsByTagName("img")[0].src;
-        const craftedItemId = convertItemId(craftedItemIcon);
+        let craftedItemId = convertItemId(craftedItemIcon);
+        if (this.storage.itemRequiresFallback(craftedItemId)) {
+            craftedItemId = recipeNode.getElementsByClassName("crafting-item-name")[0].innerText;
+        }
         // prevent repeated calls
         if (!forceUpdate && craftedItemId === this.lastCraftedItemId) {
             // for items with multiple recipes

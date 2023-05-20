@@ -369,13 +369,23 @@ class MarketHighlights {
             return;
         }
         if (this.quantileColorsActive) {
-            const priceQuantiles = this.storage.latestPriceQuantiles();
+            const itemIdsWithFallbacks = [];
+            for (const item of items) {
+                const itemId = convertItemId(item.firstChild.src);
+                if (this.storage.itemRequiresFallback(itemId)) {
+                    itemIdsWithFallbacks.push(item.firstChild.alt);
+                } else {
+                    itemIdsWithFallbacks.push(itemId);
+                }
+            }
+            const priceQuantiles = this.storage.latestPriceQuantiles(itemIdsWithFallbacks);
             if (this.settings.quantileDisplay === "party") {
                 this.partyMode(items, priceQuantiles);
             } else {
-                for (const item of items) {
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
                     const itemId = convertItemId(item.firstChild.src);
-                    const quantile = priceQuantiles[itemId];
+                    const quantile = priceQuantiles[i];
                     const color = this.getHSLColor(quantile);
                     item.style.backgroundImage = "url(/images/ui/frame_box.png), linear-gradient(#1c2024, #1c2024)";
                     if (this.settings.quantileDisplay === "dot") {
@@ -418,9 +428,11 @@ class MarketHighlights {
         if (!this.quantileColorsActive || !items[0].parentNode) {
             return;
         }
-        for (let item of items) {
-            const itemId = convertItemId(item.firstChild.src);
-            const quantile = (priceQuantiles[itemId] + offset) % 3;
+        // If the lengths don't match, we ignore the overhang
+        // No one will use this feature seriously anyway
+        for (let i = 0; i < items.length && i < priceQuantiles.length; i++) {
+            const item = items[i];
+            const quantile = (priceQuantiles[i] + offset) % 3;
             const color = this.getHSLColor(quantile);
             item.style.border = `3px solid ${color}`;
             this.quantileDot(item, color);

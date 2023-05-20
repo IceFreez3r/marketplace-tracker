@@ -341,8 +341,8 @@ class AlertTracker {
             priceBelowInput.value = "";
             priceAboveInput.value = "";
         } else {
-            priceBelowInput.value = this.allAlerts[itemId].below ?? undefined;
-            priceAboveInput.value = this.allAlerts[itemId].above ?? undefined;
+            priceBelowInput.value = this.allAlerts[itemId].below;
+            priceAboveInput.value = this.allAlerts[itemId].above;
         }
 
         document.getElementsByClassName("save")[0].addEventListener("click", () => {
