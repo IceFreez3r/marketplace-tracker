@@ -4,6 +4,10 @@ class CraftingTracker {
     static icon = "<img src='images/ui/crafting_icon.png' alt='Crafting Tracker Icon'/>";
     static category = "recipe";
     css = `
+.crafting-container {
+    grid-template-rows: 1fr max-content;
+}
+
 .crafting-info-table {
     grid-column: span 2;
     display: grid; /* Grid Layout specified by js */
