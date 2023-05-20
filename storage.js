@@ -28,16 +28,11 @@ class Storage {
             this.itemList[item].name = vanillaItemsList[item].name;
             this.itemList[item].vendorPrice = vanillaItemsList[item].value;
         }
-        await this.fetchAPI();
-        const apiFetch = setInterval(() => this.fetchAPI(), 1000 * 60 * 10); // 10 minutes
+        this.fetchAPILoop();
     }
 
     getLastLogin() {
         return this.lastLogin;
-    }
-
-    handleClose() {
-        this.storeItemList();
     }
 
     handleApiData(data) {
@@ -53,6 +48,7 @@ class Storage {
         this.itemList[2]["prices"].push([timestamp, currentHeatValue.heatValue]);
         this.sortPriceList(2);
         this.latestPriceList[2] = currentHeatValue.heatValue;
+        this.storeItemList();
     }
 
     bestHeatItem() {
@@ -222,23 +218,44 @@ class Storage {
         }
     }
 
-    async fetchAPI() {
+    fetchAPILoop() {
+        this.fetchAPI().then((lastAPITimestamp) => {
+            let timeUntilNextUpdate;
+            if (lastAPITimestamp === null) {
+                timeUntilNextUpdate = 1000 * 60 * 10;
+            } else {
+                // last api timestamp + 20 minutes - now
+                timeUntilNextUpdate = new Date(lastAPITimestamp).valueOf() + 1000 * 60 * 10 * 2 - Date.now();
+            }
+            console.log("Time until the next fetch (in ms):", timeUntilNextUpdate);
+            setTimeout(() => {
+                this.fetchAPILoop();
+            }, timeUntilNextUpdate + 1000 * 10);
+        });
+    }
+
+    fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
-        await fetch(apiUrl)
+        const lastAPITimestamp = fetch(apiUrl)
             .then((response) => {
                 return response.json();
             })
             .then((data) => {
                 if (data.status === "Success") {
                     this.handleApiData(data.manifest);
+                    console.log("API timestamp: ", data.timestamp);
+                    return data.timestamp;
                 } else {
                     console.error("Error fetching API data. Status: " + data.status);
+                    return null;
                 }
             })
             .catch((err) => {
                 console.error(err);
+                return null;
             });
         this.APICallback();
+        return lastAPITimestamp;
     }
 
     loadLocalStorage(key, fallback) {

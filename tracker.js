@@ -360,7 +360,6 @@ input[type="time"].tracker-time:not(.browser-default) {
 
         this.storage = new Storage(() => this.onApiUpdate());
 
-        window.addEventListener("beforeunload", () => this.storage.handleClose());
         document.addEventListener("keydown", (event) => {
             if (event.key === "Escape") {
                 this.closePopup();
