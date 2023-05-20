@@ -89,7 +89,7 @@ class OfflineTracker {
     }
 
     onAPIUpdate() {
-        return;
+        this.offlineTracker();
     }
 
     offlineTracker(){

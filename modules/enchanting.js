@@ -53,15 +53,10 @@ body .scrollcrafting-container {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
-            if (getSelectedSkill() === "Enchanting" && this.selectedTab() === "Scrollcrafting") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.enchantingTracker();
-            }
+            this.checkForEnchanting(mutations);
         });
     }
-    
+
     onGameReady() {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
@@ -96,7 +91,16 @@ body .scrollcrafting-container {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForEnchanting();
+    }
+
+    checkForEnchanting(mutations) {
+        if (getSelectedSkill() === "Enchanting" && this.selectedTab() === "Scrollcrafting") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.enchantingTracker();
+        }
     }
 
     enchantingTracker() {
@@ -107,10 +111,7 @@ body .scrollcrafting-container {
     }
 
     processEnchantment(recipe) {
-        // Table already exists
-        if (recipe.getElementsByClassName("enchanting-info-table")[0]) {
-            return;
-        }
+        recipe.getElementsByClassName("enchanting-info-table")[0]?.remove();
         const scrollId = convertItemId(recipe.firstChild.src);
         const scrollIcon = recipe.firstChild.src;
 

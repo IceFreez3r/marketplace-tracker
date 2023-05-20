@@ -160,15 +160,7 @@ class MarketHighlights {
         this.notificationInformation = {}; // comes from alert.js
 
         this.playAreaObserver = new MutationObserver((mutations) => {
-            if (getSelectedSkill() === "Marketplace") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.highlight();
-            } else {
-                this.favoriteFilterActive = false;
-                this.quantileColorsActive = false;
-            }
+            this.checkForMarketplace(mutations);
         });
     }
 
@@ -236,13 +228,25 @@ class MarketHighlights {
     }
 
     onAPIUpdate() {
-        return;
+        this.checkForMarketplace();
     }
 
     onNotify(message, data) {
         if (message === "alerts") {
             this.notificationInformation = data;
-            this.onAPIUpdate();
+            this.checkForMarketplace();
+        }
+    }
+
+    checkForMarketplace(mutations) {
+        if (getSelectedSkill() === "Marketplace") {
+            if (mutations && detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.highlight();
+        } else {
+            this.favoriteFilterActive = false;
+            this.quantileColorsActive = false;
         }
     }
 

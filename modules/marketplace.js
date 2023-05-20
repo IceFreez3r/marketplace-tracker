@@ -154,12 +154,7 @@ class MarketplaceTracker {
         this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
-            if (getSelectedSkill() === "Marketplace") {
-                if (detectInfiniteLoop(mutations)) {
-                    return;
-                }
-                this.marketplaceTracker();
-            }
+            this.checkForMarketplace(mutations);
         });
         this.sellDialogChecker = new MutationObserver((mutations) => {
             if (document.getElementById("lowest-price")) {
@@ -222,7 +217,16 @@ class MarketplaceTracker {
     }
 
     onAPIUpdate() {
+        this.checkForMarketplace();
+    }
+
+    checkForMarketplace(mutations) {
+        if (getSelectedSkill() === "Marketplace") {
+            if (mutations && detectInfiniteLoop(mutations)) {
         return;
+    }
+            this.marketplaceTracker();
+        }
     }
 
     marketplaceTracker() {
@@ -247,10 +251,9 @@ class MarketplaceTracker {
         }
         const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
         const analysis = this.storage.analyzeItem(itemId);
-        if (document.getElementsByClassName("marketplace-analysis-table").length === 0) {
+        document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
             const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
             saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
-        }
         this.markOffers(offers, analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
@@ -280,11 +283,9 @@ class MarketplaceTracker {
     }
 
     markOffers(offers, maxPrice) {
-        for (let i = 0; i < offers.length; i++) {
-            let offer = offers[i];
+        for (const offer of offers) {
             offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
-            let offerPrice = offer.childNodes[3].innerText;
-            offerPrice = parseNumberString(offerPrice);
+            const offerPrice = parseNumberString(offer.childNodes[3].innerText);
             if (offerPrice < maxPrice * 0.6) {
                 offer.classList.add("marketplace-offer-low");
             } else if (offerPrice < maxPrice * 0.8) {
