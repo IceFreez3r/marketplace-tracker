@@ -53,16 +53,14 @@ body .scrollcrafting-container {
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
+            this.playAreaObserver.disconnect();
             this.checkForEnchanting(mutations);
+            this.connectPlayAreaObserver();
         });
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        this.playAreaObserver.observe(playAreaContainer, {
-            childList: true,
-            subtree: true
-        });
+        this.connectPlayAreaObserver();
     }
 
     deactivate() {
@@ -94,6 +92,14 @@ body .scrollcrafting-container {
         this.checkForEnchanting();
     }
 
+    connectPlayAreaObserver() {
+        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        this.playAreaObserver.observe(playAreaContainer, {
+            childList: true,
+            subtree: true
+        });
+    }
+
     checkForEnchanting(mutations) {
         if (getSelectedSkill() === "Enchanting" && this.selectedTab() === "Scrollcrafting") {
             if (mutations && detectInfiniteLoop(mutations)) {
@@ -112,13 +118,17 @@ body .scrollcrafting-container {
 
     processEnchantment(recipe) {
         recipe.getElementsByClassName("enchanting-info-table")[0]?.remove();
-        const scrollId = convertItemId(recipe.firstChild.src);
+        let scrollId = convertItemId(recipe.firstChild.src);
+        if (this.storage.itemRequiresFallback(scrollId)) {
+            scrollId = recipe.childNodes[1].innerText;
+        }
         const scrollIcon = recipe.firstChild.src;
 
         let standardResources = this.getStandardResources(recipe.getElementsByClassName("scrollcrafting-standard-resources")[0]);
         let dynamicResources = this.getDynamicResources(recipe.getElementsByClassName("scrollcrafting-dynamic-resources")[0]);
         // combine lists of objects into separate lists
-        let resourceItemIds = ["scroll"].concat(dynamicResources.map(resource => resource.itemId));
+        // "Scroll" is the fallback item id for the scroll, some ability books also use the same icon
+        let resourceItemIds = ["Scroll"].concat(dynamicResources.map(resource => resource.itemId));
         let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));
         let resourceItemCounts = [standardResources.scrolls].concat(dynamicResources.map(resource => resource.amount));
         const recipePrices = this.storage.handleRecipe(resourceItemIds, scrollId);

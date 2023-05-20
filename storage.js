@@ -22,7 +22,7 @@ class Storage {
                     // Add fallback for itemImages that are used by multiple items
                     this.idMap[vanillaItemsList[item].name] = item;
                     if (this.idMap[itemImage] !== -1) {
-                        this.idMap[vanillaItemsList[this.idMap[itemImage]].name] = item;
+                        this.idMap[vanillaItemsList[this.idMap[itemImage]].name] = this.idMap[itemImage];
                         // prevent getting the wrong item
                         this.idMap[itemImage] = -1;
                     }
