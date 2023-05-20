@@ -223,8 +223,8 @@ class MarketplaceTracker {
     checkForMarketplace(mutations) {
         if (getSelectedSkill() === "Marketplace") {
             if (mutations && detectInfiniteLoop(mutations)) {
-        return;
-    }
+                return;
+            }
             this.marketplaceTracker();
         }
     }
@@ -252,8 +252,8 @@ class MarketplaceTracker {
         const itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
         const analysis = this.storage.analyzeItem(itemId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
-            const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
-            saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
+        const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
         this.markOffers(offers, analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
@@ -492,10 +492,15 @@ class MarketplaceTracker {
         const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("Item sells to NPCs for:", "").replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
         const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
+        this.checkPrice(warningIcon, priceInput, vendorPrice);
         priceInput.addEventListener("input", () => {
-            const price = parseCompactNumberString(priceInput.value);
-            const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
-            warningIcon.classList.toggle("hidden", !tooLowPrice);
+            this.checkPrice(warningIcon, priceInput, vendorPrice);
         });
+    }
+
+    checkPrice(warningIcon, priceInput, vendorPrice) {
+        const price = parseCompactNumberString(priceInput.value);
+        const tooLowPrice = Math.floor(price * 0.95) < vendorPrice;
+        warningIcon.classList.toggle("hidden", !tooLowPrice);
     }
 }
