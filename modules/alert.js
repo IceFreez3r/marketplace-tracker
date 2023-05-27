@@ -300,7 +300,10 @@ class AlertTracker {
             // not loaded yet
             return;
         }
-        const itemId = convertItemId(offer.childNodes[1].firstChild.src);
+        let itemId = convertItemId(offer.childNodes[1].firstChild.src);
+        if (this.storage.itemRequiresFallback(itemId)) {
+            itemId = offer.firstChild.firstChild.textContent;
+        }
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(refreshButton, "afterend", `
             <button id="marketplace-alert-button" class="marketplace-alert-button ${
@@ -372,10 +375,10 @@ class AlertTracker {
         } else {
             this.allAlerts[itemId] = {};
             if (priceBelow !== 0 && priceBelow !== "") {
-                this.allAlerts[itemId].below = priceBelow;
+                this.allAlerts[itemId].below = parseInt(priceBelow);
             }
             if (priceAbove !== 0 && priceAbove !== "") {
-                this.allAlerts[itemId].above = priceAbove;
+                this.allAlerts[itemId].above = parseInt(priceAbove);
             }
         }
         const alertButton = document.getElementById("marketplace-alert-button");

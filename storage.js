@@ -9,7 +9,7 @@ class Storage {
         this.latestAPIFetch = this.loadLocalStorage('TrackerLatestAPIFetch', 0);
     }
 
-    async onGameReady() {
+    onGameReady() {
         const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
         this.idMap = {};
         for (const item in vanillaItemsList) {
@@ -128,7 +128,12 @@ class Storage {
             }
             return result;
         }, {});
-        localStorage.setItem('itemList', JSON.stringify(itemList));
+        try {
+            localStorage.setItem('itemList', JSON.stringify(itemList));
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
     getItemName(itemId) {
@@ -164,12 +169,20 @@ class Storage {
             };
         }
         const apiId = this.idMap[itemId];
-        if (apiId === -1 || this.itemList[apiId].prices.length === 0) {
+        if (apiId === -1) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
                 vendorPrice: NaN,
+            };
+        }
+        if (this.itemList[apiId].prices.length === 0) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+                vendorPrice: this.itemList[apiId].vendorPrice,
             };
         }
         const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);
@@ -200,6 +213,7 @@ class Storage {
     latestPrices() {
         const prices = {};
         for (let itemId in this.idMap) {
+            if (this.idMap[itemId] === -1) continue;
             prices[itemId] = ((itemId) => {
                 const apiId = this.idMap[itemId];
                 return this.latestPriceList[apiId] ?? NaN;
@@ -269,13 +283,14 @@ class Storage {
 
     fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
-        const lastAPITimestamp = fetch(apiUrl)
+        return fetch(apiUrl)
             .then((response) => {
                 return response.json();
             })
             .then((data) => {
                 if (data.status === "Success") {
                     this.handleApiData(data);
+                    this.APICallback();
                     return data.timestamp;
                 } else {
                     console.error("Error fetching API data. Status: " + data.status);
@@ -286,8 +301,6 @@ class Storage {
                 console.error(err);
                 return null;
             });
-        this.APICallback();
-        return lastAPITimestamp;
     }
 
     loadLocalStorage(key, fallback) {

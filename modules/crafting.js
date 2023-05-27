@@ -22,10 +22,20 @@ class CraftingTracker {
     grid-column: 2;
 }
 
+.crafting-info-table-content {
+    display: flex;
+}
+
 .crafting-info-table-icon {
     margin: 4px 10px;
     width: 32px;
     height: 32px;
+    object-fit: contain;
+}
+
+.crafting-info-table-vendor-icon {
+    width: 16px;
+    height: 16px;
     object-fit: contain;
 }
 
@@ -137,7 +147,9 @@ class CraftingTracker {
             this.lastCraftedItemId = null;
             return;
         }
-        const craftedItemIcon = recipeNode.getElementsByClassName("crafting-item-icon")[0].getElementsByTagName("img")[0].src;
+        const craftedItemIcon = recipeNode
+            .getElementsByClassName("crafting-item-icon")[0]
+            .getElementsByTagName("img")[0].src;
         let craftedItemId = convertItemId(craftedItemIcon);
         if (this.storage.itemRequiresFallback(craftedItemId)) {
             craftedItemId = recipeNode.getElementsByClassName("crafting-item-name")[0].innerText;
@@ -155,7 +167,8 @@ class CraftingTracker {
             this.lastSelectedNavTab = selectedNavTab.innerText;
         }
         this.lastCraftedItemId = craftedItemId;
-        const craftingAmount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) || 1;
+        const craftingAmount = parseInt(document.getElementById("craftCount").value);
+        const productCount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) || 1;
 
         const resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
         let resourceItemIds = [];
@@ -174,28 +187,57 @@ class CraftingTracker {
         // crafting info table
         document.getElementsByClassName("crafting-info-table")[0]?.remove();
         const craftingContainer = document.getElementsByClassName("crafting-container")[0];
-        const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
-        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: craftingAmount });
+        const ingredients = Object.assign(recipePrices.ingredients, {
+            icons: resourceItemIcons,
+            counts: resourceItemCounts,
+        });
+        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: productCount });
         saveInsertAdjacentHTML(
             craftingContainer,
             "beforeend",
-            Templates.infoTableTemplate("crafting", ingredients, product, this.settings.profit, false, false, undefined, undefined, "idlescape-container")
+            Templates.infoTableTemplate(
+                "crafting",
+                ingredients,
+                product,
+                this.settings.profit,
+                false,
+                false,
+                undefined,
+                undefined,
+                "idlescape-container"
+            )
         );
 
         if (this.settings.goldPerXP) {
-            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
+            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount);
         }
     }
 
-    goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {
+    goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount) {
         document.getElementsByClassName("crafting-gold-per-exp")[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
         const experience = parseNumberString(experienceNode.childNodes[0].textContent);
         if (experience === 0) {
             return;
         }
-        let minCost = -profit("flat", totalRecipePrice(ingredients.minPrices, resourceItemCounts), product.minPrice * product.count);
-        let maxCost = -profit("flat", totalRecipePrice(ingredients.maxPrices, resourceItemCounts), product.maxPrice * product.count);
+        const betterVendorThanMin = profit("flat", product.vendorPrice, product.minPrice) < 0;
+        const betterMinSellPrice = (betterVendorThanMin ? product.vendorPrice : product.minPrice) * productCount;
+        const betterVendorThanMax = profit("flat", product.vendorPrice, product.maxPrice) < 0;
+        const betterMaxSellPrice = (betterVendorThanMax ? product.vendorPrice : product.maxPrice) * productCount;
+        let minCost = -profit(
+            "flat",
+            totalRecipePrice(ingredients.minPrices, resourceItemCounts),
+            betterMinSellPrice,
+            undefined,
+            betterVendorThanMin
+        );
+        let maxCost = -profit(
+            "flat",
+            totalRecipePrice(ingredients.maxPrices, resourceItemCounts),
+            betterMaxSellPrice,
+            undefined,
+            betterVendorThanMax
+        );
         // swap min and max if min is higher than max
         if (minCost > maxCost) {
             [minCost, maxCost] = [maxCost, minCost];
