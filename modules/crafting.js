@@ -155,7 +155,8 @@ class CraftingTracker {
             this.lastSelectedNavTab = selectedNavTab.innerText;
         }
         this.lastCraftedItemId = craftedItemId;
-        const craftingAmount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) || 1;
+        const craftingAmount = parseInt(document.getElementById("craftCount").value);
+        const productCount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) || 1;
 
         const resourceItemNodes = recipeNode.getElementsByClassName("crafting-item-resource");
         let resourceItemIds = [];
@@ -175,7 +176,7 @@ class CraftingTracker {
         document.getElementsByClassName("crafting-info-table")[0]?.remove();
         const craftingContainer = document.getElementsByClassName("crafting-container")[0];
         const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
-        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: craftingAmount });
+        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: productCount });
         saveInsertAdjacentHTML(
             craftingContainer,
             "beforeend",
