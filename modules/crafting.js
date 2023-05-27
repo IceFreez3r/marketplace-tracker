@@ -209,11 +209,11 @@ class CraftingTracker {
         );
 
         if (this.settings.goldPerXP) {
-            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts);
+            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount);
         }
     }
 
-    goldPerXP(recipeNode, ingredients, product, resourceItemCounts) {
+    goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount) {
         document.getElementsByClassName("crafting-gold-per-exp")[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp small")[0];
         const experience = parseNumberString(experienceNode.childNodes[0].textContent);
@@ -221,9 +221,9 @@ class CraftingTracker {
             return;
         }
         const betterVendorThanMin = profit("flat", product.vendorPrice, product.minPrice) < 0;
-        const betterMinSellPrice = betterVendorThanMin ? product.vendorPrice : product.minPrice;
+        const betterMinSellPrice = (betterVendorThanMin ? product.vendorPrice : product.minPrice) * productCount;
         const betterVendorThanMax = profit("flat", product.vendorPrice, product.maxPrice) < 0;
-        const betterMaxSellPrice = betterVendorThanMax ? product.vendorPrice : product.maxPrice;
+        const betterMaxSellPrice = (betterVendorThanMax ? product.vendorPrice : product.maxPrice) * productCount;
         let minCost = -profit(
             "flat",
             totalRecipePrice(ingredients.minPrices, resourceItemCounts),
