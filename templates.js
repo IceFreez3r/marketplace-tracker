@@ -62,7 +62,7 @@ class Templates {
                 <rect class="rect-second" x="34" y="18" width="50" height="50" rx="5" ry="5"/>
                 <rect class="rect-first" x="12" y="38" width="50" height="50" rx="5" ry="5"/>
             </svg>`;
-        }
+    }
 
     static dotTemplate(size, classes = "", color = "hsl(40, 80%, 40%)") {
         return `
@@ -90,40 +90,86 @@ class Templates {
      * @param {Number=} chance chance to successfully craft the product
      * @returns {string} html string
      */
-    static infoTableTemplate(classId, ingredients, product, profitType, compactDisplay = false, showCounts = false, secondsPerAction = null, chance = 1, classes = "") {
+    static infoTableTemplate(
+        classId,
+        ingredients,
+        product,
+        profitType,
+        compactDisplay = false,
+        showCounts = false,
+        secondsPerAction = null,
+        chance = 1,
+        classes = ""
+    ) {
         const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
-        const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice } = product;
+        const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice, vendorPrice: productVendorPrice } = product;
         // Ingredients
         let header = "";
         for (let i = 0; i < ingredientIcons.length; i++) {
-            header += Templates.infoTableCell(classId, `
+            header += Templates.infoTableCell(
+                classId,
+                `
                 <img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
-                ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}`);
+                ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}`
+            );
         }
         // Total crafting cost
-        header += Templates.infoTableCell(classId, `
+        header += Templates.infoTableCell(
+            classId,
+            `
             <span class="${classId}-info-table-font">
                 &Sigma;
-            </span>`);
+            </span>`
+        );
         // Product
         header += Templates.infoTableCell(classId, `<img class="${classId}-info-table-icon" src="${productIcon}">`);
         if (productCount > 1) {
-            header += Templates.infoTableCell(classId, `
+            header += Templates.infoTableCell(
+                classId,
+                `
                 <span class="${classId}-info-table-font">
                     &Sigma;
-                </span>`);
+                </span>`
+            );
         }
         // Profit
         if (profitType !== "off") {
-            header += Templates.infoTableCell(classId, `
+            header += Templates.infoTableCell(
+                classId,
+                `
                 <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
-                ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}`);
+                ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}`
+            );
         }
 
-        const minPrice = Templates.infoTableRow(classId, ingredientMinPrices, ingredientCounts, productMinPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
-        const maxPrice = Templates.infoTableRow(classId, ingredientMaxPrices, ingredientCounts, productMaxPrice, productCount, profitType, compactDisplay, secondsPerAction, chance);
+        const minPrice = Templates.infoTableRow(
+            classId,
+            ingredientMinPrices,
+            ingredientCounts,
+            productMinPrice,
+            productVendorPrice,
+            productCount,
+            profitType,
+            compactDisplay,
+            secondsPerAction,
+            chance
+        );
+        const maxPrice = Templates.infoTableRow(
+            classId,
+            ingredientMaxPrices,
+            ingredientCounts,
+            productMaxPrice,
+            productVendorPrice,
+            productCount,
+            profitType,
+            compactDisplay,
+            secondsPerAction,
+            chance
+        );
         return `
-            <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")}, 1fr)">
+            <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
+            ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
+        }, 1fr)">
                 ${header}
                 ${Templates.infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
                 ${minPrice}
@@ -132,30 +178,64 @@ class Templates {
             </div>`;
     }
 
-static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, productCount, profitType, compactDisplay, secondsPerAction, chance) {
-    let row = "";
-    // Ingredients
-    row += ingredientPrices.map(price => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay, fraction: true }))).join("");
-    // Total crafting cost
-    const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
-    const totalProductPrice = productPrice * productCount;
-    row += Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
-    // Product
-    row += Templates.infoTableCell(classId, formatNumber(productPrice, { compactDisplay: compactDisplay, fraction: true }));
-    if (productCount > 1) {
-        row += Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
+    static infoTableRow(
+        classId,
+        ingredientPrices,
+        ingredientCounts,
+        productPrice,
+        productVendorPrice,
+        productCount,
+        profitType,
+        compactDisplay,
+        secondsPerAction,
+        chance
+    ) {
+        let row = "";
+        // Ingredients
+        row += ingredientPrices
+            .map((price) => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay, fraction: true })))
+            .join("");
+        // Total crafting cost
+        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
+        const betterToVendor = profit('flat', productVendorPrice, productPrice) < 0;
+        const betterPrice = betterToVendor ? productVendorPrice : productPrice;
+        const totalProductPrice = betterPrice * productCount;
+        row += Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
+        // Product
+        row += Templates.infoTableCell(classId, formatNumber(betterPrice, { compactDisplay: compactDisplay, fraction: true }), betterToVendor);
+        if (productCount > 1) {
+            row += Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
+        }
+        // Profit
+        if (profitType !== "off") {
+            row += Templates.infoTableCell(
+                classId,
+                formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction, betterToVendor), {
+                    compactDisplay: compactDisplay,
+                    profitType: profitType,
+                })
+            );
+        }
+        return row;
     }
-    // Profit
-    if (profitType !== "off") {
-        row += Templates.infoTableCell(classId, formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction), { compactDisplay: compactDisplay, profitType: profitType }));
-    }
-    return row;
-}
 
-    static infoTableCell(classId, content) {
+    static infoTableCell(classId, content, vendorIcon = false) {
         return `
             <div class="${classId}-info-table-content">
                 ${content}
+                ${
+                    vendorIcon
+                        ? `
+                            <div style="position: relative;">
+                                <img class="crafting-info-table-vendor-icon" src="/images/money_icon.png" alt="Vendor">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        Vendor Price
+                                    </div>
+                                </div>
+                            </div>`
+                        : ""
+                }
             </div>`;
     }
 
@@ -228,12 +308,12 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
             console.log("Menu with id " + id + " already exists!");
             return;
         }
-        let menu = document.createElement('div');
-        menu.classList.add('tracker-select-menu');
+        let menu = document.createElement("div");
+        menu.classList.add("tracker-select-menu");
         let content = `
             <div class="tracker-select-menu-current">
                 <span class="tracker-select-menu-selection" id="${id}" data-for="${currentlySelected}">${options[currentlySelected]}</span>
-                ${Templates.arrowDownTemplate('arrow-down')}
+                ${Templates.arrowDownTemplate("arrow-down")}
             </div>
             <div class="tracker-options">`;
         for (let option in options) {
@@ -243,18 +323,18 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
                 </div>`;
         }
         content += "</div>";
-        saveInsertAdjacentHTML(menu, 'beforeend', content);
+        saveInsertAdjacentHTML(menu, "beforeend", content);
 
-        const optionDivs = menu.getElementsByClassName('tracker-option');
+        const optionDivs = menu.getElementsByClassName("tracker-option");
         for (let optionDiv of optionDivs) {
-            optionDiv.addEventListener('click', (e) => {
-                if (optionDiv.classList.contains('tracker-selected')) {
+            optionDiv.addEventListener("click", (e) => {
+                if (optionDiv.classList.contains("tracker-selected")) {
                     return;
                 }
-                const oldSelection = menu.getElementsByClassName('tracker-selected')[0];
-                oldSelection.classList.remove('tracker-selected');
-                optionDiv.classList.add('tracker-selected');
-                const newValue = optionDiv.getAttribute('data-for');
+                const oldSelection = menu.getElementsByClassName("tracker-selected")[0];
+                oldSelection.classList.remove("tracker-selected");
+                optionDiv.classList.add("tracker-selected");
+                const newValue = optionDiv.getAttribute("data-for");
                 let current = document.getElementById(id);
                 current.dataset.for = newValue;
                 current.innerText = options[newValue];
@@ -277,34 +357,36 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
      * @returns {Node} div holding the select menu with working staticality.
      */
     static sliderTemplate(id, range, currentlySelected, classes = "") {
-        return `<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${range[1]}" step="${range[2] || 1}" value="${currentlySelected}">`;
+        return `<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${range[1]}" step="${
+            range[2] || 1
+        }" value="${currentlySelected}">`;
     }
 
     static timeDurationTemplate(id, value = "", classes = "") {
-        const durationInput = document.createElement('input');
+        const durationInput = document.createElement("input");
         durationInput.id = id;
         durationInput.classList = `tracker-time-duration ${classes}`;
-        durationInput.type = 'text';
+        durationInput.type = "text";
         durationInput.value = value;
         durationInput.maxLength = 5;
         durationInput.placeholder = "hh:mm";
 
         let lastKey = null;
-        durationInput.addEventListener('keydown', (event) => {
+        durationInput.addEventListener("keydown", (event) => {
             lastKey = event.key;
         });
 
-        durationInput.addEventListener('keypress', (event) => {
+        durationInput.addEventListener("keypress", (event) => {
             if (/[^\d:]/.test(event.key)) {
                 event.preventDefault();
             }
         });
 
-        durationInput.addEventListener('input', (event) => {
+        durationInput.addEventListener("input", (event) => {
             event.target.value = Templates.formatTimeInput(event.target.value, lastKey);
         });
 
-        durationInput.addEventListener('blur', (event) => {
+        durationInput.addEventListener("blur", (event) => {
             event.target.value = Templates.padTime(Templates.formatTimeInput(event.target.value, lastKey));
         });
         return durationInput;
@@ -321,18 +403,18 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
 
     static formatTimeInput(value, lastKey) {
         // if the user removed the colon, also remove the last digit of the hours
-        if (lastKey === 'Backspace' && value.length === 2) {
+        if (lastKey === "Backspace" && value.length === 2) {
             value = value[0];
         }
-        value = value.replace(/:/g, '');
+        value = value.replace(/:/g, "");
         let hours = value.substring(0, 2);
         let minutes = value.substring(2, 4);
-        if (lastKey === ':') {
-            hours = hours.padStart(2, '0');
+        if (lastKey === ":") {
+            hours = hours.padStart(2, "0");
         }
         const needsColon = hours.length === 2;
-        hours = hours > 23 ? '23' : hours;
-        minutes = minutes > 59 ? '59' : minutes;
+        hours = hours > 23 ? "23" : hours;
+        minutes = minutes > 59 ? "59" : minutes;
         return `${hours}${needsColon ? `:${minutes}` : ""}`;
     }
 
@@ -340,9 +422,9 @@ static infoTableRow(classId, ingredientPrices, ingredientCounts, productPrice, p
         if (value.length === 0) {
             return value;
         }
-        let [hours, minutes] = value.split(':');
+        let [hours, minutes] = value.split(":");
         minutes = minutes || "00"; // minutes is undefined if there is no colon
-        return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+        return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
     }
 
     static trackerLogoTemplate(classes = "") {

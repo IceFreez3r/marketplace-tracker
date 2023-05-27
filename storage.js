@@ -164,12 +164,20 @@ class Storage {
             };
         }
         const apiId = this.idMap[itemId];
-        if (apiId === -1 || this.itemList[apiId].prices.length === 0) {
+        if (apiId === -1) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
                 vendorPrice: NaN,
+            };
+        }
+        if (this.itemList[apiId].prices.length === 0) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+                vendorPrice: this.itemList[apiId].vendorPrice,
             };
         }
         const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);

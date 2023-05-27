@@ -40,23 +40,6 @@ function parseTimeString(timeString, returnScale = false) {
     return [time, scaleOptions.find(scale => time >= scale)];
 }
 
-function totalValue(resourceMinPrices, resourceMaxPrices, resourceCounts, chance = 1) {
-    let totalMinValue = 0;
-    let totalMaxValue = 0;
-    for (let i = 0; i < resourceCounts.length; i++) {
-        if (!isNaN(resourceMinPrices[i])) {
-            if (resourceCounts[i] > 0) {
-                totalMinValue += resourceMinPrices[i] * resourceCounts[i];
-                totalMaxValue += resourceMaxPrices[i] * resourceCounts[i];
-            } else {
-                totalMinValue += resourceMaxPrices[i] * resourceCounts[i];
-                totalMaxValue += resourceMinPrices[i] * resourceCounts[i];
-            }
-        }
-    }
-    return [totalMinValue / chance, totalMaxValue / chance];
-}
-
 function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
     // dot product of prices and counts divided by chance
     return resourcePrices.map((price, index) => !isNaN(price) ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
@@ -71,14 +54,15 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
  * @param {number=} secondsPerAction only required if type is `per_hour`
  * @returns {number}
  */
-function profit(type, buyPrice, sellPrice, secondsPerAction = null) {
+function profit(type, buyPrice, sellPrice, secondsPerAction = null, noMarketFee = false) {
+    const postFee = noMarketFee ? 1 : 0.95;
     switch (type) {
         case "percent":
-            return (Math.floor(sellPrice * 0.95) - buyPrice) / buyPrice;
+            return (Math.floor(sellPrice * postFee) - buyPrice) / buyPrice;
         case "flat":
-            return Math.floor(sellPrice * 0.95) - buyPrice;
+            return Math.floor(sellPrice * postFee) - buyPrice;
         case "per_hour":
-            return ((Math.floor(sellPrice * 0.95) - buyPrice) * (60 * 60 / secondsPerAction));
+            return ((Math.floor(sellPrice * postFee) - buyPrice) * (60 * 60 / secondsPerAction));
         default:
             console.error("Unknown profit type: " + type);
     }

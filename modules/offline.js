@@ -89,17 +89,22 @@ class OfflineTracker {
     }
 
     onAPIUpdate() {
-        this.offlineTracker();
+        this.offlineTracker(true);
     }
 
-    offlineTracker(){
+    offlineTracker(forceUpdate = false){
         let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
         if (!offlineProgressBox) {
             return;
         }
         // Offline Info already exists
-        if (document.getElementsByClassName('offline-info-box').length !== 0) {
-            return;
+        const existingInfoBox = document.getElementsByClassName('offline-info-box')[0];
+        if (existingInfoBox) {
+            if (forceUpdate) {
+                existingInfoBox.remove();
+            } else {
+                return;
+            }
         }
         const title = document.getElementsByClassName('MuiTypography-root MuiTypography-h6')[0].innerText;
         const isDaelsTracker = title === 'Resources Tracker';
@@ -115,7 +120,7 @@ class OfflineTracker {
             items[itemId] += itemCount;
         }
         const itemValues = this.storage.analyzeItems(Object.keys(items));
-        const [totalMinValue, totalMaxValue] = totalValue(itemValues.minPrices, itemValues.maxPrices, Object.values(items));
+        const [totalMinValue, totalMaxValue] = this.totalValue(Object.values(items), itemValues);
 
         /* Offline Time
             - Offline Tracker:
@@ -193,5 +198,24 @@ class OfflineTracker {
                     </div>
                 </div>
             </div>`;
+    }
+
+    totalValue(itemCounts, itemValues) {
+        const {minPrices, maxPrices, vendorPrices} = itemValues;
+        const sanitizedMinPrices = minPrices.map(price => isNaN(price) ? 0 : price);
+        const sanitizedMaxPrices = maxPrices.map(price => isNaN(price) ? 0 : price);
+        const sanitizedVendorPrices = vendorPrices.map(price => isNaN(price) ? 0 : price);
+        let totalMinValue = 0;
+        let totalMaxValue = 0;
+        for (let i = 0; i < itemCounts.length; i++) {
+            if (itemCounts[i] > 0) {
+                totalMinValue += Math.max(sanitizedMinPrices[i], sanitizedVendorPrices[i]) * itemCounts[i];
+                totalMaxValue += Math.max(sanitizedMaxPrices[i], sanitizedVendorPrices[i]) * itemCounts[i];
+            } else {
+                totalMinValue += sanitizedMaxPrices[i] * itemCounts[i];
+                totalMaxValue += sanitizedMinPrices[i] * itemCounts[i];
+            }
+        }
+        return [totalMinValue, totalMaxValue];
     }
 }

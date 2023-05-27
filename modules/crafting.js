@@ -22,10 +22,20 @@ class CraftingTracker {
     grid-column: 2;
 }
 
+.crafting-info-table-content {
+    display: flex;
+}
+
 .crafting-info-table-icon {
     margin: 4px 10px;
     width: 32px;
     height: 32px;
+    object-fit: contain;
+}
+
+.crafting-info-table-vendor-icon {
+    width: 16px;
+    height: 16px;
     object-fit: contain;
 }
 
