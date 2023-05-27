@@ -433,7 +433,10 @@ class MarketplaceTracker {
                 trackerHistory.insertAdjacentElement("beforeend", item.childNodes[i].cloneNode(true));
             }
             // Build new price per item and total
-            const itemId = convertItemId(item.childNodes[1].firstChild.src);
+            let itemId = convertItemId(item.childNodes[1].firstChild.src);
+            if (this.storage.itemRequiresFallback(itemId)) {
+                itemId = item.childNodes[1].textContent;
+            }
             let itemQuantity = parseNumberString(item.childNodes[2].textContent);
             if (itemId.includes("dagger") || itemId.includes("boot") || itemId.includes("gloves") || itemId.includes("World_Walkers")) {
                 itemQuantity *= 2;

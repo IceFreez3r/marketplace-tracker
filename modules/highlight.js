@@ -313,7 +313,9 @@ class MarketHighlights {
     }
 
     filterFavorites() {
-        const notFavoriteItems = document.querySelectorAll(".anchor-buy-all-items .item:not(.favorite-highlight)");
+        const notFavoriteItems = document.querySelectorAll(
+            ".anchor-buy-all-items .item:not(.favorite-highlight), .anchor-sell-all-items .item:not(.favorite-highlight)"
+        );
         for (let i = 0; i < notFavoriteItems.length; i++) {
             notFavoriteItems[i].parentNode.classList.toggle("hidden", this.favoriteFilterActive);
         }
@@ -329,14 +331,20 @@ class MarketHighlights {
 
     highlightFavorites(items) {
         items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            if (this.storage.itemRequiresFallback(itemId)) {
+                itemId = itemNode.firstChild.firstChild.alt;
+            }
             if (this.isFavorite(itemId)) {
                 itemNode.firstChild.classList.add("favorite-highlight");
             }
         });
         const ownAuctions = items.parentNode.getElementsByClassName("marketplace-table-row");
         for (const auction of ownAuctions) {
-            const itemId = convertItemId(auction.childNodes[1].firstChild.src);
+            let itemId = convertItemId(auction.childNodes[1].firstChild.src);
+            if (this.storage.itemRequiresFallback(itemId)) {
+                itemId = auction.childNodes[1].firstChild.alt;
+            }
             auction.classList.toggle("favorite-highlight", this.isFavorite(itemId));
         }
 
@@ -384,7 +392,6 @@ class MarketHighlights {
             } else {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
-                    const itemId = convertItemId(item.firstChild.src);
                     const quantile = priceQuantiles[i];
                     const color = this.getHSLColor(quantile);
                     item.style.backgroundImage = "url(/images/ui/frame_box.png), linear-gradient(#1c2024, #1c2024)";
@@ -452,7 +459,10 @@ class MarketHighlights {
             // not loaded yet
             return;
         }
-        const itemId = convertItemId(offer.childNodes[1].firstChild.src);
+        let itemId = convertItemId(offer.childNodes[1].firstChild.src);
+        if (this.storage.itemRequiresFallback(itemId)) {
+            itemId = offer.firstChild.firstChild.textContent;
+        }
         const isFavorite = this.isFavorite(itemId);
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(
@@ -495,7 +505,10 @@ class MarketHighlights {
             alertIcons[i].remove();
         }
         items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
+            if (this.storage.itemRequiresFallback(itemId)) {
+                itemId = itemNode.firstChild.firstChild.alt;
+            }
             if (this.notificationInformation[itemId] === "below" && !itemNode.firstChild.classList.contains("alert-below")) {
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
