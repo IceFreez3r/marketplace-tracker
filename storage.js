@@ -128,7 +128,12 @@ class Storage {
             }
             return result;
         }, {});
-        localStorage.setItem('itemList', JSON.stringify(itemList));
+        try {
+            localStorage.setItem('itemList', JSON.stringify(itemList));
+        }
+        catch (e) {
+            console.log(e);
+        }
     }
 
     getItemName(itemId) {
