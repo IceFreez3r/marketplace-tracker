@@ -55,14 +55,16 @@ function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
  * @returns {number}
  */
 function profit(type, buyPrice, sellPrice, secondsPerAction = null, noMarketFee = false) {
+    const buy = isNaN(buyPrice) ? 0 : buyPrice;
+    const sell = isNaN(sellPrice) ? 0 : sellPrice;
     const postFee = noMarketFee ? 1 : 0.95;
     switch (type) {
         case "percent":
-            return (Math.floor(sellPrice * postFee) - buyPrice) / buyPrice;
+            return (Math.floor(sell * postFee) - buy) / buy;
         case "flat":
-            return Math.floor(sellPrice * postFee) - buyPrice;
+            return Math.floor(sell * postFee) - buy;
         case "per_hour":
-            return ((Math.floor(sellPrice * postFee) - buyPrice) * (60 * 60 / secondsPerAction));
+            return ((Math.floor(sell * postFee) - buy) * (60 * 60 / secondsPerAction));
         default:
             console.error("Unknown profit type: " + type);
     }
