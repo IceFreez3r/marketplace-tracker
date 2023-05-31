@@ -119,7 +119,7 @@ function detectInfiniteLoop(mutations) {
                 return true;
             }
             for (const ignoredChild of ignoredChildren) {
-                if (node.getElementsByClassName(ignoredChild).length > 0) {
+                if (node.getElementsByClassName?.(ignoredChild).length > 0) {
                     return true;
                 }
             }
@@ -147,13 +147,6 @@ function formatNumber(number, options = {}) {
     }
     const formatter = new Intl.NumberFormat("en-US", formatterOptions);
     return formatter.format(number);
-}
-
-function sortObj(obj) {
-    return Object.keys(obj).sort().reduce((result, key) => {
-        result[key] = obj[key];
-        return result;
-    }, {});
 }
 
 function durationToMilliseconds(duration) {

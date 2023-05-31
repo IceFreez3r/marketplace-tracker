@@ -130,8 +130,8 @@ class OfflineTracker {
 
         /* Offline Time
             - Offline Tracker:
-            The background script stores the last login time in localStorage whenever the tab is closed.
-            This time from the background script is as accurate as it gets, but the "Offline progress"
+            The storage script stores the last login time in localStorage whenever the tab is closed.
+            This time from the storage script is as accurate as it gets, but the "Offline progress"
             tab might also appear due to reconnects or character switches. The background time is
             therefore only used when the time difference is not too large. Otherwise the less accurate
             time from the "Offline progress" tab itself is used.

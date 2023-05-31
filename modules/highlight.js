@@ -152,9 +152,13 @@ class MarketHighlights {
         if (this.settings.markerSize === undefined) {
             this.settings.markerSize = 40;
         }
+        this.migrateFavorites();
+        if (this.settings.favorites === undefined) {
+            this.settings.favorites = [];
+        }
+        this.favorites = this.settings.favorites;
         this.cssNode = injectCSS(this.css);
 
-        this.favorites = this.storage.loadLocalStorage("favorites", []);
         this.favoriteFilterActive = false;
         this.quantileColorsActive = false;
         this.notificationInformation = {}; // comes from alert.js
@@ -235,6 +239,14 @@ class MarketHighlights {
         if (message === "alerts") {
             this.notificationInformation = data;
             this.checkForMarketplace();
+        }
+    }
+
+    migrateFavorites() {
+        if (localStorage.getItem("favorites") !== null) {
+            this.settings.favorites = JSON.parse(localStorage.getItem("favorites"));
+            localStorage.removeItem("favorites");
+            this.saveData();
         }
     }
 
@@ -347,7 +359,6 @@ class MarketHighlights {
             }
             auction.classList.toggle("favorite-highlight", this.isFavorite(itemId));
         }
-
     }
 
     quantileColorsButton() {
@@ -421,7 +432,11 @@ class MarketHighlights {
         if (quantileDot) {
             quantileDot.firstElementChild.style.fill = color;
         } else {
-            saveInsertAdjacentHTML(item, "beforeend", Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", color));
+            saveInsertAdjacentHTML(
+                item,
+                "beforeend",
+                Templates.dotTemplate(this.settings.markerSize + "%", "quantile-dot", color)
+            );
         }
     }
 
@@ -469,7 +484,9 @@ class MarketHighlights {
             refreshButton,
             "afterend",
             `
-            <button id="marketplace-favorite-button" class="marketplace-favorite-button ${isFavorite ? "" : "svg-inactive"}">
+            <button id="marketplace-favorite-button" class="marketplace-favorite-button ${
+                isFavorite ? "" : "svg-inactive"
+            }">
                 ${Templates.favoriteTemplate()}
             </button>`
         );
@@ -509,21 +526,31 @@ class MarketHighlights {
             if (this.storage.itemRequiresFallback(itemId)) {
                 itemId = itemNode.firstChild.firstChild.alt;
             }
-            if (this.notificationInformation[itemId] === "below" && !itemNode.firstChild.classList.contains("alert-below")) {
+            if (
+                this.notificationInformation[itemId] === "below" &&
+                !itemNode.firstChild.classList.contains("alert-below")
+            ) {
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
                     `
-                    <div class="alert-icon below" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
+                    <div class="alert-icon below" style="width:${this.settings.markerSize}%; height:${
+                        this.settings.markerSize
+                    }%;">
                         ${Templates.arrowDownTemplate()}
                     </div>`
                 );
-            } else if (this.notificationInformation[itemId] === "above" && !itemNode.firstChild.classList.contains("alert-above")) {
+            } else if (
+                this.notificationInformation[itemId] === "above" &&
+                !itemNode.firstChild.classList.contains("alert-above")
+            ) {
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
                     `
-                    <div class="alert-icon above" style="width:${this.settings.markerSize}%; height:${this.settings.markerSize}%;">
+                    <div class="alert-icon above" style="width:${this.settings.markerSize}%; height:${
+                        this.settings.markerSize
+                    }%;">
                         ${Templates.arrowDownTemplate()}
                     </div>`
                 );
@@ -546,6 +573,6 @@ class MarketHighlights {
     }
 
     saveData() {
-        localStorage.setItem("favorites", JSON.stringify(this.favorites));
+        this.tracker.storeSettings();
     }
 }
