@@ -107,7 +107,8 @@ function getSelectedSkill() {
 
 function detectInfiniteLoop(mutations) {
     const ignoredTargets = ["price", "heat-highlight"];
-    const ignoredNodes = ["MuiDialog-root", "react-tiny-popover-container", "scrollcrafting-totals-bar", "quantile-dot", "alert-icon", "tracker-ignore"];
+    const ignoredNodes = ["react-tiny-popover-container", "scrollcrafting-totals-bar", "quantile-dot", "alert-icon", "tracker-ignore"];
+    const ignoredChildren = ["daelis-wow-tooltip"];
     for (const mutation of mutations) {
         if (ignoredTargets.some(target => mutation.target.classList.contains(target))) {
             return true;
@@ -116,6 +117,11 @@ function detectInfiniteLoop(mutations) {
         for (const node of nodes) {
             if (node.classList && ignoredNodes.some(target => node.classList.contains(target))) {
                 return true;
+            }
+            for (const ignoredChild of ignoredChildren) {
+                if (node.getElementsByClassName?.(ignoredChild).length > 0) {
+                    return true;
+                }
             }
         }
     }
@@ -141,13 +147,6 @@ function formatNumber(number, options = {}) {
     }
     const formatter = new Intl.NumberFormat("en-US", formatterOptions);
     return formatter.format(number);
-}
-
-function sortObj(obj) {
-    return Object.keys(obj).sort().reduce((result, key) => {
-        result[key] = obj[key];
-        return result;
-    }, {});
 }
 
 function durationToMilliseconds(duration) {

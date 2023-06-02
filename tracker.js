@@ -638,12 +638,15 @@ input[type="time"].tracker-time:not(.browser-default) {
                     <div class="import-export-popup-text" style="grid-area: settings-header;">
                         Settings
                     </div>
-                    <textarea id="import-export-settings" class="import-export-popup-textarea" style="grid-area: settings-textarea;"></textarea>
+                    <textarea
+                        id="import-export-settings"
+                        class="import-export-popup-textarea"
+                        style="grid-area: settings-textarea;"
+                        placeholder="Paste settings here and click Import"></textarea>
                     <div id="tracker-import-settings" class="tracker-settings-button idlescape-button-green" style="grid-area: settings-import;">
                         Import
                         <div class="tracker-tooltip">
                             <div class="tracker-tooltip-text">
-                                <div>Enter settings into the textarea</div>
                                 <div>Reloads the page</div>
                             </div>
                         </div>
@@ -659,14 +662,13 @@ input[type="time"].tracker-time:not(.browser-default) {
                     <div class="import-export-popup-text" style="grid-area: market-header;">
                         Marketplace Data
                     </div>
-                    <textarea id="import-export-market" class="import-export-popup-textarea" style="grid-area: market-textarea;"></textarea>
+                    <textarea
+                        id="import-export-market"
+                        class="import-export-popup-textarea"
+                        style="grid-area: market-textarea;"
+                        placeholder="Paste marketdata here and click Import"></textarea>
                     <div id="tracker-import-market" class="tracker-settings-button idlescape-button-green" style="grid-area: market-import;">
                         Import
-                        <div class="tracker-tooltip">
-                            <div class="tracker-tooltip-text">
-                                Enter marketplace data into the textarea
-                            </div>
-                        </div>
                     </div>
                     <div id="tracker-export-market" class="tracker-settings-button idlescape-button-blue" style="grid-area: market-export;">
                         Export
@@ -702,6 +704,7 @@ input[type="time"].tracker-time:not(.browser-default) {
         try {
             const textarea = document.getElementById("import-export-settings");
             const data = textarea.value;
+            textarea.value = "";
             const settings = JSON.parse(data);
             this.settings = settings;
             this.storeSettings();
@@ -721,6 +724,7 @@ input[type="time"].tracker-time:not(.browser-default) {
     importStorage() {
         const textarea = document.getElementById("import-export-market");
         const data = textarea.value;
+        textarea.value = "";
         const message = this.storage.importStorage(data);
         document.getElementsByClassName("import-export-popup-message")[0].textContent = message;
     }

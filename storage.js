@@ -1,45 +1,57 @@
 class Storage {
     constructor(APICallback) {
         this.APICallback = APICallback;
-        this.itemList = this.loadLocalStorage('itemList', {});
-        this.filterItemList();
-        this.latestPriceList = {};
+        this.storageKeys = {
+            marketHistory: "TrackerMarketHistory",
+            lastLogin: "TrackerLastLogin",
+            lastAPIFetch: "TrackerLastAPIFetch",
+        };
 
-        this.lastLogin = this.loadLocalStorage('lastLogin', Date.now());
-        this.latestAPIFetch = this.loadLocalStorage('TrackerLatestAPIFetch', 0);
+        this.lastLogin = this.loadLocalStorage(this.storageKeys.lastLogin, Date.now());
+        this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch, 0);
+        this.marketHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromOldItemList());
+        this.filterItemList();
+
+        this.itemNames = {};
+        this.itemVendorPrices = {};
+        this.latestPriceList = {};
     }
 
     onGameReady() {
         const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
         this.idMap = {};
-        for (const item in vanillaItemsList) {
-            this.itemList[item] ??= {
-                prices: [],
-            };
-            if (vanillaItemsList[item].itemImage) {
-                const itemImage = convertItemId(vanillaItemsList[item].itemImage);
-                if (this.idMap[itemImage] !== undefined) {
-                    // Add fallback for itemImages that are used by multiple items
-                    this.idMap[vanillaItemsList[item].name] = item;
-                    if (this.idMap[itemImage] !== -1) {
-                        this.idMap[vanillaItemsList[this.idMap[itemImage]].name] = this.idMap[itemImage];
-                        // prevent getting the wrong item
-                        this.idMap[itemImage] = -1;
-                    }
-                } else {
-                    this.idMap[itemImage] = item;
-                }
-                this.itemList[item].itemImage = itemImage;
+        for (const apiId in vanillaItemsList) {
+            this.marketHistory[apiId] ??= [];
+            if (vanillaItemsList[apiId].itemImage) {
+                const itemImage = convertItemId(vanillaItemsList[apiId].itemImage);
+                this.addItemToIdMap(apiId, itemImage, vanillaItemsList);
             }
-            if (vanillaItemsList[item].itemIcon) {
-                const itemIcon = convertItemId(vanillaItemsList[item].itemIcon);
-                this.idMap[itemIcon] = item;
-                this.itemList[item].itemIcon = itemIcon;
+            if (vanillaItemsList[apiId].itemIcon) {
+                const itemIcon = convertItemId(vanillaItemsList[apiId].itemIcon);
+                this.addItemToIdMap(apiId, itemIcon, vanillaItemsList);
             }
-            this.itemList[item].name = vanillaItemsList[item].name;
-            this.itemList[item].vendorPrice = vanillaItemsList[item].value;
+            this.itemNames[apiId] = vanillaItemsList[apiId].name;
+            this.itemVendorPrices[apiId] = vanillaItemsList[apiId].value;
         }
-        this.fetchAPILoop();
+        // this.fetchAPILoop();
+        this.fetchAPI();
+        setInterval(() => {
+            this.fetchAPI();
+        }, 1000 * 60 * 10);
+    }
+
+    addItemToIdMap(apiId, itemId, vanillaItemsList) {
+        if (this.idMap[itemId] !== undefined) {
+            // Add fallback for itemIds that are used by multiple items
+            this.idMap[vanillaItemsList[apiId].name] = apiId;
+            if (this.idMap[itemId] !== -1) {
+                this.idMap[vanillaItemsList[this.idMap[itemId]].name] = this.idMap[itemId];
+                // prevent getting the wrong item
+                this.idMap[itemId] = -1;
+            }
+        } else {
+            this.idMap[itemId] = apiId;
+        }
     }
 
     getLastLogin() {
@@ -52,63 +64,66 @@ class Storage {
         data = data.manifest;
         for (let i = 0; i < data.length; i++) {
             const apiId = data[i].itemID;
-            if (this.latestAPIFetch !== timestamp) {
+            if (this.lastAPIFetch !== timestamp) {
                 // prevent duplicate entries
-                this.itemList[apiId].prices.push([timestamp, data[i].minPrice]);
+                this.marketHistory[apiId].push([timestamp, data[i].minPrice]);
                 this.sortPriceList(apiId);
             }
             this.latestPriceList[apiId] = data[i].minPrice;
         }
         const currentHeatValue = this.heatValue();
-        if (this.latestAPIFetch !== timestamp) {
+        if (this.lastAPIFetch !== timestamp) {
             // prevent duplicate entries
-            this.itemList[2].prices.push([timestamp, currentHeatValue.heatValue]);
+            this.marketHistory[2].push([timestamp, currentHeatValue.heatValue]);
             this.sortPriceList(2);
             this.storeItemList();
         }
         this.latestPriceList[2] = currentHeatValue.heatValue;
-        this.latestAPIFetch = timestamp;
-        localStorage.setItem("TrackerLatestAPIFetch", timestamp);
+        this.lastAPIFetch = timestamp;
+        localStorage.setItem(this.storageKeys.lastAPIFetch, timestamp);
     }
 
     bestHeatItem() {
-        const bestHeatItem = this.heatValue().apiId;
-        return this.itemList[bestHeatItem]?.itemId;
+        return this.heatValue().itemId;
     }
 
     heatValue() {
         const heatItems = [
-            {apiId: 50, heat: 50},      // Book
-            {apiId: 112, heat: 10},     // Coal
-            {apiId: 301, heat: 1},      // Branch
-            {apiId: 302, heat: 5},      // Log
-            {apiId: 303, heat: 10},     // Oak Log
-            {apiId: 304, heat: 20},     // Willow Log
-            {apiId: 305, heat: 70},     // Maple Log
-            {apiId: 306, heat: 200},    // Yew Log
-            {apiId: 307, heat: 350},    // Elder Log
-            {apiId: 702, heat: 100},    // Pyre Log
-            {apiId: 703, heat: 200},    // Oak Pyre Log
-            {apiId: 704, heat: 400},    // Willow Pyre Log
-            {apiId: 705, heat: 800},    // Maple Pyre Log
-            {apiId: 706, heat: 3000},   // Yew Pyre Log
-            {apiId: 707, heat: 5000},   // Elder Pyre Log
-            {apiId: 11030, heat: 25},   // Rotten Driftwood
-            {apiId: 11031, heat: 75},   // Sturdy Driftwood
-            {apiId: 11036, heat: 125},  // Mystical Driftwood
+            { itemId: "book", apiId: 50, heat: 50 },
+            { itemId: "coal", apiId: 112, heat: 10 },
+            { itemId: "branch", apiId: 301, heat: 1 },
+            { itemId: "log", apiId: 302, heat: 5 },
+            { itemId: "oak_log", apiId: 303, heat: 10 },
+            { itemId: "willow_log", apiId: 304, heat: 20 },
+            { itemId: "maple_log", apiId: 305, heat: 70 },
+            { itemId: "yew_log", apiId: 306, heat: 200 },
+            { itemId: "elder_log", apiId: 307, heat: 350 },
+            { itemId: "pyre", apiId: 702, heat: 100 },
+            { itemId: "oak_pyre", apiId: 703, heat: 200 },
+            { itemId: "willow_pyre", apiId: 704, heat: 400 },
+            { itemId: "maple_pyre", apiId: 705, heat: 800 },
+            { itemId: "yew_pyre", apiId: 706, heat: 3000 },
+            { itemId: "elder_pyre", apiId: 707, heat: 5000 },
+            { itemId: "rotten_driftwood", apiId: 11030, heat: 25 },
+            { itemId: "sturdy_driftwood", apiId: 11031, heat: 75 },
+            { itemId: "mystical_driftwood", apiId: 11036, heat: 125 },
         ];
-        const bestHeatItem = heatItems.reduce((result, heatItem) => {
-            if (heatItem.apiId in this.itemList) {
-                const latestPrice = this.latestPriceList[heatItem.apiId];
-                if (latestPrice / heatItem.heat < result.heatValue) {
-                    result = {
-                        apiId: heatItem.apiId,
-                        heatValue: latestPrice / heatItem.heat,
-                    };
+        const bestHeatItem = heatItems.reduce(
+            (result, heatItem) => {
+                if (heatItem.apiId in this.latestPriceList) {
+                    const latestPrice = this.latestPriceList[heatItem.apiId];
+                    if (latestPrice / heatItem.heat < result.heatValue) {
+                        return {
+                            itemId: heatItem.itemId,
+                            apiId: heatItem.apiId,
+                            heatValue: latestPrice / heatItem.heat,
+                        };
+                    }
                 }
-            }
-            return result;
-        }, {apiId: null, heatValue: Infinity});
+                return result;
+            },
+            { itemId: null, apiId: null, heatValue: Infinity }
+        );
         return bestHeatItem;
     }
 
@@ -120,29 +135,27 @@ class Storage {
     }
 
     storeItemList() {
-        this.itemList = sortObj(this.itemList);
-        // Reduce the size of the stored itemList by removing items that have no prices
-        const itemList = Object.keys(this.itemList).reduce((result, key) => {
-            if (this.itemList[key].prices.length > 0) {
-                result[key] = this.itemList[key];
+        // Reduce the size of the stored marketHistory by removing items that have no prices
+        const marketHistory = Object.keys(this.marketHistory).reduce((result, key) => {
+            if (this.marketHistory[key].length > 0) {
+                result[key] = this.marketHistory[key];
             }
             return result;
         }, {});
         try {
-            localStorage.setItem('itemList', JSON.stringify(itemList));
-        }
-        catch (e) {
+            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify(marketHistory));
+        } catch (e) {
             console.log(e);
         }
     }
 
     getItemName(itemId) {
         if (!(itemId in this.idMap)) {
-            return null;
+            return "Unknown Item";
         }
         const apiId = this.idMap[itemId];
         if (apiId === -1) return "Duplicate Item";
-        return this.itemList[apiId].name;
+        return this.itemNames[apiId];
     }
 
     itemRequiresFallback(itemId) {
@@ -150,7 +163,7 @@ class Storage {
     }
 
     analyzeItem(itemId) {
-        if (itemId === 'money_icon') {
+        if (itemId === "money_icon") {
             return {
                 minPrice: 1,
                 medianPrice: 1,
@@ -158,8 +171,8 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        if (itemId.endsWith('_essence')) {
-            const talismanAnalysis = this.analyzeItem(itemId.replace('_essence', '_talisman'));
+        if (itemId.endsWith("_essence")) {
+            const talismanAnalysis = this.analyzeItem(itemId.replace("_essence", "_talisman"));
             const essencePerTalisman = (35000 + 50000) / 2;
             return {
                 minPrice: talismanAnalysis.minPrice / essencePerTalisman,
@@ -177,32 +190,32 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        if (this.itemList[apiId].prices.length === 0) {
+        if (this.marketHistory[apiId].length === 0) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
-                vendorPrice: this.itemList[apiId].vendorPrice,
+                vendorPrice: this.itemVendorPrices[apiId],
             };
         }
-        const minQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.05);
-        const medianQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.5);
-        const maxQuantile = Math.floor((this.itemList[apiId].prices.length - 1) * 0.95);
+        const minQuantile = Math.floor((this.marketHistory[apiId].length - 1) * 0.05);
+        const medianQuantile = Math.floor((this.marketHistory[apiId].length - 1) * 0.5);
+        const maxQuantile = Math.floor((this.marketHistory[apiId].length - 1) * 0.95);
         return {
-            minPrice: this.itemList[apiId].prices[minQuantile][1],
-            medianPrice: this.itemList[apiId].prices[medianQuantile][1],
-            maxPrice: this.itemList[apiId].prices[maxQuantile][1],
-            vendorPrice: this.itemList[apiId].vendorPrice,
+            minPrice: this.marketHistory[apiId][minQuantile][1],
+            medianPrice: this.marketHistory[apiId][medianQuantile][1],
+            maxPrice: this.marketHistory[apiId][maxQuantile][1],
+            vendorPrice: this.itemVendorPrices[apiId],
         };
     }
 
     analyzeItems(itemIds) {
-        const analysisArray = itemIds.map(itemId => this.analyzeItem(itemId));
+        const analysisArray = itemIds.map((itemId) => this.analyzeItem(itemId));
         return {
-            minPrices: analysisArray.map(analysis => analysis.minPrice),
-            medianPrices: analysisArray.map(analysis => analysis.medianPrice),
-            maxPrices: analysisArray.map(analysis => analysis.maxPrice),
-            vendorPrices: analysisArray.map(analysis => analysis.vendorPrice),
+            minPrices: analysisArray.map((analysis) => analysis.minPrice),
+            medianPrices: analysisArray.map((analysis) => analysis.medianPrice),
+            maxPrices: analysisArray.map((analysis) => analysis.maxPrice),
+            vendorPrices: analysisArray.map((analysis) => analysis.vendorPrice),
         };
     }
 
@@ -230,16 +243,18 @@ class Storage {
         const quantiles = [];
         for (const itemId of itemIdsWithFallbacks) {
             const apiId = this.idMap[itemId];
-            if (apiId === -1 || this.itemList[apiId].prices.length <= 1) {
+            if (apiId === -1 || this.marketHistory[apiId].length <= 1) {
                 quantiles.push(1);
                 continue;
             }
-            const index = this.itemList[apiId].prices.findLastIndex((priceTuple) => priceTuple[1] === this.latestPriceList[apiId]);
+            const index = this.marketHistory[apiId].findLastIndex(
+                (priceTuple) => priceTuple[1] === this.latestPriceList[apiId]
+            );
             if (index === -1) {
                 quantiles.push(1);
                 continue;
             }
-            const quantile = index / (this.itemList[apiId].prices.length - 1);
+            const quantile = index / (this.marketHistory[apiId].length - 1);
             quantiles.push(quantile);
         }
         return quantiles;
@@ -247,19 +262,19 @@ class Storage {
 
     sortPriceList(apiId) {
         // Sort the price tuples by price
-        this.itemList[apiId].prices.sort((a, b) => {
+        this.marketHistory[apiId].sort((a, b) => {
             return a[1] - b[1];
         });
     }
 
     filterItemList() {
-        const twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 10) - (14 * 24 * 6);
+        const twoWeeksAgo = Math.floor(Date.now() / 1000 / 60 / 10) - 14 * 24 * 6;
         const now = Math.floor(Date.now() / 1000 / 60 / 10);
-        for (let apiId in this.itemList) {
-            for (let i = 0; i < this.itemList[apiId]["prices"].length; i++) {
+        for (let apiId in this.marketHistory) {
+            for (let i = 0; i < this.marketHistory[apiId].length; i++) {
                 // Second condition due to Issue #52 https://github.com/IceFreez3r/marketplace-tracker/issues/52
-                if (this.itemList[apiId]["prices"][i][0] < twoWeeksAgo || this.itemList[apiId]["prices"][i][0] > now) {
-                    this.itemList[apiId]["prices"].splice(i, 1);
+                if (this.marketHistory[apiId][i][0] < twoWeeksAgo || this.marketHistory[apiId][i][0] > now) {
+                    this.marketHistory[apiId].splice(i, 1);
                     i--;
                 }
             }
@@ -283,6 +298,7 @@ class Storage {
 
     fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
+        console.log("Fetching API. Current UTC time: " + new Date().toLocaleString("en-US", { timeZone: "UTC" }));
         return fetch(apiUrl)
             .then((response) => {
                 return response.json();
@@ -318,34 +334,74 @@ class Storage {
     importStorage(text) {
         try {
             const data = JSON.parse(text);
-            // merge itemList
-            for (let apiId in data.itemList) {
-                if (apiId in this.itemList) {
-                    // merge price arrays
-                    for (let i = 0; i < data.itemList[apiId].prices.length; i++) {
-                        if (!this.itemList[apiId].prices.some(priceTuple => priceTuple[0] === data.itemList[apiId].prices[i][0])) {
-                            this.itemList[apiId].prices.push(data.itemList[apiId].prices[i]);
-                        }
-                    }
-                    // sort price array
-                    this.sortPriceList(apiId);
-                } else {
-                    this.itemList[apiId] = data.itemList[apiId];
-                }
+            if (data.itemList) {
+                this.importOldData(data);
+            } else {
+                this.importNewData(data);
             }
             this.filterItemList();
             this.storeItemList();
             return "Imported marketplace data";
-        }
-        catch (err) {
+        } catch (err) {
             console.error(err);
             return "Something went wrong";
         }
     }
 
+    loadFromOldItemList() {
+        const oldItemList = this.loadLocalStorage("itemList", {});
+        for (const apiId in oldItemList) {
+            oldItemList[apiId] = oldItemList[apiId].prices;
+        }
+        localStorage.removeItem("itemList");
+        this.marketHistory = oldItemList;
+        this.storeItemList();
+        return oldItemList;
+    }
+
+    /**
+     * Imports old marketplace data structure, can be removed in future versions
+     * @param {object} data marketplace data in old structure
+     */
+    importOldData(data) {
+        for (let apiId in data.itemList) {
+            if (apiId in this.marketHistory) {
+                // merge price arrays
+                for (let i = 0; i < data.itemList[apiId].prices.length; i++) {
+                    if (
+                        !this.marketHistory[apiId].some(
+                            (priceTuple) => priceTuple[0] === data.itemList[apiId].prices[i][0]
+                        )
+                    ) {
+                        this.marketHistory[apiId].push(data.itemList[apiId].prices[i]);
+                    }
+                }
+                // sort price array
+                this.sortPriceList(apiId);
+            } else {
+                this.marketHistory[apiId] = data.itemList[apiId].prices;
+            }
+        }
+    }
+
+    importNewData(data) {
+        for (let apiId in data) {
+            if (apiId in this.marketHistory) {
+                // merge price arrays
+                for (let i = 0; i < data[apiId].length; i++) {
+                    if (!this.marketHistory[apiId].some((priceTuple) => priceTuple[0] === data[apiId][i][0])) {
+                        this.marketHistory[apiId].push(data[apiId][i]);
+                    }
+                }
+                // sort price array
+                this.sortPriceList(apiId);
+            } else {
+                this.marketHistory[apiId] = data[apiId];
+            }
+        }
+    }
+
     exportStorage() {
-        return JSON.stringify({
-            itemList: this.itemList
-        });
+        return JSON.stringify(this.marketHistory);
     }
 }

@@ -129,7 +129,11 @@ class AlertTracker {
             this.settings.manualMute = "";
         }
         this.storageKey = "TrackerAlerts";
-        this.allAlerts = this.storage.loadLocalStorage(this.storageKey, {});
+        this.migrateAlerts();
+        if (this.settings.allAlerts === undefined) {
+            this.settings.allAlerts = {};
+        }
+        this.allAlerts = this.settings.allAlerts;
 
         this.cssNode = injectCSS(this.css);
 
@@ -187,10 +191,13 @@ class AlertTracker {
 
         const cooldown = document.createElement("div");
         cooldown.classList.add("tracker-module-setting");
-        cooldown.insertAdjacentHTML("beforeend", `
+        cooldown.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="tracker-module-setting-name">
                 Cooldown between notifications
-            </div>`);
+            </div>`
+        );
         cooldown.append(Templates.timeDurationTemplate(AlertTracker.id + "-cooldown", this.settings.cooldown));
 
         const doNotDisturb = `
@@ -198,15 +205,22 @@ class AlertTracker {
                 <div class="tracker-module-setting-name">
                     Do not disturb between
                 </div>
-                ${Templates.timeRangeTemplate(AlertTracker.id + "-doNotDisturb", this.settings.doNotDisturb.start, this.settings.doNotDisturb.end)}
+                ${Templates.timeRangeTemplate(
+                    AlertTracker.id + "-doNotDisturb",
+                    this.settings.doNotDisturb.start,
+                    this.settings.doNotDisturb.end
+                )}
             </div>`;
 
         const manualMute = document.createElement("div");
         manualMute.classList.add("tracker-module-setting");
-        manualMute.insertAdjacentHTML("beforeend", `
+        manualMute.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="tracker-module-setting-name">
                 Manually mute notifications for
-            </div>`);
+            </div>`
+        );
         const remainingMute = this.settings.manualMuteEnd - Date.now();
         this.settings.manualMute = remainingMute > 0 ? millisecondsToDuration(remainingMute) : "";
         manualMute.append(Templates.timeDurationTemplate(AlertTracker.id + "-manualMute", this.settings.manualMute));
@@ -225,6 +239,14 @@ class AlertTracker {
             this.createNotification();
         }
         this.tracker.notifyModule(MarketHighlights.id, "alerts", this.notificationInformation);
+    }
+
+    migrateAlerts() {
+        if (localStorage.getItem(this.storageKey) !== null) {
+            this.settings.allAlerts = JSON.parse(localStorage.getItem(this.storageKey));
+            localStorage.removeItem(this.storageKey);
+            this.saveData();
+        }
     }
 
     collectNotificationData() {
@@ -305,12 +327,16 @@ class AlertTracker {
             itemId = offer.firstChild.firstChild.textContent;
         }
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
-        saveInsertAdjacentHTML(refreshButton, "afterend", `
+        saveInsertAdjacentHTML(
+            refreshButton,
+            "afterend",
+            `
             <button id="marketplace-alert-button" class="marketplace-alert-button ${
                 this.hasActiveAlert(itemId) ? "" : "svg-inactive"
             }" style="stroke: #ccffff; fill: #ccffff;" >
                 ${Templates.alertTemplate()}
-            </button>`);
+            </button>`
+        );
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.addEventListener("click", () => {
             this.openPopUp(itemId);
@@ -318,7 +344,10 @@ class AlertTracker {
     }
 
     openPopUp(itemId) {
-        saveInsertAdjacentHTML(document.body, "beforeend", Templates.popupTemplate(`
+        saveInsertAdjacentHTML(
+            document.body,
+            "beforeend",
+            Templates.popupTemplate(`
             <div class="alert-popup">
                 <div class="alert-popup-title">Notification thresholds</div>
                 <div class="alert-input-container">
@@ -336,7 +365,8 @@ class AlertTracker {
                     <div class="alert-popup-button clear idlescape-button-red">Clear</div>
                     <div class="alert-popup-button save idlescape-button-green">Save</div>
                 </div>
-            </div>`));
+            </div>`)
+        );
         const alertPopup = document.getElementsByClassName("alert-popup")[0];
         const priceBelowInput = document.getElementById("price-below");
         const priceAboveInput = document.getElementById("price-above");
@@ -383,7 +413,7 @@ class AlertTracker {
         }
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(itemId));
-        localStorage.setItem(this.storageKey, JSON.stringify(this.allAlerts));
+        this.tracker.storeSettings();
         this.tracker.closePopup();
     }
 

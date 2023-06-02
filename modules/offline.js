@@ -110,22 +110,28 @@ class OfflineTracker {
         const isDaelsTracker = title === 'Resources Tracker';
         const items = {};
         for (let itemNode of offlineProgressBox.childNodes) {
-            const itemId = convertItemId(itemNode.firstChild.src);
+            const itemId = convertItemId(itemNode.getElementsByClassName("item-icon")[0].src);
             if (!this.settings.include_gold && itemId === 'money_icon') {
                 continue;
             }
-            const itemCount = parseCompactNumberString(itemNode.childNodes[1].innerText);
+            const itemCount = parseCompactNumberString(itemNode.getElementsByClassName("centered")[0].innerText);
             // adds to existing count if itemId already occured
             items[itemId] ??= 0;
             items[itemId] += itemCount;
+        }
+        // filter out items with 0 count
+        for (let itemId in items) {
+            if (items[itemId] === 0) {
+                delete items[itemId];
+            }
         }
         const itemValues = this.storage.analyzeItems(Object.keys(items));
         const [totalMinValue, totalMaxValue] = this.totalValue(Object.values(items), itemValues);
 
         /* Offline Time
             - Offline Tracker:
-            The background script stores the last login time in localStorage whenever the tab is closed.
-            This time from the background script is as accurate as it gets, but the "Offline progress"
+            The storage script stores the last login time in localStorage whenever the tab is closed.
+            This time from the storage script is as accurate as it gets, but the "Offline progress"
             tab might also appear due to reconnects or character switches. The background time is
             therefore only used when the time difference is not too large. Otherwise the less accurate
             time from the "Offline progress" tab itself is used.
