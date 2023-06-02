@@ -245,7 +245,7 @@ class AlertTracker {
         if (localStorage.getItem(this.storageKey) !== null) {
             this.settings.allAlerts = JSON.parse(localStorage.getItem(this.storageKey));
             localStorage.removeItem(this.storageKey);
-            this.saveData();
+            this.tracker.storeSettings();
         }
     }
 
