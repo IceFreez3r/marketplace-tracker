@@ -33,7 +33,11 @@ class Storage {
             this.itemNames[apiId] = vanillaItemsList[apiId].name;
             this.itemVendorPrices[apiId] = vanillaItemsList[apiId].value;
         }
-        this.fetchAPILoop();
+        // this.fetchAPILoop();
+        this.fetchAPI();
+        setInterval(() => {
+            this.fetchAPI();
+        }, 1000 * 60 * 10);
     }
 
     addItemToIdMap(apiId, itemId, vanillaItemsList) {
@@ -294,6 +298,7 @@ class Storage {
 
     fetchAPI() {
         const apiUrl = window.location.origin + "/api/market/manifest";
+        console.log("Fetching API. Current UTC time: " + new Date().toLocaleString("en-US", { timeZone: "UTC" }));
         return fetch(apiUrl)
             .then((response) => {
                 return response.json();
