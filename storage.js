@@ -15,6 +15,7 @@ class Storage {
 
         this.itemNames = {};
         this.itemVendorPrices = {};
+        this.heatItems = {};
         this.latestPriceList = {};
     }
 
@@ -23,16 +24,23 @@ class Storage {
         this.idMap = {};
         for (const apiId in vanillaItemsList) {
             this.marketHistory[apiId] ??= [];
+            let itemId;
             if (vanillaItemsList[apiId].itemImage) {
-                const itemImage = convertItemId(vanillaItemsList[apiId].itemImage);
-                this.addItemToIdMap(apiId, itemImage, vanillaItemsList);
+                itemId = convertItemId(vanillaItemsList[apiId].itemImage);
+                this.addItemToIdMap(apiId, itemId, vanillaItemsList);
             }
             if (vanillaItemsList[apiId].itemIcon) {
-                const itemIcon = convertItemId(vanillaItemsList[apiId].itemIcon);
-                this.addItemToIdMap(apiId, itemIcon, vanillaItemsList);
+                itemId = convertItemId(vanillaItemsList[apiId].itemIcon);
+                this.addItemToIdMap(apiId, itemId, vanillaItemsList);
             }
             this.itemNames[apiId] = vanillaItemsList[apiId].name;
             this.itemVendorPrices[apiId] = vanillaItemsList[apiId].value;
+            if (vanillaItemsList[apiId].heat) {
+                this.heatItems[apiId] = {
+                    heat: vanillaItemsList[apiId].heat,
+                    itemId,
+                };
+            }
         }
         // this.fetchAPILoop();
         this.fetchAPI();
@@ -89,43 +97,28 @@ class Storage {
     }
 
     heatValue() {
-        const heatItems = [
-            { itemId: "book", apiId: 50, heat: 50 },
-            { itemId: "coal", apiId: 112, heat: 10 },
-            { itemId: "branch", apiId: 301, heat: 1 },
-            { itemId: "log", apiId: 302, heat: 5 },
-            { itemId: "oak_log", apiId: 303, heat: 10 },
-            { itemId: "willow_log", apiId: 304, heat: 20 },
-            { itemId: "maple_log", apiId: 305, heat: 70 },
-            { itemId: "yew_log", apiId: 306, heat: 200 },
-            { itemId: "elder_log", apiId: 307, heat: 350 },
-            { itemId: "pyre", apiId: 702, heat: 100 },
-            { itemId: "oak_pyre", apiId: 703, heat: 200 },
-            { itemId: "willow_pyre", apiId: 704, heat: 400 },
-            { itemId: "maple_pyre", apiId: 705, heat: 800 },
-            { itemId: "yew_pyre", apiId: 706, heat: 3000 },
-            { itemId: "elder_pyre", apiId: 707, heat: 5000 },
-            { itemId: "rotten_driftwood", apiId: 11030, heat: 25 },
-            { itemId: "sturdy_driftwood", apiId: 11031, heat: 75 },
-            { itemId: "mystical_driftwood", apiId: 11036, heat: 125 },
-        ];
-        const bestHeatItem = heatItems.reduce(
-            (result, heatItem) => {
-                if (heatItem.apiId in this.latestPriceList) {
-                    const latestPrice = this.latestPriceList[heatItem.apiId];
-                    if (latestPrice / heatItem.heat < result.heatValue) {
-                        return {
-                            itemId: heatItem.itemId,
-                            apiId: heatItem.apiId,
-                            heatValue: latestPrice / heatItem.heat,
-                        };
-                    }
+        const bestHeatItem = Object.keys(this.heatItems).reduce((result, heatItem) => {
+            if (heatItem in this.latestPriceList) {
+                const latestPrice = this.latestPriceList[heatItem];
+                if (latestPrice / this.heatItems[heatItem].heat < result.heatValue) {
+                    return {
+                        itemId: this.heatItems[heatItem].itemId,
+                        apiId: heatItem,
+                        heatValue: latestPrice / this.heatItems[heatItem].heat,
+                    };
                 }
-                return result;
-            },
-            { itemId: null, apiId: null, heatValue: Infinity }
-        );
+            }
+            return result;
+        }, { itemId: null, apiId: null, heatValue: Infinity });
         return bestHeatItem;
+    }
+
+    itemHeatValue(itemId) {
+        const apiId = this.idMap[itemId];
+        if (apiId in this.heatItems) {
+            return this.latestPriceList[apiId] / this.heatItems[apiId].heat;
+        }
+        return Infinity;
     }
 
     handleRecipe(ingredientItemIds, productItemId) {
