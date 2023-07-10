@@ -9,7 +9,8 @@ class Storage {
 
         this.lastLogin = this.loadLocalStorage(this.storageKeys.lastLogin, Date.now());
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch, 0);
-        this.marketHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromOldItemList());
+        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromV1ItemList());
+        this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
         this.itemNames = {};
@@ -135,15 +136,31 @@ class Storage {
     }
 
     storeItemList() {
+        // get the minimum timestamp of all entries
+        const baseTimestamp = Object.keys(this.marketHistory).reduce((result, apiId) => {
+            if (this.marketHistory[apiId].length > 0) {
+                const timestamp = this.marketHistory[apiId][0][0];
+                if (timestamp < result) {
+                    return timestamp;
+                }
+            }
+            return result;
+        }, Infinity);
         // Reduce the size of the stored marketHistory by removing items that have no prices
-        const marketHistory = Object.keys(this.marketHistory).reduce((result, key) => {
-            if (this.marketHistory[key].length > 0) {
-                result[key] = this.marketHistory[key];
+        const history = Object.keys(this.marketHistory).reduce((result, apiId) => {
+            if (this.marketHistory[apiId].length > 0) {
+                result[apiId] = this.marketHistory[apiId].map((entry) => {
+                    // reduce timestamp by the minimum timestamp to reduce memory usage
+                    return [entry[0] - baseTimestamp, entry[1]];
+                });
             }
             return result;
         }, {});
         try {
-            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify(marketHistory));
+            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify({
+                baseTimestamp,
+                history: history,
+            }));
         } catch (e) {
             console.log(e);
         }
@@ -348,7 +365,7 @@ class Storage {
         }
     }
 
-    loadFromOldItemList() {
+    loadFromV1ItemList() {
         const oldItemList = this.loadLocalStorage("itemList", {});
         for (const apiId in oldItemList) {
             oldItemList[apiId] = oldItemList[apiId].prices;
@@ -357,6 +374,22 @@ class Storage {
         this.marketHistory = oldItemList;
         this.storeItemList();
         return oldItemList;
+    }
+
+    processStorageHistory(storageHistory) {
+        // support for V2 storage format
+        if (storageHistory.baseTimestamp === undefined || storageHistory.history === undefined) {
+            return storageHistory;
+        }
+        const newHistory = {};
+        const baseTimestamp = storageHistory.baseTimestamp ?? 0;
+        for (const apiId in storageHistory.history) {
+            newHistory[apiId] = [];
+            for (const priceTuple of storageHistory.history[apiId]) {
+                newHistory[apiId].push([baseTimestamp + priceTuple[0], priceTuple[1]]);
+            }
+        }
+        return newHistory;
     }
 
     /**
