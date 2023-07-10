@@ -124,7 +124,9 @@ class SmithingTracker {
         for (const input of inputs) {
             ingredientIds.push(convertItemId(input.getElementsByClassName("smithing-information-input-icon")[0].src));
             ingredientIcons.push(input.getElementsByClassName("smithing-information-input-icon")[0].src);
-            ingredientCounts.push(parseNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText));
+            ingredientCounts.push(
+                parseCompactNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText)
+            );
         }
 
         const outputContainer = smithingInfo.getElementsByClassName("smithing-information-output")[0];
