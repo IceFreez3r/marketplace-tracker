@@ -142,10 +142,14 @@ class Storage {
         // Reduce the size of the stored marketHistory by removing items that have no prices
         const history = Object.keys(this.marketHistory).reduce((result, apiId) => {
             if (this.marketHistory[apiId].length > 0) {
-                result[apiId] = this.marketHistory[apiId].map((entry) => {
-                    // reduce timestamp by the minimum timestamp to reduce memory usage
-                    return [entry[0] - baseTimestamp, entry[1]];
-                });
+                const basePrice = this.marketHistory[apiId][0][1];
+                result[apiId] = {
+                    b: basePrice,
+                    p: this.marketHistory[apiId].map((entry) => {
+                        // reduce timestamp by the minimum timestamp to reduce memory usage
+                        return [entry[0] - baseTimestamp, entry[1] - basePrice];
+                    }),
+                }
             }
             return result;
         }, {});
@@ -378,8 +382,9 @@ class Storage {
         const baseTimestamp = storageHistory.baseTimestamp ?? 0;
         for (const apiId in storageHistory.history) {
             newHistory[apiId] = [];
-            for (const priceTuple of storageHistory.history[apiId]) {
-                newHistory[apiId].push([baseTimestamp + priceTuple[0], priceTuple[1]]);
+            const basePrice = storageHistory.history[apiId].b;
+            for (const priceTuple of storageHistory.history[apiId].p) {
+                newHistory[apiId].push([baseTimestamp + priceTuple[0], basePrice + priceTuple[1]]);
             }
         }
         return newHistory;
