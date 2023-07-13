@@ -97,20 +97,23 @@ class Storage {
     }
 
     heatValue() {
-        const bestHeatItem = Object.keys(this.heatItems).reduce((result, heatItem) => {
-            if (heatItem in this.latestPriceList) {
-                const latestPrice = this.latestPriceList[heatItem];
-                if (latestPrice / this.heatItems[heatItem].heat < result.heatValue) {
-                    return {
-                        itemId: this.heatItems[heatItem].itemId,
-                        apiId: heatItem,
-                        heatValue: latestPrice / this.heatItems[heatItem].heat,
-                    };
+        const bestHeatItem = Object.keys(this.heatItems).reduce(
+            (result, heatItem) => {
+                if (heatItem in this.latestPriceList) {
+                    const latestPrice = this.latestPriceList[heatItem];
+                    if (latestPrice / this.heatItems[heatItem].heat < result.heatValue) {
+                        return {
+                            itemId: this.heatItems[heatItem].itemId,
+                            apiId: heatItem,
+                            heatValue: latestPrice / this.heatItems[heatItem].heat,
+                        };
+                    }
                 }
-            }
-            return result;
-        }, { itemId: null, apiId: null, heatValue: Infinity });
-        bestHeatItem.heatValue = Math.round(bestHeatItem.heatValue * 100) / 100;
+                return result;
+            },
+            { itemId: null, apiId: null, heatValue: Infinity }
+        );
+        bestHeatItem.heatValue = Math.round(bestHeatItem.heatValue * 1000) / 1000;
         return bestHeatItem;
     }
 
@@ -130,35 +133,50 @@ class Storage {
     }
 
     storeItemList() {
-        // get the minimum timestamp of all entries
-        const baseTimestamp = Object.keys(this.marketHistory).reduce((result, apiId) => {
-            if (this.marketHistory[apiId].length > 0) {
-                const timestamp = this.marketHistory[apiId][0][0];
-                if (timestamp < result) {
-                    return timestamp;
-                }
-            }
-            return result;
-        }, Infinity);
-        // Reduce the size of the stored marketHistory by removing items that have no prices
         const history = Object.keys(this.marketHistory).reduce((result, apiId) => {
+            // exclude items with no history
             if (this.marketHistory[apiId].length > 0) {
-                const basePrice = this.marketHistory[apiId][0][1];
-                result[apiId] = {
-                    b: basePrice,
-                    p: this.marketHistory[apiId].map((entry) => {
-                        // reduce timestamp by the minimum timestamp to reduce memory usage
-                        return [entry[0] - baseTimestamp, entry[1] - basePrice];
-                    }),
+                let previousTimestamp = 0;
+                let previousPrice = 0;
+                const history = this.marketHistory[apiId].map((entry) => {
+                    // reduce timestamp by the previous timestamp
+                    const timestamp = entry[0] - previousTimestamp;
+                    previousTimestamp = entry[0];
+                    // reduce price by the previous price
+                    const price = entry[1] - previousPrice;
+                    previousPrice = entry[1];
+                    if (price === 0) {
+                        // reduce memory usage by using a single number instead of an array
+                        return timestamp;
+                    }
+                    return [timestamp, Math.round(price * 1000) / 1000];
+                });
+                result[apiId] = [history[0]];
+                // compress streaks of 1s
+                let streakLength = 0;
+                for (let i = 1; i < history.length; i++) {
+                    const entry = history[i];
+                    if (typeof entry === "number" && entry === 1) {
+                        streakLength++;
+                    } else {
+                        if (streakLength > 0) {
+                            if (streakLength === 1) {
+                                result[apiId].push(1);
+                            } else {
+                                // timestamp is negative to indicate a streak
+                                // negative timestamp difference cannot occur otherwise, because the data is sorted
+                                result[apiId].push(-streakLength);
+                            }
+                            streakLength = 0;
+                        }
+                        result[apiId].push(entry);
+                    }
                 }
             }
             return result;
         }, {});
         try {
-            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify({
-                baseTimestamp,
-                history: history,
-            }));
+            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify(history));
         } catch (e) {
             console.log(e);
         }
@@ -275,10 +293,10 @@ class Storage {
         return quantiles;
     }
 
+    // Sort the price tuples of a given apiId by price and then by timestamp
     sortPriceList(apiId) {
-        // Sort the price tuples by price
         this.marketHistory[apiId].sort((a, b) => {
-            return a[1] - b[1];
+            return a[1] - b[1] || a[0] - b[0];
         });
     }
 
@@ -376,16 +394,26 @@ class Storage {
 
     processStorageHistory(storageHistory) {
         // support for V2 storage format
-        if (storageHistory.baseTimestamp === undefined || storageHistory.history === undefined) {
-            return storageHistory;
-        }
         const newHistory = {};
-        const baseTimestamp = storageHistory.baseTimestamp ?? 0;
-        for (const apiId in storageHistory.history) {
+        for (const apiId in storageHistory) {
             newHistory[apiId] = [];
-            const basePrice = storageHistory.history[apiId].b;
-            for (const priceTuple of storageHistory.history[apiId].p) {
-                newHistory[apiId].push([baseTimestamp + priceTuple[0], basePrice + priceTuple[1]]);
+            let previousTimestamp = 0;
+            let previousPrice = 0;
+            for (const priceTuple of storageHistory[apiId]) {
+                if (typeof priceTuple === "number") {
+                    if (priceTuple < 0) {
+                        for (let i = 0; i < -priceTuple; i++) {
+                            previousTimestamp += 1;
+                            newHistory[apiId].push([previousTimestamp, previousPrice]);
+                        }
+                        continue;
+                    }
+                    previousTimestamp += priceTuple;
+                } else {
+                    previousTimestamp += priceTuple[0];
+                    previousPrice += priceTuple[1];
+                }
+                newHistory[apiId].push([previousTimestamp, previousPrice]);
             }
         }
         return newHistory;
