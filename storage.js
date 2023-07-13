@@ -110,6 +110,7 @@ class Storage {
             }
             return result;
         }, { itemId: null, apiId: null, heatValue: Infinity });
+        bestHeatItem.heatValue = Math.round(bestHeatItem.heatValue * 100) / 100;
         return bestHeatItem;
     }
 
