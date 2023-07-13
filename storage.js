@@ -172,6 +172,13 @@ class Storage {
                         result[apiId].push(entry);
                     }
                 }
+                if (streakLength > 0) {
+                    if (streakLength === 1) {
+                        result[apiId].push(1);
+                    } else {
+                        result[apiId].push(-streakLength);
+                    }
+                }
             }
             return result;
         }, {});
@@ -394,6 +401,10 @@ class Storage {
 
     processStorageHistory(storageHistory) {
         // support for V2 storage format
+        // if the second timestamp of heat in the data is above 2m, we can assume that it's the V2 format
+        if (storageHistory[2]?.[1]?.[0] && storageHistory[2][1][0] > 2000000) {
+            return storageHistory;
+        }
         const newHistory = {};
         for (const apiId in storageHistory) {
             newHistory[apiId] = [];
@@ -401,7 +412,9 @@ class Storage {
             let previousPrice = 0;
             for (const priceTuple of storageHistory[apiId]) {
                 if (typeof priceTuple === "number") {
+                    // compressed price tuple
                     if (priceTuple < 0) {
+                        // streak of same price
                         for (let i = 0; i < -priceTuple; i++) {
                             previousTimestamp += 1;
                             newHistory[apiId].push([previousTimestamp, previousPrice]);
