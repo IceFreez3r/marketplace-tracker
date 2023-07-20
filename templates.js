@@ -101,10 +101,63 @@ class Templates {
         chance = 1,
         classes = ""
     ) {
-        const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, maxPrices: ingredientMaxPrices } = ingredients;
-        const { icon: productIcon, count: productCount, minPrice: productMinPrice, maxPrice: productMaxPrice, vendorPrice: productVendorPrice } = product;
-        // Ingredients
+        const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, medianPrices: ingredientMedianPrices, maxPrices: ingredientMaxPrices } = ingredients;
+        const { icon: productIcon, count: productCount, minPrice: productMinPrice, medianPrice: productMedianPrices, maxPrice: productMaxPrice, vendorPrice: productVendorPrice } = product;
+
+        const header = Templates.infoTableHeader(classId, ingredientIcons, ingredientCounts, productIcon, productCount, profitType, showCounts);
+        const minPrice = Templates.infoTableRow(
+            classId,
+            ingredientMinPrices,
+            ingredientCounts,
+            productMinPrice,
+            productVendorPrice,
+            productCount,
+            profitType,
+            compactDisplay,
+            secondsPerAction,
+            chance,
+            compactDisplay ? "Min" : "Minimal Marketprice"
+        );
+        const medianPrice = Templates.infoTableRow(
+            classId,
+            ingredientMedianPrices,
+            ingredientCounts,
+            productMedianPrices,
+            productVendorPrice,
+            productCount,
+            profitType,
+            compactDisplay,
+            secondsPerAction,
+            chance,
+            compactDisplay ? "Median" : "Median Marketprice"
+        );
+        const maxPrice = Templates.infoTableRow(
+            classId,
+            ingredientMaxPrices,
+            ingredientCounts,
+            productMaxPrice,
+            productVendorPrice,
+            productCount,
+            profitType,
+            compactDisplay,
+            secondsPerAction,
+            chance,
+            compactDisplay ? "Max" : "Maximal Marketprice"
+        );
+        return `
+            <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
+            ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
+        }, 1fr)">
+                ${header}
+                ${minPrice}
+                ${medianPrice}
+                ${maxPrice}
+            </div>`;
+    }
+
+    static infoTableHeader(classId, ingredientIcons, ingredientCounts, productIcon, productCount, profitType, showCounts = false) {
         let header = "";
+        // Ingredients
         for (let i = 0; i < ingredientIcons.length; i++) {
             header += Templates.infoTableCell(
                 classId,
@@ -141,41 +194,7 @@ class Templates {
                 ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}`
             );
         }
-
-        const minPrice = Templates.infoTableRow(
-            classId,
-            ingredientMinPrices,
-            ingredientCounts,
-            productMinPrice,
-            productVendorPrice,
-            productCount,
-            profitType,
-            compactDisplay,
-            secondsPerAction,
-            chance
-        );
-        const maxPrice = Templates.infoTableRow(
-            classId,
-            ingredientMaxPrices,
-            ingredientCounts,
-            productMaxPrice,
-            productVendorPrice,
-            productCount,
-            profitType,
-            compactDisplay,
-            secondsPerAction,
-            chance
-        );
-        return `
-            <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
-            ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
-        }, 1fr)">
-                ${header}
-                ${Templates.infoTableCell(classId, compactDisplay ? "Min" : "Minimal Marketprice")}
-                ${minPrice}
-                ${Templates.infoTableCell(classId, compactDisplay ? "Max" : "Maximal Marketprice")}
-                ${maxPrice}
-            </div>`;
+        return header;
     }
 
     static infoTableRow(
@@ -188,9 +207,10 @@ class Templates {
         profitType,
         compactDisplay,
         secondsPerAction,
-        chance
+        chance,
+        label
     ) {
-        let row = "";
+        let row = Templates.infoTableCell(classId, label);
         // Ingredients
         row += ingredientPrices
             .map((price) => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay, fraction: true })))
