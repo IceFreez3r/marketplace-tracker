@@ -67,6 +67,15 @@ class CraftingTracker {
         if (this.settings.goldPerXP === undefined) {
             this.settings.goldPerXP = 1;
         }
+        if (
+            this.settings.min_column === undefined ||
+            this.settings.median_column === undefined ||
+            this.settings.max_column === undefined
+        ) {
+            this.settings.min_column = true;
+            this.settings.median_column = true;
+            this.settings.max_column = true;
+        }
         this.cssNode = injectCSS(this.css);
 
         this.lastCraftedItemId = null;
@@ -93,16 +102,16 @@ class CraftingTracker {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement("div");
-        moduleSetting.classList.add("tracker-module-setting");
-        moduleSetting.insertAdjacentHTML(
+        let profitType = document.createElement("div");
+        profitType.classList.add("tracker-module-setting");
+        profitType.insertAdjacentHTML(
             "beforeend",
             `
             <div class="tracker-module-setting-name">
                 Profit
             </div>`
         );
-        moduleSetting.append(
+        profitType.append(
             Templates.selectMenu(
                 CraftingTracker.id + "-profit",
                 {
@@ -121,7 +130,26 @@ class CraftingTracker {
                 </div>
                 ${Templates.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
             </div>`;
-        return [moduleSetting, goldPerXP];
+        const columns = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Min Column
+                </div>
+                ${Templates.checkboxTemplate(CraftingTracker.id + "-min_column", this.settings.min_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Median Column
+                </div>
+                ${Templates.checkboxTemplate(CraftingTracker.id + "-median_column", this.settings.median_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Max Column
+                </div>
+                ${Templates.checkboxTemplate(CraftingTracker.id + "-max_column", this.settings.max_column)}
+            </div>`;
+        return [profitType, goldPerXP, columns];
     }
 
     settingChanged(settingId, value) {
@@ -197,6 +225,7 @@ class CraftingTracker {
             "beforeend",
             Templates.infoTableTemplate(
                 "crafting",
+                [this.settings.min_column, this.settings.median_column, this.settings.max_column],
                 ingredients,
                 product,
                 this.settings.profit,

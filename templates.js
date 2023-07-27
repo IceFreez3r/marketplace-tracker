@@ -81,6 +81,7 @@ class Templates {
     /**
      *
      * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
+     * @param {Array} columns tripel of boolean values, each representing if the min, median or max price should be displayed
      * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
      * @param {Object} product icon, count, minPrice and maxPrice of the product
      * @param {string} profitType options are `off`, `percent`, `flat` and `per_hour`
@@ -92,6 +93,7 @@ class Templates {
      */
     static infoTableTemplate(
         classId,
+        columns,
         ingredients,
         product,
         profitType,
@@ -101,11 +103,33 @@ class Templates {
         chance = 1,
         classes = ""
     ) {
-        const { icons: ingredientIcons, counts: ingredientCounts, minPrices: ingredientMinPrices, medianPrices: ingredientMedianPrices, maxPrices: ingredientMaxPrices } = ingredients;
-        const { icon: productIcon, count: productCount, minPrice: productMinPrice, medianPrice: productMedianPrices, maxPrice: productMaxPrice, vendorPrice: productVendorPrice } = product;
+        const [minColumn, medianColumn, maxColumn] = columns;
+        const {
+            icons: ingredientIcons,
+            counts: ingredientCounts,
+            minPrices: ingredientMinPrices,
+            medianPrices: ingredientMedianPrices,
+            maxPrices: ingredientMaxPrices,
+        } = ingredients;
+        const {
+            icon: productIcon,
+            count: productCount,
+            minPrice: productMinPrice,
+            medianPrice: productMedianPrices,
+            maxPrice: productMaxPrice,
+            vendorPrice: productVendorPrice,
+        } = product;
 
-        const header = Templates.infoTableHeader(classId, ingredientIcons, ingredientCounts, productIcon, productCount, profitType, showCounts);
-        const minPrice = Templates.infoTableRow(
+        const header = Templates.infoTableHeader(
+            classId,
+            ingredientIcons,
+            ingredientCounts,
+            productIcon,
+            productCount,
+            profitType,
+            showCounts
+        );
+        const minPrice = minColumn ? Templates.infoTableRow(
             classId,
             ingredientMinPrices,
             ingredientCounts,
@@ -117,8 +141,8 @@ class Templates {
             secondsPerAction,
             chance,
             compactDisplay ? "Min" : "Minimal Marketprice"
-        );
-        const medianPrice = Templates.infoTableRow(
+        ) : "";
+        const medianPrice = medianColumn ? Templates.infoTableRow(
             classId,
             ingredientMedianPrices,
             ingredientCounts,
@@ -130,8 +154,8 @@ class Templates {
             secondsPerAction,
             chance,
             compactDisplay ? "Median" : "Median Marketprice"
-        );
-        const maxPrice = Templates.infoTableRow(
+        ) : "";
+        const maxPrice = maxColumn ? Templates.infoTableRow(
             classId,
             ingredientMaxPrices,
             ingredientCounts,
@@ -143,7 +167,7 @@ class Templates {
             secondsPerAction,
             chance,
             compactDisplay ? "Max" : "Maximal Marketprice"
-        );
+        ) : "";
         return `
             <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
             ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
@@ -155,7 +179,15 @@ class Templates {
             </div>`;
     }
 
-    static infoTableHeader(classId, ingredientIcons, ingredientCounts, productIcon, productCount, profitType, showCounts = false) {
+    static infoTableHeader(
+        classId,
+        ingredientIcons,
+        ingredientCounts,
+        productIcon,
+        productCount,
+        profitType,
+        showCounts = false
+    ) {
         let header = "";
         // Ingredients
         for (let i = 0; i < ingredientIcons.length; i++) {
@@ -213,27 +245,42 @@ class Templates {
         let row = Templates.infoTableCell(classId, label);
         // Ingredients
         row += ingredientPrices
-            .map((price) => Templates.infoTableCell(classId, formatNumber(price, { compactDisplay: compactDisplay, fraction: true })))
+            .map((price) =>
+                Templates.infoTableCell(
+                    classId,
+                    formatNumber(price, { compactDisplay: compactDisplay, fraction: true })
+                )
+            )
             .join("");
         // Total crafting cost
         const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
-        const betterToVendor = profit('flat', productVendorPrice, productPrice) < 0;
+        const betterToVendor = profit("flat", productVendorPrice, productPrice) < 0;
         const betterPrice = betterToVendor ? productVendorPrice : productPrice;
         const totalProductPrice = betterPrice * productCount;
         row += Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
         // Product
-        row += Templates.infoTableCell(classId, formatNumber(betterPrice, { compactDisplay: compactDisplay, fraction: true }), betterToVendor);
+        row += Templates.infoTableCell(
+            classId,
+            formatNumber(betterPrice, { compactDisplay: compactDisplay, fraction: true }),
+            betterToVendor
+        );
         if (productCount > 1) {
-            row += Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }));
+            row += Templates.infoTableCell(
+                classId,
+                formatNumber(totalProductPrice, { compactDisplay: compactDisplay })
+            );
         }
         // Profit
         if (profitType !== "off") {
             row += Templates.infoTableCell(
                 classId,
-                formatNumber(profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction, betterToVendor), {
-                    compactDisplay: compactDisplay,
-                    profitType: profitType,
-                })
+                formatNumber(
+                    profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction, betterToVendor),
+                    {
+                        compactDisplay: compactDisplay,
+                        profitType: profitType,
+                    }
+                )
             );
         }
         return row;
@@ -284,7 +331,9 @@ class Templates {
                     </div>
                 </div>
             </div>`;
-        const topRightNotificationContainer = document.getElementsByClassName("rnc__notification-container--top-right")[0];
+        const topRightNotificationContainer = document.getElementsByClassName(
+            "rnc__notification-container--top-right"
+        )[0];
         saveInsertAdjacentHTML(topRightNotificationContainer, "afterbegin", notification);
         const notificationElement = topRightNotificationContainer.lastElementChild;
         setTimeout(() => {
@@ -332,13 +381,17 @@ class Templates {
         menu.classList.add("tracker-select-menu");
         let content = `
             <div class="tracker-select-menu-current">
-                <span class="tracker-select-menu-selection" id="${id}" data-for="${currentlySelected}">${options[currentlySelected]}</span>
+                <span class="tracker-select-menu-selection" id="${id}" data-for="${currentlySelected}">${
+            options[currentlySelected]
+        }</span>
                 ${Templates.arrowDownTemplate("arrow-down")}
             </div>
             <div class="tracker-options">`;
         for (let option in options) {
             content += `
-                <div class="tracker-option${option === currentlySelected ? " tracker-selected" : ""}" data-for="${option}">
+                <div class="tracker-option${
+                    option === currentlySelected ? " tracker-selected" : ""
+                }" data-for="${option}">
                     ${options[option]}
                 </div>`;
         }
@@ -377,9 +430,9 @@ class Templates {
      * @returns {Node} div holding the select menu with working staticality.
      */
     static sliderTemplate(id, range, currentlySelected, classes = "") {
-        return `<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${range[1]}" step="${
-            range[2] || 1
-        }" value="${currentlySelected}">`;
+        return `<input id="${id}" class="tracker-slider ${classes}" type="range" min="${range[0]}" max="${
+            range[1]
+        }" step="${range[2] || 1}" value="${currentlySelected}">`;
     }
 
     static timeDurationTemplate(id, value = "", classes = "") {
@@ -464,5 +517,18 @@ class Templates {
                     c-0.6-8.6-1.2-17.3-1.9-25.9c0-14.2,8-25.9,21-29.6c13-3.1,25.9,3.1,31.5,15.4c1.9,4.3,2.5,8.6,2.5,13.6
                     C269.499,195.468,268.199,209.068,267.599,222.568z"/>
             </svg>`;
+    }
+
+    static accordionToggleTemplate(identifier, classes = "") {
+        const toggle = stringToHTMLElement(Templates.arrowDownTemplate(`accordion-toggle ${classes}`));
+        toggle.dataset.accordion = identifier;
+        toggle.addEventListener("click", () => {
+            const accordion = document.getElementById(identifier);
+            if (accordion) {
+                accordion.classList.toggle("accordion-open");
+            }
+            toggle.classList.toggle("accordion-toggle-open");
+        });
+        return toggle;
     }
 }

@@ -227,3 +227,9 @@ function insertTrackerButtons() {
     marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
     return document.getElementById("tracker-buttons");
 }
+
+function stringToHTMLElement(HTMLString) {
+    const template = document.createElement("template");
+    saveInsertAdjacentHTML(template, "beforeend", HTMLString);
+    return template.children[0];
+}

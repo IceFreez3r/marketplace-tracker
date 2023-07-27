@@ -67,6 +67,15 @@ body .runecrafting-essence-counter {
         if (this.settings.profit === undefined) {
             this.settings.profit = "flat";
         }
+        if (
+            this.settings.min_column === undefined ||
+            this.settings.median_column === undefined ||
+            this.settings.max_column === undefined
+        ) {
+            this.settings.min_column = true;
+            this.settings.median_column = true;
+            this.settings.max_column = true;
+        }
         this.cssNode = injectCSS(this.css);
 
         this.playAreaObserver = new MutationObserver(mutations => {
@@ -86,19 +95,38 @@ body .runecrafting-essence-counter {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement('div');
-        moduleSetting.classList.add('tracker-module-setting');
-        moduleSetting.insertAdjacentHTML('beforeend', `
+        let profitType = document.createElement('div');
+        profitType.classList.add('tracker-module-setting');
+        profitType.insertAdjacentHTML('beforeend', `
         <div class="tracker-module-setting-name">
             Profit
         </div>`);
-        moduleSetting.append(Templates.selectMenu(RunecraftingTracker.id + "-profit", {
+        profitType.append(Templates.selectMenu(RunecraftingTracker.id + "-profit", {
             off: "Off",
             percent: "Percent",
             flat: "Flat",
             per_hour: "Per Hour",
         }, this.settings.profit));
-        return moduleSetting;
+        const columns = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Min Column
+                </div>
+                ${Templates.checkboxTemplate(RunecraftingTracker.id + "-min_column", this.settings.min_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Median Column
+                </div>
+                ${Templates.checkboxTemplate(RunecraftingTracker.id + "-median_column", this.settings.median_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Max Column
+                </div>
+                ${Templates.checkboxTemplate(RunecraftingTracker.id + "-max_column", this.settings.max_column)}
+            </div>`;
+        return [profitType, columns];
     }
 
     settingChanged(settingId, value) {
@@ -177,7 +205,20 @@ body .runecrafting-essence-counter {
         const recipePrices = this.storage.handleRecipe(ingredientIds, productId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientAmounts });
         const product = Object.assign(recipePrices.product, { icon: productIcon, count: productAmount });
-        saveInsertAdjacentHTML(recipe, "beforeend", Templates.infoTableTemplate("runecrafting", ingredients, product, this.settings.profit, false, false, timePerAction));
+        saveInsertAdjacentHTML(
+            recipe,
+            "beforeend",
+            Templates.infoTableTemplate(
+                "runecrafting",
+                [this.settings.min_column, this.settings.median_column, this.settings.max_column],
+                ingredients,
+                product,
+                this.settings.profit,
+                false,
+                false,
+                timePerAction
+            )
+        );
     }
 
     productAmount(activeTab, activeTalisman) {
