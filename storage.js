@@ -2,14 +2,14 @@ class Storage {
     constructor(APICallback) {
         this.APICallback = APICallback;
         this.storageKeys = {
-            marketHistory: "TrackerMarketHistory",
+            marketHistory: "TrackerMarketHistoryEncoded",
             lastLogin: "TrackerLastLogin",
             lastAPIFetch: "TrackerLastAPIFetch",
         };
 
         this.lastLogin = this.loadLocalStorage(this.storageKeys.lastLogin, Date.now());
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch, 0);
-        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromV1ItemList());
+        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromV2ItemList());
         this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
@@ -182,8 +182,9 @@ class Storage {
             }
             return result;
         }, {});
+        const { compressed, codes, skipLast } = HuffmanEncoding.encode(JSON.stringify(history));
         try {
-            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify(history));
+            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify([compressed, codes, skipLast]));
         } catch (e) {
             console.log(e);
         }
@@ -399,25 +400,34 @@ class Storage {
         return oldItemList;
     }
 
+    loadFromV2ItemList() {
+        const oldItemList = this.loadLocalStorage("TrackerMarketHistory", () => this.loadFromV1ItemList());
+        localStorage.removeItem("TrackerMarketHistory");
+        this.marketHistory = oldItemList;
+        this.storeItemList();
+        return oldItemList;
+    }
+
     processStorageHistory(storageHistory) {
         // support for V2 storage format
-        // if the second timestamp of heat in the data is above 2m, we can assume that it's the V2 format
-        if (storageHistory[2]?.[1]?.[0] && storageHistory[2][1][0] > 2000000) {
+        if (!Array.isArray(storageHistory)) {
             return storageHistory;
         }
-        const newHistory = {};
-        for (const apiId in storageHistory) {
-            newHistory[apiId] = [];
+        const [compressed, codes, skipLast] = storageHistory;
+        const decoded = JSON.parse(HuffmanEncoding.decode(compressed, codes, skipLast));
+        const history = {};
+        for (const apiId in decoded) {
+            history[apiId] = [];
             let previousTimestamp = 0;
             let previousPrice = 0;
-            for (const priceTuple of storageHistory[apiId]) {
+            for (const priceTuple of decoded[apiId]) {
                 if (typeof priceTuple === "number") {
                     // compressed price tuple
                     if (priceTuple < 0) {
                         // streak of same price
                         for (let i = 0; i < -priceTuple; i++) {
                             previousTimestamp += 1;
-                            newHistory[apiId].push([previousTimestamp, previousPrice]);
+                            history[apiId].push([previousTimestamp, previousPrice]);
                         }
                         continue;
                     }
@@ -426,10 +436,10 @@ class Storage {
                     previousTimestamp += priceTuple[0];
                     previousPrice += priceTuple[1];
                 }
-                newHistory[apiId].push([previousTimestamp, previousPrice]);
+                history[apiId].push([previousTimestamp, previousPrice]);
             }
         }
-        return newHistory;
+        return history;
     }
 
     /**
