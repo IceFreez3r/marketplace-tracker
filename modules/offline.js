@@ -1,39 +1,25 @@
-class OfflineTracker {
-    static id = 'offline_tracker';
-    static displayName = 'Offline Tracker';
-    static icon = "<img src='/images/clock.png' alt='Offline Tracker Icon'>";
+class PopupTracker {
+    static id = "offline_tracker"; // old id to maintain settings
+    static displayName = "Popup Tracker";
+    static icon = "<img src='/images/clock.png' alt='Popup Tracker Icon'>";
     static category = "economy";
     css = `
-.offline-info-box {
+.popup-info-box {
     padding: 10px;
     text-align: center;
     font-size: 25px;
 }
 
-.offline-gold-icon {
+.popup-gold-icon {
     height: 28px;
     width: 28px;
     vertical-align: text-top;
 }
 
-.offline-info-value {
-    display: flex;
+.popup-info-value {
+    display: grid;
+    grid-template-columns: 1fr 20px 1fr;
     justify-content: center;
-}
-
-.offline-info-value .left-info {
-    flex: 1;
-    text-align: right;
-}
-
-.offline-info-value .center-info {
-    flex: 0;
-    padding: 0 5px;
-}
-
-.offline-info-value .right-info {
-    flex: 1;
-    text-align: left;
 }
     `;
 
@@ -41,30 +27,46 @@ class OfflineTracker {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
+        if (this.settings.offline_popup === undefined) {
+            this.settings.offline_popup = 1;
+        }
+        if (this.settings.chest_popup === undefined) {
+            this.settings.chest_popup = 1;
+        }
+        if (this.settings.chat_chest_popup === undefined) {
+            this.settings.chat_chest_popup = 0;
+        }
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
         }
-        if (this.settings.lastLogin === undefined || typeof(this.settings.lastLogin) !== 'number') {
+        if (this.settings.lastLogin === undefined || typeof this.settings.lastLogin !== "number") {
             this.settings.lastLogin = Date.now();
         }
         this.cssNode = injectCSS(this.css);
 
-        window.addEventListener('beforeunload', () => {
+        window.addEventListener("beforeunload", () => {
             this.settings.lastLogin = Date.now();
             this.tracker.storeSettings();
         });
 
-        this.bodyObserver = new MutationObserver(mutations => {
+        this.bodyObserver = new MutationObserver((mutations) => {
             if (detectInfiniteLoop(mutations)) {
                 return;
             }
             this.offlineTracker();
+            this.chestTracker();
         });
-    };
+        this.chestObserver = new MutationObserver((mutations) => {
+            if (detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.chestTracker();
+        });
+    }
 
     onGameReady() {
         this.bodyObserver.observe(document.body, {
-            childList: true
+            childList: true,
         });
         this.offlineTracker();
     }
@@ -78,9 +80,28 @@ class OfflineTracker {
         return `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
+                    Offline popup
+                </div>
+                ${Templates.checkboxTemplate(PopupTracker.id + "-offline_popup", this.settings.offline_popup)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Chest/Dungeon completion popup
+                </div>
+                ${Templates.checkboxTemplate(PopupTracker.id + "-chest_popup", this.settings.chest_popup)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Chat Chest links
+                </div>
+                ${Templates.checkboxTemplate(PopupTracker.id + "-chat_chest_popup", this.settings.chat_chest_popup)}
+            </div>
+            </br>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
                     Include Gold
                 </div>
-                ${Templates.checkboxTemplate(OfflineTracker.id + '-include_gold', this.settings.include_gold)}
+                ${Templates.checkboxTemplate(PopupTracker.id + "-include_gold", this.settings.include_gold)}
             </div>`;
     }
 
@@ -90,15 +111,19 @@ class OfflineTracker {
 
     onAPIUpdate() {
         this.offlineTracker(true);
+        this.chestTracker(true);
     }
 
-    offlineTracker(forceUpdate = false){
-        let offlineProgressBox = document.getElementsByClassName('offline-progress-box all-items')[0];
+    offlineTracker(forceUpdate = false) {
+        if (!this.settings.offline_popup) {
+            return;
+        }
+        let offlineProgressBox = document.getElementsByClassName("offline-progress-box all-items")[0];
         if (!offlineProgressBox) {
             return;
         }
         // Offline Info already exists
-        const existingInfoBox = document.getElementsByClassName('offline-info-box')[0];
+        const existingInfoBox = document.getElementsByClassName("offline-info-box")[0];
         if (existingInfoBox) {
             if (forceUpdate) {
                 existingInfoBox.remove();
@@ -106,27 +131,8 @@ class OfflineTracker {
                 return;
             }
         }
-        const title = document.getElementsByClassName('MuiTypography-root MuiTypography-h6')[0].innerText;
-        const isDaelsTracker = title === 'Resources Tracker';
-        const items = {};
-        for (let itemNode of offlineProgressBox.childNodes) {
-            const itemId = convertItemId(itemNode.getElementsByClassName("item-icon")[0].src);
-            if (!this.settings.include_gold && itemId === 'money_icon') {
-                continue;
-            }
-            const itemCount = parseCompactNumberString(itemNode.getElementsByClassName("centered")[0].innerText);
-            // adds to existing count if itemId already occured
-            items[itemId] ??= 0;
-            items[itemId] += itemCount;
-        }
-        // filter out items with 0 count
-        for (let itemId in items) {
-            if (items[itemId] === 0) {
-                delete items[itemId];
-            }
-        }
-        const itemValues = this.storage.analyzeItems(Object.keys(items));
-        const [totalMinValue, totalMaxValue] = this.totalValue(Object.values(items), itemValues);
+
+        const [totalMinValue, totalMaxValue] = this.totalValue(offlineProgressBox);
 
         /* Offline Time
             - Offline Tracker:
@@ -139,6 +145,8 @@ class OfflineTracker {
             - Dael's Tracker:
             Just use the scrapped time.
         */
+        const title = document.getElementsByClassName("MuiTypography-root MuiTypography-h6")[0].innerText;
+        const isDaelsTracker = title === "Resources Tracker";
         const offlineTimeScrappedString = offlineProgressBox.previousElementSibling.innerText;
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
@@ -147,14 +155,20 @@ class OfflineTracker {
                 offlineTime = offlineTimeScrapped;
             } else {
                 const offlineTimeBackground = Date.now() - this.settings.lastLogin;
-                offlineTime = this.calculateOfflineTime(offlineTimeBackground, offlineTimeScrapped, offlineTimeScrappedScale);
+                offlineTime = this.calculateOfflineTime(
+                    offlineTimeBackground,
+                    offlineTimeScrapped,
+                    offlineTimeScrappedScale
+                );
             }
         } else {
             offlineTime = offlineTimeScrapped;
         }
-        saveInsertAdjacentHTML(offlineProgressBox, 'afterend', this.offlineInfoTemplate(totalMinValue,
-                                                                                        totalMaxValue,
-                                                                                        offlineTime));
+        saveInsertAdjacentHTML(
+            offlineProgressBox,
+            "afterend",
+            this.offlineInfoTemplate(totalMinValue, totalMaxValue, "offline-info-box", offlineTime)
+        );
     }
 
     calculateOfflineTime(background, scrapped, scale) {
@@ -168,49 +182,92 @@ class OfflineTracker {
         return Math.min(12 * 60 * 60 * 1000, background);
     }
 
-    offlineInfoTemplate(totalMinValue, totalMaxValue, offlineTime) {
-        const minPerHour = totalMinValue * 1000 * 60 * 60 / offlineTime;
-        const maxPerHour = totalMaxValue * 1000 * 60 * 60 / offlineTime;
-        return `
-            <div class="offline-progress-box offline-info-box">
-                <div class="offline-info-title">
-                    Total value
-                </div>
-                <div class="offline-info-value">
-                    <div class="left-info">
-                        <span>
-                            ${formatNumber(totalMinValue)}
-                            <img src="/images/money_icon.png" class="offline-gold-icon">
-                        </span>
-                        <br>
-                        <span>
-                            ${formatNumber(minPerHour)}/h
-                        </span>
-                    </div>
-                    <div class="center-info">
-                        <span> ~ </span>
-                        <br>
-                        <span> ~ </span>
-                    </div>
-                    <div class="right-info">
-                        <span>
-                            ${formatNumber(totalMaxValue)}
-                            <img src="/images/money_icon.png" class="offline-gold-icon">
-                        </span>
-                        <br>
-                        <span>
-                            ${formatNumber(maxPerHour)}/h
-                        </span>
-                    </div>
-                </div>
-            </div>`;
+    chestTracker(forceUpdate = false) {
+        const chestPopups = document.getElementsByClassName("chest-open-box all-items");
+        if (chestPopups.length === 0) {
+            this.chestObserver.disconnect();
+            return;
+        }
+        for (let i = 0; i < chestPopups.length; i++) {
+            const chestPopup = chestPopups[i];
+            if (chestPopup.nextElementSibling && chestPopup.nextElementSibling.classList.contains("chest-info-box")) {
+                if (forceUpdate) {
+                    chestPopup.nextElementSibling.remove();
+                } else {
+                    continue;
+                }
+            }
+            const [totalMinValue, totalMaxValue] = this.totalValue(chestPopup);
+            saveInsertAdjacentHTML(
+                chestPopup,
+                "afterend",
+                this.offlineInfoTemplate(totalMinValue, totalMaxValue, "chest-info-box")
+            );
+        }
+        this.chestObserver.observe(chestPopups[0].parentElement, {
+            childList: true,
+        });
     }
 
-    totalValue(itemCounts, itemValues) {
-        const {minPrices, maxPrices, vendorPrices} = itemValues;
-        const sanitizedMinPrices = minPrices.map(price => isNaN(price) ? 0 : price);
-        const sanitizedMaxPrices = maxPrices.map(price => isNaN(price) ? 0 : price);
-        const sanitizedVendorPrices = vendorPrices.map(price => isNaN(price) ? 0 : price);
+    offlineInfoTemplate(totalMinValue, totalMaxValue, className, offlineTime = undefined) {
+        let template = `
+            <div class="offline-progress-box ${className} popup-info-box">
+                <div class="popup-info-value">
+                    <span>
+                        ${formatNumber(totalMinValue)}
+                        <img src="/images/money_icon.png" class="popup-gold-icon">
+                    </span>
+                    <span> ~ </span>
+                    <span>
+                        ${formatNumber(totalMaxValue)}
+                        <img src="/images/money_icon.png" class="popup-gold-icon">
+                    </span>
+                    `;
+        if (offlineTime) {
+            const minPerHour = (totalMinValue * 1000 * 60 * 60) / offlineTime;
+            const maxPerHour = (totalMaxValue * 1000 * 60 * 60) / offlineTime;
+            template += `
+                    <span>
+                        ${formatNumber(minPerHour)}/h
+                    </span>
+                    <span> ~ </span>
+                    <span>
+                        ${formatNumber(maxPerHour)}/h
+                    </span>
+                    </div>`;
+        }
+        template += `
+                </div>
+            </div>`;
+        return template;
+    }
+
+    totalValue(itemBox) {
+        const items = {};
+        for (let itemNode of itemBox.childNodes) {
+            const itemId = convertItemId(itemNode.getElementsByClassName("item-icon")[0].src);
+            if (!this.settings.include_gold && itemId === "money_icon") {
+                continue;
+            }
+            const itemCount = parseCompactNumberString(itemNode.getElementsByClassName("centered")[0].innerText);
+            // adds to existing count if itemId already occured
+            items[itemId] ??= 0;
+            items[itemId] += itemCount;
+        }
+        // filter out items with 0 count
+        for (let itemId in items) {
+            if (items[itemId] === 0) {
+                delete items[itemId];
+            }
+        }
+
+        const itemValues = this.storage.analyzeItems(Object.keys(items));
+        const itemCounts = Object.values(items);
+
+        const { minPrices, maxPrices, vendorPrices } = itemValues;
+        const sanitizedMinPrices = minPrices.map((price) => (isNaN(price) ? 0 : price));
+        const sanitizedMaxPrices = maxPrices.map((price) => (isNaN(price) ? 0 : price));
+        const sanitizedVendorPrices = vendorPrices.map((price) => (isNaN(price) ? 0 : price));
         let totalMinValue = 0;
         let totalMaxValue = 0;
         for (let i = 0; i < itemCounts.length; i++) {

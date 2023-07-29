@@ -7,7 +7,8 @@
         {
             "matches": [
                 "https://play.idlescape.com/*",
-                "https://www.play.idlescape.com/*"
+                "https://www.play.idlescape.com/*",
+                "https://dev.idlescape.com/"
             ],
             "js": [
                 "storage.js",
