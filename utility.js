@@ -113,6 +113,7 @@ function getSelectedSkill() {
 }
 
 function detectInfiniteLoop(mutations) {
+    const whitelistedChildren = ["chest-tooltip"];
     const ignoredTargets = ["price", "heat-highlight"];
     const ignoredNodes = [
         "react-tiny-popover-container",
@@ -123,10 +124,19 @@ function detectInfiniteLoop(mutations) {
     ];
     const ignoredChildren = ["daelis-wow-tooltip"];
     for (const mutation of mutations) {
+        const nodes = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));
+        // Whitelist
+        for (const node of nodes) {
+            for (const whitelistedChild of whitelistedChildren) {
+                if (node.getElementsByClassName?.(whitelistedChild).length > 0) {
+                    return false;
+                }
+            }
+        }
+        // Blacklist
         if (ignoredTargets.some((target) => mutation.target.classList.contains(target))) {
             return true;
         }
-        const nodes = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));
         for (const node of nodes) {
             if (node.classList && ignoredNodes.some((target) => node.classList.contains(target))) {
                 return true;

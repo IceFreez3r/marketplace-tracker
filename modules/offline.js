@@ -8,6 +8,13 @@ class PopupTracker {
     padding: 10px;
     text-align: center;
     font-size: 25px;
+    display: grid;
+    grid-template-columns: 1fr 20px 1fr;
+    justify-content: center;
+}
+
+.chat-chest-info-box.popup-info-box {
+    font-size: 14px;
 }
 
 .popup-gold-icon {
@@ -16,10 +23,9 @@ class PopupTracker {
     vertical-align: text-top;
 }
 
-.popup-info-value {
-    display: grid;
-    grid-template-columns: 1fr 20px 1fr;
-    justify-content: center;
+.chat-chest-info-box .popup-gold-icon {
+    height: 15px;
+    width: 15px;
 }
     `;
 
@@ -55,6 +61,7 @@ class PopupTracker {
             }
             this.offlineTracker();
             this.chestTracker();
+            this.chatChestTracker();
         });
         this.chestObserver = new MutationObserver((mutations) => {
             if (detectInfiniteLoop(mutations)) {
@@ -112,6 +119,7 @@ class PopupTracker {
     onAPIUpdate() {
         this.offlineTracker(true);
         this.chestTracker(true);
+        this.chatChestTracker(true);
     }
 
     offlineTracker(forceUpdate = false) {
@@ -167,7 +175,7 @@ class PopupTracker {
         saveInsertAdjacentHTML(
             offlineProgressBox,
             "afterend",
-            this.offlineInfoTemplate(totalMinValue, totalMaxValue, "offline-info-box", offlineTime)
+            this.popupInfoTemplate(totalMinValue, totalMaxValue, "offline-progress-box offline-info-box", offlineTime)
         );
     }
 
@@ -201,7 +209,7 @@ class PopupTracker {
             saveInsertAdjacentHTML(
                 chestPopup,
                 "afterend",
-                this.offlineInfoTemplate(totalMinValue, totalMaxValue, "chest-info-box")
+                this.popupInfoTemplate(totalMinValue, totalMaxValue, "offline-progress-box chest-info-box")
             );
         }
         this.chestObserver.observe(chestPopups[0].parentElement, {
@@ -209,35 +217,57 @@ class PopupTracker {
         });
     }
 
-    offlineInfoTemplate(totalMinValue, totalMaxValue, className, offlineTime = undefined) {
+    chatChestTracker(forceUpdate = false) {
+        if (!this.settings.chat_chest_popup) {
+            return;
+        }
+        const chatChestPopup = document.getElementsByClassName("chest-tooltip-loot-container")[0];
+        if (!chatChestPopup) {
+            return;
+        }
+        const [totalMinValue, totalMaxValue] = this.totalValue(chatChestPopup);
+        const existingInfoBox = document.getElementsByClassName("chat-chest-info-box")[0];
+        if (existingInfoBox) {
+            if (forceUpdate) {
+                existingInfoBox.remove();
+            } else {
+                return;
+            }
+        }
+        saveInsertAdjacentHTML(
+            chatChestPopup,
+            "afterend",
+            this.popupInfoTemplate(totalMinValue, totalMaxValue, "chat-chest-info-box")
+        );
+    }
+
+    popupInfoTemplate(totalMinValue, totalMaxValue, classes, offlineTime = undefined) {
         let template = `
-            <div class="offline-progress-box ${className} popup-info-box">
-                <div class="popup-info-value">
-                    <span>
-                        ${formatNumber(totalMinValue)}
-                        <img src="/images/money_icon.png" class="popup-gold-icon">
-                    </span>
-                    <span> ~ </span>
-                    <span>
-                        ${formatNumber(totalMaxValue)}
-                        <img src="/images/money_icon.png" class="popup-gold-icon">
-                    </span>
+            <div class="${classes} popup-info-box">
+                <span>
+                    ${formatNumber(totalMinValue)}
+                    <img src="/images/money_icon.png" class="popup-gold-icon">
+                </span>
+                <span> ~ </span>
+                <span>
+                    ${formatNumber(totalMaxValue)}
+                    <img src="/images/money_icon.png" class="popup-gold-icon">
+                </span>
                     `;
         if (offlineTime) {
             const minPerHour = (totalMinValue * 1000 * 60 * 60) / offlineTime;
             const maxPerHour = (totalMaxValue * 1000 * 60 * 60) / offlineTime;
             template += `
-                    <span>
-                        ${formatNumber(minPerHour)}/h
-                    </span>
-                    <span> ~ </span>
-                    <span>
-                        ${formatNumber(maxPerHour)}/h
-                    </span>
-                    </div>`;
+                <span>
+                    ${formatNumber(minPerHour)}/h
+                </span>
+                <span> ~ </span>
+                <span>
+                    ${formatNumber(maxPerHour)}/h
+                </span>
+                </div>`;
         }
         template += `
-                </div>
             </div>`;
         return template;
     }
