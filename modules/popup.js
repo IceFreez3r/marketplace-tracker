@@ -13,7 +13,8 @@ class PopupTracker {
     justify-content: center;
 }
 
-.chat-chest-info-box.popup-info-box {
+.chat-chest-info-box.popup-info-box,
+.resource-info-box.popup-info-box{
     font-size: 14px;
 }
 
@@ -23,7 +24,8 @@ class PopupTracker {
     vertical-align: text-top;
 }
 
-.chat-chest-info-box .popup-gold-icon {
+.chat-chest-info-box .popup-gold-icon,
+.resource-info-box .popup-gold-icon {
     height: 15px;
     width: 15px;
 }
@@ -41,6 +43,9 @@ class PopupTracker {
         }
         if (this.settings.chat_chest_popup === undefined) {
             this.settings.chat_chest_popup = 0;
+        }
+        if (this.settings.resource_popup === undefined) {
+            this.settings.resource_popup = 0;
         }
         if (this.settings.include_gold === undefined) {
             this.settings.include_gold = 1;
@@ -62,12 +67,27 @@ class PopupTracker {
             this.offlineTracker();
             this.chestTracker();
             this.chatChestTracker();
+            this.resourcePopupTracker();
+            this.popoverObserver.disconnect();
+            document.querySelectorAll(".react-tiny-popover-container").forEach((node) => {
+                this.popoverObserver.observe(node, {
+                    attributes: true,
+                    attributeFilter: ["style"],
+                });
+            });
         });
         this.chestObserver = new MutationObserver((mutations) => {
             if (detectInfiniteLoop(mutations)) {
                 return;
             }
             this.chestTracker();
+        });
+        this.popoverObserver = new MutationObserver((mutations) => {
+            if (detectInfiniteLoop(mutations)) {
+                return;
+            }
+            this.chatChestTracker();
+            this.resourcePopupTracker();
         });
     }
 
@@ -99,9 +119,19 @@ class PopupTracker {
             </div>
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Chat Chest links
+                    Chat Chest link
                 </div>
                 ${Templates.checkboxTemplate(PopupTracker.id + "-chat_chest_popup", this.settings.chat_chest_popup)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Resource popup
+                    <div class="tracker-module-setting-description">
+                        <div>Doesn't handle resources that can drop in bulk.</div>
+                        <div>And I wouldn't trust it for foraging or fishing at all :)</div>
+                    </div>
+                </div>
+                ${Templates.checkboxTemplate(PopupTracker.id + "-resource_popup", this.settings.resource_popup)}
             </div>
             </br>
             <div class="tracker-module-setting">
@@ -120,6 +150,7 @@ class PopupTracker {
         this.offlineTracker(true);
         this.chestTracker(true);
         this.chatChestTracker(true);
+        this.resourcePopupTracker(true);
     }
 
     offlineTracker(forceUpdate = false) {
@@ -225,7 +256,6 @@ class PopupTracker {
         if (!chatChestPopup) {
             return;
         }
-        const [totalMinValue, totalMaxValue] = this.totalValue(chatChestPopup);
         const existingInfoBox = document.getElementsByClassName("chat-chest-info-box")[0];
         if (existingInfoBox) {
             if (forceUpdate) {
@@ -234,6 +264,7 @@ class PopupTracker {
                 return;
             }
         }
+        const [totalMinValue, totalMaxValue] = this.totalValue(chatChestPopup);
         saveInsertAdjacentHTML(
             chatChestPopup,
             "afterend",
@@ -241,7 +272,36 @@ class PopupTracker {
         );
     }
 
-    popupInfoTemplate(totalMinValue, totalMaxValue, classes, offlineTime = undefined) {
+    resourcePopupTracker(forceUpdate = false) {
+        if (!this.settings.resource_popup) {
+            return;
+        }
+        const resourcePopup = document.getElementsByClassName("resource-container-resource-list")[0];
+        if (!resourcePopup) {
+            return;
+        }
+        const existingInfoBox = document.getElementsByClassName("resource-info-box")[0];
+        if (existingInfoBox) {
+            if (forceUpdate) {
+                existingInfoBox.remove();
+            } else {
+                return;
+            }
+        }
+        const [totalMinValue, totalMaxValue] = this.totalValue(resourcePopup, (percentString) => {
+            if (percentString === "???" || percentString.endsWith("Rarity")) return 0;
+            return parseFloat(percentString) / 100;
+        });
+        const actions = document.getElementsByClassName("resource-container-resource-aph")[0].lastChild.textContent;
+        const timePerAction = (1 / actions) * 60 * 60 * 1000;
+        saveInsertAdjacentHTML(
+            resourcePopup,
+            "afterend",
+            this.popupInfoTemplate(totalMinValue, totalMaxValue, "resource-info-box", timePerAction)
+        );
+    }
+
+    popupInfoTemplate(totalMinValue, totalMaxValue, classes, timeInMs = undefined) {
         let template = `
             <div class="${classes} popup-info-box">
                 <span>
@@ -254,9 +314,9 @@ class PopupTracker {
                     <img src="/images/money_icon.png" class="popup-gold-icon">
                 </span>
                     `;
-        if (offlineTime) {
-            const minPerHour = (totalMinValue * 1000 * 60 * 60) / offlineTime;
-            const maxPerHour = (totalMaxValue * 1000 * 60 * 60) / offlineTime;
+        if (timeInMs) {
+            const minPerHour = (totalMinValue * 1000 * 60 * 60) / timeInMs;
+            const maxPerHour = (totalMaxValue * 1000 * 60 * 60) / timeInMs;
             template += `
                 <span>
                     ${formatNumber(minPerHour)}/h
@@ -272,14 +332,14 @@ class PopupTracker {
         return template;
     }
 
-    totalValue(itemBox) {
+    totalValue(itemBox, parse = parseCompactNumberString) {
         const items = {};
         for (let itemNode of itemBox.childNodes) {
             const itemId = convertItemId(itemNode.getElementsByClassName("item-icon")[0].src);
             if (!this.settings.include_gold && itemId === "money_icon") {
                 continue;
             }
-            const itemCount = parseCompactNumberString(itemNode.getElementsByClassName("centered")[0].innerText);
+            const itemCount = parse(itemNode.getElementsByClassName("centered")[0].innerText);
             // adds to existing count if itemId already occured
             items[itemId] ??= 0;
             items[itemId] += itemCount;

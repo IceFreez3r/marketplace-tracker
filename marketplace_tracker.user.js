@@ -19,7 +19,7 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/enchanting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/highlight.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/marketplace.js
-// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/offline.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/popup.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/runecrafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/smithing.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/tracker.js

@@ -113,7 +113,7 @@ function getSelectedSkill() {
 }
 
 function detectInfiniteLoop(mutations) {
-    const whitelistedChildren = ["chest-tooltip"];
+    const whitelistedChildren = ["chest-tooltip", "resource-container-tooltip"];
     const ignoredTargets = ["price", "heat-highlight"];
     const ignoredNodes = [
         "react-tiny-popover-container",

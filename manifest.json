@@ -8,7 +8,8 @@
             "matches": [
                 "https://play.idlescape.com/*",
                 "https://www.play.idlescape.com/*",
-                "https://dev.idlescape.com/"
+                "https://dev.idlescape.com/",
+                "http://localhost/*"
             ],
             "js": [
                 "storage.js",
@@ -21,7 +22,7 @@
                 "modules/enchanting.js",
                 "modules/highlight.js",
                 "modules/marketplace.js",
-                "modules/offline.js",
+                "modules/popup.js",
                 "modules/runecrafting.js",
                 "modules/smithing.js",
                 "tracker.js",
