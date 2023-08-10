@@ -364,11 +364,11 @@ input[type="time"].tracker-time:not(.browser-default) {
     height: 1.5rem;
     fill: var(--tracker-red);
     margin-left: 10px;
-    transition: fill 1s ease-out;
+    transition: fill 1s ease-out, transform 0.4s ease-out;
 }
 
 .accordion-toggle-open {
-    transform: rotate(180deg);
+    transform: rotate(-180deg);
     fill: white;
 }
     `;
