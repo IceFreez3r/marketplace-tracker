@@ -176,10 +176,11 @@ class SmithingTracker {
         this.ingredients = ingredients;
 
         const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
-        const timePerAction = parseFloat(
-            smithingInfo.getElementsByClassName("smithing-information-calculations")[0].getElementsByClassName("smithing-information-input-amount")[0]
-                .firstChild.textContent
-        );
+        const timePerAction = parseTimeString(
+            smithingInfo
+                .getElementsByClassName("smithing-information-calculations")[0]
+                .getElementsByClassName("smithing-information-input-amount")[0].firstChild.textContent
+        ) / 1000;
 
         document.getElementsByClassName("smithing-info-table")[0]?.parentElement.remove();
         saveInsertAdjacentHTML(
