@@ -2,18 +2,20 @@ class Storage {
     constructor(APICallback) {
         this.APICallback = APICallback;
         this.storageKeys = {
-            marketHistory: "TrackerMarketHistory",
+            marketHistory: "TrackerMarketHistoryEncoded",
             lastLogin: "TrackerLastLogin",
             lastAPIFetch: "TrackerLastAPIFetch",
         };
 
         this.lastLogin = this.loadLocalStorage(this.storageKeys.lastLogin, Date.now());
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch, 0);
-        this.marketHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromOldItemList());
+        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromV2ItemList());
+        this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
         this.itemNames = {};
         this.itemVendorPrices = {};
+        this.heatItems = {};
         this.latestPriceList = {};
     }
 
@@ -22,16 +24,23 @@ class Storage {
         this.idMap = {};
         for (const apiId in vanillaItemsList) {
             this.marketHistory[apiId] ??= [];
+            let itemId;
             if (vanillaItemsList[apiId].itemImage) {
-                const itemImage = convertItemId(vanillaItemsList[apiId].itemImage);
-                this.addItemToIdMap(apiId, itemImage, vanillaItemsList);
+                itemId = convertItemId(vanillaItemsList[apiId].itemImage);
+                this.addItemToIdMap(apiId, itemId, vanillaItemsList);
             }
             if (vanillaItemsList[apiId].itemIcon) {
-                const itemIcon = convertItemId(vanillaItemsList[apiId].itemIcon);
-                this.addItemToIdMap(apiId, itemIcon, vanillaItemsList);
+                itemId = convertItemId(vanillaItemsList[apiId].itemIcon);
+                this.addItemToIdMap(apiId, itemId, vanillaItemsList);
             }
             this.itemNames[apiId] = vanillaItemsList[apiId].name;
             this.itemVendorPrices[apiId] = vanillaItemsList[apiId].value;
+            if (vanillaItemsList[apiId].heat) {
+                this.heatItems[apiId] = {
+                    heat: vanillaItemsList[apiId].heat,
+                    itemId,
+                };
+            }
         }
         // this.fetchAPILoop();
         this.fetchAPI();
@@ -88,35 +97,15 @@ class Storage {
     }
 
     heatValue() {
-        const heatItems = [
-            { itemId: "book", apiId: 50, heat: 50 },
-            { itemId: "coal", apiId: 112, heat: 10 },
-            { itemId: "branch", apiId: 301, heat: 1 },
-            { itemId: "log", apiId: 302, heat: 5 },
-            { itemId: "oak_log", apiId: 303, heat: 10 },
-            { itemId: "willow_log", apiId: 304, heat: 20 },
-            { itemId: "maple_log", apiId: 305, heat: 70 },
-            { itemId: "yew_log", apiId: 306, heat: 200 },
-            { itemId: "elder_log", apiId: 307, heat: 350 },
-            { itemId: "pyre", apiId: 702, heat: 100 },
-            { itemId: "oak_pyre", apiId: 703, heat: 200 },
-            { itemId: "willow_pyre", apiId: 704, heat: 400 },
-            { itemId: "maple_pyre", apiId: 705, heat: 800 },
-            { itemId: "yew_pyre", apiId: 706, heat: 3000 },
-            { itemId: "elder_pyre", apiId: 707, heat: 5000 },
-            { itemId: "rotten_driftwood", apiId: 11030, heat: 25 },
-            { itemId: "sturdy_driftwood", apiId: 11031, heat: 75 },
-            { itemId: "mystical_driftwood", apiId: 11036, heat: 125 },
-        ];
-        const bestHeatItem = heatItems.reduce(
+        const bestHeatItem = Object.keys(this.heatItems).reduce(
             (result, heatItem) => {
-                if (heatItem.apiId in this.latestPriceList) {
-                    const latestPrice = this.latestPriceList[heatItem.apiId];
-                    if (latestPrice / heatItem.heat < result.heatValue) {
+                if (heatItem in this.latestPriceList) {
+                    const latestPrice = this.latestPriceList[heatItem];
+                    if (latestPrice / this.heatItems[heatItem].heat < result.heatValue) {
                         return {
-                            itemId: heatItem.itemId,
-                            apiId: heatItem.apiId,
-                            heatValue: latestPrice / heatItem.heat,
+                            itemId: this.heatItems[heatItem].itemId,
+                            apiId: heatItem,
+                            heatValue: latestPrice / this.heatItems[heatItem].heat,
                         };
                     }
                 }
@@ -124,7 +113,16 @@ class Storage {
             },
             { itemId: null, apiId: null, heatValue: Infinity }
         );
+        bestHeatItem.heatValue = Math.round(bestHeatItem.heatValue * 1000) / 1000;
         return bestHeatItem;
+    }
+
+    itemHeatValue(itemId) {
+        const apiId = this.idMap[itemId];
+        if (apiId in this.heatItems) {
+            return this.latestPriceList[apiId] / this.heatItems[apiId].heat;
+        }
+        return Infinity;
     }
 
     handleRecipe(ingredientItemIds, productItemId) {
@@ -135,15 +133,58 @@ class Storage {
     }
 
     storeItemList() {
-        // Reduce the size of the stored marketHistory by removing items that have no prices
-        const marketHistory = Object.keys(this.marketHistory).reduce((result, key) => {
-            if (this.marketHistory[key].length > 0) {
-                result[key] = this.marketHistory[key];
+        const history = Object.keys(this.marketHistory).reduce((result, apiId) => {
+            // exclude items with no history
+            if (this.marketHistory[apiId].length > 0) {
+                let previousTimestamp = 0;
+                let previousPrice = 0;
+                const history = this.marketHistory[apiId].map((entry) => {
+                    // reduce timestamp by the previous timestamp
+                    const timestamp = entry[0] - previousTimestamp;
+                    previousTimestamp = entry[0];
+                    // reduce price by the previous price
+                    const price = entry[1] - previousPrice;
+                    previousPrice = entry[1];
+                    if (price === 0) {
+                        // reduce memory usage by using a single number instead of an array
+                        return timestamp;
+                    }
+                    return [timestamp, Math.round(price * 1000) / 1000];
+                });
+                result[apiId] = [history[0]];
+                // compress streaks of 1s
+                let streakLength = 0;
+                for (let i = 1; i < history.length; i++) {
+                    const entry = history[i];
+                    if (typeof entry === "number" && entry === 1) {
+                        streakLength++;
+                    } else {
+                        if (streakLength > 0) {
+                            if (streakLength === 1) {
+                                result[apiId].push(1);
+                            } else {
+                                // timestamp is negative to indicate a streak
+                                // negative timestamp difference cannot occur otherwise, because the data is sorted
+                                result[apiId].push(-streakLength);
+                            }
+                            streakLength = 0;
+                        }
+                        result[apiId].push(entry);
+                    }
+                }
+                if (streakLength > 0) {
+                    if (streakLength === 1) {
+                        result[apiId].push(1);
+                    } else {
+                        result[apiId].push(-streakLength);
+                    }
+                }
             }
             return result;
         }, {});
+        const { compressed, codes, skipLast } = HuffmanEncoding.encode(JSON.stringify(history));
         try {
-            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify(marketHistory));
+            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify([compressed, codes, skipLast]));
         } catch (e) {
             console.log(e);
         }
@@ -260,10 +301,10 @@ class Storage {
         return quantiles;
     }
 
+    // Sort the price tuples of a given apiId by price and then by timestamp
     sortPriceList(apiId) {
-        // Sort the price tuples by price
         this.marketHistory[apiId].sort((a, b) => {
-            return a[1] - b[1];
+            return a[1] - b[1] || a[0] - b[0];
         });
     }
 
@@ -348,7 +389,7 @@ class Storage {
         }
     }
 
-    loadFromOldItemList() {
+    loadFromV1ItemList() {
         const oldItemList = this.loadLocalStorage("itemList", {});
         for (const apiId in oldItemList) {
             oldItemList[apiId] = oldItemList[apiId].prices;
@@ -357,6 +398,48 @@ class Storage {
         this.marketHistory = oldItemList;
         this.storeItemList();
         return oldItemList;
+    }
+
+    loadFromV2ItemList() {
+        const oldItemList = this.loadLocalStorage("TrackerMarketHistory", () => this.loadFromV1ItemList());
+        localStorage.removeItem("TrackerMarketHistory");
+        this.marketHistory = oldItemList;
+        this.storeItemList();
+        return oldItemList;
+    }
+
+    processStorageHistory(storageHistory) {
+        // support for V2 storage format
+        if (!Array.isArray(storageHistory)) {
+            return storageHistory;
+        }
+        const [compressed, codes, skipLast] = storageHistory;
+        const decoded = JSON.parse(HuffmanEncoding.decode(compressed, codes, skipLast));
+        const history = {};
+        for (const apiId in decoded) {
+            history[apiId] = [];
+            let previousTimestamp = 0;
+            let previousPrice = 0;
+            for (const priceTuple of decoded[apiId]) {
+                if (typeof priceTuple === "number") {
+                    // compressed price tuple
+                    if (priceTuple < 0) {
+                        // streak of same price
+                        for (let i = 0; i < -priceTuple; i++) {
+                            previousTimestamp += 1;
+                            history[apiId].push([previousTimestamp, previousPrice]);
+                        }
+                        continue;
+                    }
+                    previousTimestamp += priceTuple;
+                } else {
+                    previousTimestamp += priceTuple[0];
+                    previousPrice += priceTuple[1];
+                }
+                history[apiId].push([previousTimestamp, previousPrice]);
+            }
+        }
+        return history;
     }
 
     /**

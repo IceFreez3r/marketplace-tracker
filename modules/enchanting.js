@@ -1,5 +1,5 @@
 class EnchantingTracker {
-    static id = "enchanting_tracker"
+    static id = "enchanting_tracker";
     static displayName = "Enchanting Tracker";
     static icon = "<img src='/images/enchanting/enchanting_logo.png' alt='Enchanting Tracker Icon'>";
     static category = "recipe";
@@ -50,9 +50,18 @@ body .scrollcrafting-container {
         if (this.settings.profit === undefined) {
             this.settings.profit = "percent";
         }
+        if (
+            this.settings.min_column === undefined ||
+            this.settings.median_column === undefined ||
+            this.settings.max_column === undefined
+        ) {
+            this.settings.min_column = true;
+            this.settings.median_column = true;
+            this.settings.max_column = true;
+        }
         this.cssNode = injectCSS(this.css);
 
-        this.playAreaObserver = new MutationObserver(mutations => {
+        this.playAreaObserver = new MutationObserver((mutations) => {
             this.playAreaObserver.disconnect();
             this.checkForEnchanting(mutations);
             this.connectPlayAreaObserver();
@@ -69,19 +78,47 @@ body .scrollcrafting-container {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement('div');
-        moduleSetting.classList.add('tracker-module-setting');
-        moduleSetting.insertAdjacentHTML('beforeend', `
+        const profitType = document.createElement("div");
+        profitType.classList.add("tracker-module-setting");
+        profitType.insertAdjacentHTML(
+            "beforeend",
+            `
             <div class="tracker-module-setting-name">
                 Profit
-            </div>`);
-        moduleSetting.append(Templates.selectMenu(EnchantingTracker.id + "-profit", {
-            off: "Off",
-            percent: "Percent",
-            flat: "Flat",
-            per_hour: "Per Hour",
-        }, this.settings.profit));
-        return moduleSetting;
+            </div>`
+        );
+        profitType.append(
+            Templates.selectMenu(
+                EnchantingTracker.id + "-profit",
+                {
+                    off: "Off",
+                    percent: "Percent",
+                    flat: "Flat",
+                    per_hour: "Per Hour",
+                },
+                this.settings.profit
+            )
+        );
+        const columns = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Min Column
+                </div>
+                ${Templates.checkboxTemplate(EnchantingTracker.id + "-min_column", this.settings.min_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Median Column
+                </div>
+                ${Templates.checkboxTemplate(EnchantingTracker.id + "-median_column", this.settings.median_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Max Column
+                </div>
+                ${Templates.checkboxTemplate(EnchantingTracker.id + "-max_column", this.settings.max_column)}
+            </div>`;
+        return [profitType, columns];
     }
 
     settingChanged(settingId, value) {
@@ -96,7 +133,7 @@ body .scrollcrafting-container {
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
-            subtree: true
+            subtree: true,
         });
     }
 
@@ -124,24 +161,49 @@ body .scrollcrafting-container {
         }
         const scrollIcon = recipe.firstChild.src;
 
-        let standardResources = this.getStandardResources(recipe.getElementsByClassName("scrollcrafting-standard-resources")[0]);
-        let dynamicResources = this.getDynamicResources(recipe.getElementsByClassName("scrollcrafting-dynamic-resources")[0]);
+        let standardResources = this.getStandardResources(
+            recipe.getElementsByClassName("scrollcrafting-standard-resources")[0]
+        );
+        let dynamicResources = this.getDynamicResources(
+            recipe.getElementsByClassName("scrollcrafting-dynamic-resources")[0]
+        );
         // combine lists of objects into separate lists
         // "Scroll" is the fallback item id for the scroll, some ability books also use the same icon
-        let resourceItemIds = ["Scroll"].concat(dynamicResources.map(resource => resource.itemId));
-        let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(dynamicResources.map(resource => resource.icon));
-        let resourceItemCounts = [standardResources.scrolls].concat(dynamicResources.map(resource => resource.amount));
+        let resourceItemIds = ["Scroll"].concat(dynamicResources.map((resource) => resource.itemId));
+        let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(
+            dynamicResources.map((resource) => resource.icon)
+        );
+        let resourceItemCounts = [standardResources.scrolls].concat(
+            dynamicResources.map((resource) => resource.amount)
+        );
         const recipePrices = this.storage.handleRecipe(resourceItemIds, scrollId);
-        const ingredients = Object.assign(recipePrices.ingredients, { icons: resourceItemIcons, counts: resourceItemCounts });
+        const ingredients = Object.assign(recipePrices.ingredients, {
+            icons: resourceItemIcons,
+            counts: resourceItemCounts,
+        });
         const product = Object.assign(recipePrices.product, { icon: scrollIcon, count: 1 });
-        saveInsertAdjacentHTML(recipe, 'beforeend', Templates.infoTableTemplate('enchanting', ingredients, product, this.settings.profit, false, false, standardResources.timePerAction, standardResources.chance));
+        saveInsertAdjacentHTML(
+            recipe,
+            "beforeend",
+            Templates.infoTableTemplate(
+                "enchanting",
+                [this.settings.min_column, this.settings.median_column, this.settings.max_column],
+                ingredients,
+                product,
+                this.settings.profit,
+                false,
+                false,
+                standardResources.timePerAction,
+                standardResources.chance
+            )
+        );
     }
 
     getStandardResources(node) {
         return {
             scrolls: this.getResource(node.childNodes[3].firstChild).amount,
             chance: parseFloat(this.getResource(node.childNodes[2].firstChild).amount) / 100,
-            timePerAction: parseFloat(this.getResource(node.childNodes[1].firstChild).amount)
+            timePerAction: parseFloat(this.getResource(node.childNodes[1].firstChild).amount),
         };
     }
 
@@ -157,7 +219,7 @@ body .scrollcrafting-container {
         return {
             itemId: convertItemId(node.childNodes[0].src),
             icon: node.childNodes[0].src,
-            amount: node.childNodes[1].innerText
+            amount: node.childNodes[1].innerText,
         };
     }
 

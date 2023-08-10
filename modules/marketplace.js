@@ -26,7 +26,8 @@ class MarketplaceTracker {
 
 .marketplace-analysis-table {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    grid-auto-flow: column;
     grid-gap: 5px;
     border: 2px solid hsla(0, 0%, 100%, .452);
     padding: 6px;
@@ -262,33 +263,44 @@ class MarketplaceTracker {
         const analysis = this.storage.analyzeItem(itemId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
-        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(analysis));
+        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(itemId, analysis));
         this.markOffers(offers, analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
-    priceAnalysisTableTemplate(analysis) {
-        return `
+    priceAnalysisTableTemplate(itemId, analysis) {
+        let table = `
             <div class="marketplace-analysis-table">
                 <div class="marketplace-analysis-table-content">
                     Minimum
                 </div>
                 <div class="marketplace-analysis-table-content">
-                    Median
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    Maximum
-                </div>
-                <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.minPrice)}
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    Median
                 </div>
                 <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.medianPrice)}
                 </div>
                 <div class="marketplace-analysis-table-content">
-                    ${formatNumber(analysis.maxPrice)}
+                    Maximum
                 </div>
-            </div>`;
+                <div class="marketplace-analysis-table-content">
+                    ${formatNumber(analysis.maxPrice)}
+                </div>`;
+        const heatValue = this.storage.itemHeatValue(itemId);
+        if (heatValue !== Infinity) {
+            table += `
+                <div class="marketplace-analysis-table-content">
+                    Gold/Heat
+                </div>
+                <div class="marketplace-analysis-table-content">
+                    ${formatNumber(heatValue, { fraction: true })}
+                </div>`;
+        }
+        table += "</div>";
+        return table;
     }
 
     markOffers(offers, maxPrice) {
@@ -438,7 +450,12 @@ class MarketplaceTracker {
                 itemId = item.childNodes[1].textContent;
             }
             let itemQuantity = parseNumberString(item.childNodes[2].textContent);
-            if (itemId.includes("dagger") || itemId.includes("boot") || itemId.includes("gloves") || itemId.includes("World_Walkers")) {
+            if (
+                (itemId.includes("dagger") && !itemId.includes("beast_dagger")) ||
+                itemId.includes("boot") ||
+                itemId.includes("gloves") ||
+                itemId.includes("World_Walkers")
+            ) {
                 itemQuantity *= 2;
             }
             const totalDiv = item.childNodes[4];
@@ -501,7 +518,10 @@ class MarketplaceTracker {
         }
         sellButton.insertAdjacentHTML("beforeend", Templates.warningTemplate());
         warningIcon = sellButton.getElementsByClassName("warning")[0];
-        const vendorPriceString = document.getElementById("lowest-price-npc").textContent.replace("Item sells to NPCs for:", "").replaceAll(" ", "");
+        const vendorPriceString = document
+            .getElementById("lowest-price-npc")
+            .textContent.replace("Item sells to NPCs for:", "")
+            .replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
         const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
         this.checkPrice(warningIcon, priceInput, vendorPrice);

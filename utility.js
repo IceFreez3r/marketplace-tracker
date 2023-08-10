@@ -1,48 +1,58 @@
 // example:
 // "/images/mining/stygian_ore.png" -> "stygian_ore"
 function convertItemId(itemName) {
-    itemName = itemName.substring(itemName.lastIndexOf('/') + 1, itemName.lastIndexOf('.'));
-    itemName = itemName.replace(/-/g, '_');
+    itemName = itemName.substring(itemName.lastIndexOf("/") + 1, itemName.lastIndexOf("."));
+    itemName = itemName.replace(/-/g, "_");
     return itemName;
 }
 
 function parseNumberString(numberString, numberSeparators = localNumberSeparators) {
-    return parseFloat(numberString.replaceAll(numberSeparators['group'], '').replaceAll(numberSeparators['decimal'], '.'));
+    return parseFloat(
+        numberString.replaceAll(numberSeparators["group"], "").replaceAll(numberSeparators["decimal"], ".")
+    );
 }
 
 function parseCompactNumberString(numberString) {
     const baseNumber = parseNumberString(numberString);
     const parseScale = {
-        'K': 3,
-        'M': 6,
-        'B': 9,
-        'T': 12,
-        'P': 15,
-        'E': 18,
-    }
+        K: 3,
+        M: 6,
+        B: 9,
+        T: 12,
+        P: 15,
+        E: 18,
+    };
     const scale = parseScale[numberString.slice(-1).toUpperCase()] || 0;
     return Math.round(baseNumber * Math.pow(10, scale));
 }
 
 // Parses a time string and returns the time in milliseconds
 function parseTimeString(timeString, returnScale = false) {
-    const regex = /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*\.?$/;
+    const regex =
+        /(?<days>\d+\sday)?[s\s]*(?<hours>\d+\shour)?[s\s]*(?<minutes>\d+\sminute)?[s\s]*(?<seconds>\d+\ssecond)?[s\s]*\.?$/;
+    const compactRegex =
+        /(?<days>\d+d)?[s\s]*(?<hours>\d+h)?[s\s]*(?<minutes>\d+m)?[s\s]*(?<seconds>\d+(\.\d+)?s)?[s\s]*\.?$/;
     const match = timeString.match(regex);
-    const days = match.groups.days ? parseInt(match.groups.days) : 0;
-    const hours = match.groups.hours ? parseInt(match.groups.hours) : 0;
-    const minutes = match.groups.minutes ? parseInt(match.groups.minutes) : 0;
-    const seconds = match.groups.seconds ? parseInt(match.groups.seconds) : 0;
+    const compactMatch = timeString.match(compactRegex);
+    const days = match.groups.days ? parseInt(match.groups.days) : (compactMatch.groups.days ? parseInt(compactMatch.groups.days) : 0);
+    const hours = match.groups.hours ? parseInt(match.groups.hours) : (compactMatch.groups.hours ? parseInt(compactMatch.groups.hours) : 0);
+    const minutes = match.groups.minutes ? parseInt(match.groups.minutes) : (compactMatch.groups.minutes ? parseInt(compactMatch.groups.minutes) : 0);
+    const seconds = match.groups.seconds ? parseInt(match.groups.seconds) : (compactMatch.groups.seconds ? parseFloat(compactMatch.groups.seconds) : 0);
     const time = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
     if (!returnScale) {
         return time;
     }
     const scaleOptions = [1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1];
-    return [time, scaleOptions.find(scale => time >= scale)];
+    return [time, scaleOptions.find((scale) => time >= scale)];
 }
 
 function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {
     // dot product of prices and counts divided by chance
-    return resourcePrices.map((price, index) => !isNaN(price) ? price * resourceCounts[index] : 0).reduce((a, b) => a + b, 0) / chance;
+    return (
+        resourcePrices
+            .map((price, index) => (!isNaN(price) ? price * resourceCounts[index] : 0))
+            .reduce((a, b) => a + b, 0) / chance
+    );
 }
 
 /**
@@ -64,7 +74,7 @@ function profit(type, buyPrice, sellPrice, secondsPerAction = null, noMarketFee 
         case "flat":
             return Math.floor(sell * postFee) - buy;
         case "per_hour":
-            return ((Math.floor(sell * postFee) - buy) * (60 * 60 / secondsPerAction));
+            return (Math.floor(sell * postFee) - buy) * ((60 * 60) / secondsPerAction);
         default:
             console.error("Unknown profit type: " + type);
     }
@@ -78,8 +88,8 @@ function saveInsertAdjacentHTML(element, position, html) {
 function getLocalNumberSeparators() {
     const parts = Intl.NumberFormat().formatToParts(10000000.1);
     return {
-        group: parts.find(part => part.type === "group").value,
-        decimal: parts.find(part => part.type === "decimal").value
+        group: parts.find((part) => part.type === "group").value,
+        decimal: parts.find((part) => part.type === "decimal").value,
     };
 }
 
@@ -101,21 +111,37 @@ function isIronmanCharacter() {
 }
 
 function getSelectedSkill() {
-    const selectedSkill = document.getElementsByClassName('nav-tab noselect selected-tab')[0];
+    const selectedSkill = document.getElementsByClassName("nav-tab noselect selected-tab")[0];
     return selectedSkill ? selectedSkill.innerText : "";
 }
 
 function detectInfiniteLoop(mutations) {
+    const whitelistedChildren = ["chest-tooltip", "resource-container-tooltip"];
     const ignoredTargets = ["price", "heat-highlight"];
-    const ignoredNodes = ["react-tiny-popover-container", "scrollcrafting-totals-bar", "quantile-dot", "alert-icon", "tracker-ignore"];
+    const ignoredNodes = [
+        "react-tiny-popover-container",
+        "scrollcrafting-totals-bar",
+        "quantile-dot",
+        "alert-icon",
+        "tracker-ignore",
+    ];
     const ignoredChildren = ["daelis-wow-tooltip"];
     for (const mutation of mutations) {
-        if (ignoredTargets.some(target => mutation.target.classList.contains(target))) {
+        const nodes = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));
+        // Whitelist
+        for (const node of nodes) {
+            for (const whitelistedChild of whitelistedChildren) {
+                if (node.getElementsByClassName?.(whitelistedChild).length > 0) {
+                    return false;
+                }
+            }
+        }
+        // Blacklist
+        if (ignoredTargets.some((target) => mutation.target.classList.contains(target))) {
             return true;
         }
-        const nodes = Array.from(mutation.addedNodes).concat(Array.from(mutation.removedNodes));
         for (const node of nodes) {
-            if (node.classList && ignoredNodes.some(target => node.classList.contains(target))) {
+            if (node.classList && ignoredNodes.some((target) => node.classList.contains(target))) {
                 return true;
             }
             for (const ignoredChild of ignoredChildren) {
@@ -129,7 +155,7 @@ function detectInfiniteLoop(mutations) {
 }
 
 function formatNumber(number, options = {}) {
-    const {compactDisplay, profitType, showSign, fraction} = options;
+    const { compactDisplay, profitType, showSign, fraction } = options;
     if (isNaN(number)) {
         return "?";
     }
@@ -175,7 +201,9 @@ function getSkillLevel(skill, total) {
     }
     // If the user activated levels in the sidebar, the skill level is always accessible from there
     const upperCaseSkill = skill.charAt(0).toUpperCase() + skill.slice(1);
-    const sidebarSkill = document.getElementsByClassName("nav-drawer-container")[0].getElementsByClassName(upperCaseSkill)[0];
+    const sidebarSkill = document
+        .getElementsByClassName("nav-drawer-container")[0]
+        .getElementsByClassName(upperCaseSkill)[0];
     if (sidebarSkill) {
         const level = parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
         if (sidebarSkill.getElementsByClassName("mastery-bar")[0]) {
@@ -223,7 +251,15 @@ function insertTrackerButtons() {
     if (trackerButtons) {
         return trackerButtons;
     }
-    const marketplaceFilter = document.getElementsByClassName("anchor-marketplace-filter")[0] ?? document.getElementsByClassName("marketplace-buy-info")[0];
+    const marketplaceFilter =
+        document.getElementsByClassName("anchor-marketplace-filter")[0] ??
+        document.getElementsByClassName("marketplace-buy-info")[0];
     marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
     return document.getElementById("tracker-buttons");
+}
+
+function stringToHTMLElement(HTMLString) {
+    const template = document.createElement("template");
+    saveInsertAdjacentHTML(template, "beforeend", HTMLString);
+    return template.children[0];
 }

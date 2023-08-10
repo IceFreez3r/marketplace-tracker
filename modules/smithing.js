@@ -48,6 +48,15 @@ class SmithingTracker {
         if (this.settings.profit === undefined) {
             this.settings.profit = "percent";
         }
+        if (
+            this.settings.min_column === undefined ||
+            this.settings.median_column === undefined ||
+            this.settings.max_column === undefined
+        ) {
+            this.settings.min_column = true;
+            this.settings.median_column = true;
+            this.settings.max_column = true;
+        }
         this.cssNode = injectCSS(this.css);
         this.ingredients = {};
 
@@ -71,16 +80,16 @@ class SmithingTracker {
     }
 
     settingsMenuContent() {
-        let moduleSetting = document.createElement("div");
-        moduleSetting.classList.add("tracker-module-setting");
-        moduleSetting.insertAdjacentHTML(
+        let profitType = document.createElement("div");
+        profitType.classList.add("tracker-module-setting");
+        profitType.insertAdjacentHTML(
             "beforeend",
             `
             <div class="tracker-module-setting-name">
                 Profit
             </div>`
         );
-        moduleSetting.append(
+        profitType.append(
             Templates.selectMenu(
                 SmithingTracker.id + "-profit",
                 {
@@ -92,7 +101,26 @@ class SmithingTracker {
                 this.settings.profit
             )
         );
-        return moduleSetting;
+        const columns = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Min Column
+                </div>
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-min_column", this.settings.min_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Median Column
+                </div>
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-median_column", this.settings.median_column)}
+            </div>
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Max Column
+                </div>
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-max_column", this.settings.max_column)}
+            </div>`;
+        return [profitType, columns];
     }
 
     settingChanged(settingId, value) {
@@ -124,7 +152,9 @@ class SmithingTracker {
         for (const input of inputs) {
             ingredientIds.push(convertItemId(input.getElementsByClassName("smithing-information-input-icon")[0].src));
             ingredientIcons.push(input.getElementsByClassName("smithing-information-input-icon")[0].src);
-            ingredientCounts.push(parseNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText));
+            ingredientCounts.push(
+                parseCompactNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText)
+            );
         }
 
         const outputContainer = smithingInfo.getElementsByClassName("smithing-information-output")[0];
@@ -146,10 +176,11 @@ class SmithingTracker {
         this.ingredients = ingredients;
 
         const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
-        const timePerAction = parseFloat(
-            smithingInfo.getElementsByClassName("smithing-information-calculations")[0].getElementsByClassName("smithing-information-input-amount")[0]
-                .firstChild.textContent
-        );
+        const timePerAction = parseTimeString(
+            smithingInfo
+                .getElementsByClassName("smithing-information-calculations")[0]
+                .getElementsByClassName("smithing-information-input-amount")[0].firstChild.textContent
+        ) / 1000;
 
         document.getElementsByClassName("smithing-info-table")[0]?.parentElement.remove();
         saveInsertAdjacentHTML(
@@ -157,7 +188,16 @@ class SmithingTracker {
             "afterend",
             `
             <div class="idlescape-container tracker-ignore">
-                ${Templates.infoTableTemplate("smithing", this.ingredients, product, this.settings.profit, false, false, timePerAction)}
+                ${Templates.infoTableTemplate(
+                    "smithing",
+                    [this.settings.min_column, this.settings.median_column, this.settings.max_column],
+                    this.ingredients,
+                    product,
+                    this.settings.profit,
+                    false,
+                    false,
+                    timePerAction
+                )}
             </div>`
         );
     }

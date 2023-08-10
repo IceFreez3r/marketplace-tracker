@@ -53,8 +53,22 @@ class Tracker {
     display: none;
 }
 
-.settings-module-content > :last-child {
-    margin-bottom: -5px;
+.settings-module-content {
+    display: none;
+}
+
+.settings-module-content>:first-child {
+    padding-top: 3px;
+    border-top: 1px solid var(--tracker-red);
+}
+
+.settings-module-content>:last-child {
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--tracker-red);
+}
+
+.accordion-open {
+    display: block;
 }
 
 .settings-footer {
@@ -344,6 +358,19 @@ input[type="time"].tracker-time:not(.browser-default) {
 .import-export-popup-textarea {
     height: 100%;
 }
+
+.accordion-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: var(--tracker-red);
+    margin-left: 10px;
+    transition: fill 1s ease-out, transform 0.4s ease-out;
+}
+
+.accordion-toggle-open {
+    transform: rotate(-180deg);
+    fill: white;
+}
     `;
 
     constructor() {
@@ -378,7 +405,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                           farming_tracker: 1,
                           market_highlights: 1,
                           marketplace_tracker: 1,
-                          offline_tracker: 1,
+                          offline_tracker: 1, // popup tracker
                           runecrafting_tracker: 1,
                           smithing_tracker: 1,
                       },
@@ -522,21 +549,24 @@ input[type="time"].tracker-time:not(.browser-default) {
             }
             const moduleSettings = document.createElement("div");
             moduleSettings.className = "settings-module";
+            const moduleHeader = document.createElement("div");
+            moduleHeader.className = "settings-module-header";
+            moduleSettings.append(moduleHeader);
             saveInsertAdjacentHTML(
-                moduleSettings,
+                moduleHeader,
                 "beforeend",
                 `
-                <div class="settings-module-header">
                     <div class="settings-module-header-toggle-icon">
                         ${module.icon}
                     </div>
                     <div class="settings-module-header-title">
                         ${module.displayName}
                     </div>
-                    ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}
-                </div>`
+                    ${Templates.checkboxTemplate(moduleId, this.settings.activeModules[moduleId])}`
             );
+            moduleHeader.appendChild(Templates.accordionToggleTemplate("accordion-" + moduleId));
             const moduleSettingsContent = document.createElement("div");
+            moduleSettingsContent.id = "accordion-" + moduleId;
             moduleSettingsContent.className = "settings-module-content";
             this.addModuleSettings(moduleId, moduleSettingsContent);
             moduleSettings.append(moduleSettingsContent);
@@ -731,7 +761,8 @@ input[type="time"].tracker-time:not(.browser-default) {
 
     exportStorage() {
         navigator.clipboard.writeText(this.storage.exportStorage());
-        document.getElementsByClassName("import-export-popup-message")[0].textContent = "Copied marketplace data to clipboard";
+        document.getElementsByClassName("import-export-popup-message")[0].textContent =
+            "Copied marketplace data to clipboard";
     }
 
     saveSettings() {
@@ -748,13 +779,17 @@ input[type="time"].tracker-time:not(.browser-default) {
                         const changed = this.activateModule(checkbox.id);
                         if (changed) {
                             // Add module settings
-                            this.addModuleSettings(checkbox.id, checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0]);
+                            this.addModuleSettings(
+                                checkbox.id,
+                                checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0]
+                            );
                         }
                     } else {
                         const changed = this.deactivateModule(checkbox.id);
                         if (changed) {
                             // Remove module settings
-                            const settingsModuleContent = checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0];
+                            const settingsModuleContent =
+                                checkbox.parentNode.parentNode.getElementsByClassName("settings-module-content")[0];
                             while (settingsModuleContent.firstChild) {
                                 settingsModuleContent.lastChild.remove();
                             }

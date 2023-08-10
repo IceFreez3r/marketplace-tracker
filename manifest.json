@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "Idlescape Marketplace Tracker",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "description": "Automatically tracks prices of items on the Idlescape Marketplace",
     "content_scripts": [
         {
@@ -14,13 +14,13 @@
                 "templates.js",
                 "utility.js",
                 "external/DOMpurify.min.js",
+                "external/huffman.js",
                 "modules/alert.js",
                 "modules/crafting.js",
                 "modules/enchanting.js",
-                "modules/farming.js",
                 "modules/highlight.js",
                 "modules/marketplace.js",
-                "modules/offline.js",
+                "modules/popup.js",
                 "modules/runecrafting.js",
                 "modules/smithing.js",
                 "tracker.js",
