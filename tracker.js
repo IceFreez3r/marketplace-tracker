@@ -11,8 +11,30 @@ class Tracker {
     width: 100%;
 }
 
-.tracker-drawer-item-left {
-    width: 100%;
+.anchor-drawer-tracker {
+    /* stolen from vanilla */
+    cursor: pointer;
+    margin-top: 5px;
+    text-align: left;
+    display: flex;
+    vertical-align: middle;
+    line-height: 30px;
+    font-size: 16px;
+    padding: 0px 10px;
+}
+
+.anchor-drawer-tracker:hover {
+    /* stolen from vanilla */
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.tracker-sidebar-name {
+    /* stolen from vanilla */
+    margin-left: 10px;
+}
+
+.tracker-sidebar-icon {
+    width: 25px;
 }
 
 .settings-module {
@@ -466,20 +488,21 @@ input[type="time"].tracker-time:not(.browser-default) {
         let oldSidebarItem = document.getElementById("tracker-settings-sidebar");
         oldSidebarItem?.remove();
 
-        const vanillaSettings = document.getElementsByClassName("Settings")[0];
+        const vanillaSettings = document.getElementsByClassName("anchor-userscript-settings")[0];
+        if (!vanillaSettings) return;
         vanillaSettings.insertAdjacentHTML(
-            "afterend",
+            "beforeend",
             `
-            <div id="tracker-settings-sidebar" class="drawer-item active noselect tracker">
-                <div class="drawer-item-left tracker-drawer-item-left">
-                    ${Templates.trackerLogoTemplate("drawer-item-icon")}
+            <div id="tracker-settings-sidebar" class="anchor-drawer-tracker tracker">
+                ${Templates.trackerLogoTemplate("tracker-sidebar-icon")}
+                <div class="tracker-sidebar-name">
                     Marketplace Tracker
                 </div>
             </div>`
         );
         document.getElementById("tracker-settings-sidebar").addEventListener("click", () => {
             // Hide sidebar unless it's pinned
-            if (!document.getElementsByClassName("drawer-item center")[0].lastChild.classList.contains("pressed")) {
+            if (!localStorage.getItem("navbarPinned")) {
                 document.getElementsByClassName("nav-drawer")[0].classList.add("drawer-closed");
             }
             this.settingsPage();
@@ -494,21 +517,18 @@ input[type="time"].tracker-time:not(.browser-default) {
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
         const navTabContainer = playAreaContainer.getElementsByClassName("nav-tab-container")[0];
-        if (document.getElementsByClassName("game-container")[0].classList.contains("navbar-disabled")) {
-            navTabContainer.style.display = "none";
-        }
+        navTabContainer.style.display = "none";
 
         navTabContainer.insertAdjacentHTML(
             "afterend",
             `
             <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
-                <div class="nav-tab noselect selected-tab tracker">
+                <div class="nav-tab selected-tab tracker">
                     ${Templates.trackerLogoTemplate("nav-tab-icon icon-border")}
                     Tracker
                 </div>
             </div>`
         );
-        const selectedSkill = getSelectedSkill();
 
         const playAreaBackground = playAreaContainer.getElementsByClassName("play-area-background")[0];
         const playAreas = playAreaBackground.getElementsByClassName("play-area");
@@ -527,10 +547,6 @@ input[type="time"].tracker-time:not(.browser-default) {
             },
             recipe: {
                 name: "Recipes",
-                div: undefined,
-            },
-            visual: {
-                name: "Visual Changes",
                 div: undefined,
             },
         };
@@ -604,6 +620,7 @@ input[type="time"].tracker-time:not(.browser-default) {
         const saveButton = document.getElementById("settings-save");
         saveButton.addEventListener("click", () => this.saveSettings());
 
+        const selectedSkill = getSelectedSkill();
         this.settingsResetObserver?.disconnect();
         this.settingsResetObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() !== selectedSkill) {

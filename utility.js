@@ -103,7 +103,7 @@ function injectCSS(css) {
 }
 
 function getCharacterName() {
-    return document.getElementsByClassName("navbar1-box left drawer-button noselect")[0].childNodes[1].textContent;
+    return document.getElementsByClassName("navbar1-box left drawer-button")?.[0]?.childNodes?.[1]?.textContent;
 }
 
 function isIronmanCharacter() {
@@ -111,7 +111,7 @@ function isIronmanCharacter() {
 }
 
 function getSelectedSkill() {
-    const selectedSkill = document.getElementsByClassName("nav-tab noselect selected-tab")[0];
+    const selectedSkill = document.getElementsByClassName("nav-tab selected-tab")[0];
     return selectedSkill ? selectedSkill.innerText : "";
 }
 
@@ -192,58 +192,12 @@ function deepCompare(object1, object2) {
 }
 
 function getSkillLevel(skill, total) {
-    // Dael's script attaches the skill levels to window
-    if (window.ISState) {
-        if (total) {
-            return 99 + window.ISstate.skills[skill].masteryLevel;
-        }
-        return window.ISstate.skills[skill].level;
-    }
-    // If the user activated levels in the sidebar, the skill level is always accessible from there
-    const upperCaseSkill = skill.charAt(0).toUpperCase() + skill.slice(1);
-    const sidebarSkill = document
-        .getElementsByClassName("nav-drawer-container")[0]
-        .getElementsByClassName(upperCaseSkill)[0];
-    if (sidebarSkill) {
-        const level = parseInt(sidebarSkill.getElementsByClassName("skill-level-bar-ni-exp-level")[0].innerText);
-        if (sidebarSkill.getElementsByClassName("mastery-bar")[0]) {
-            if (total && level !== 99) {
-                return 99 + level;
-            }
-            return 99;
-        }
-        return level;
-    }
-    // Last option is the header, which might not be shown if the window is in half screen mode
-    // Normal header with skills as circles
-    const headerCircles = document.getElementsByClassName("exp-tooltip");
-    for (const headerSkill of headerCircles) {
-        if (headerSkill.dataset.for === `${skill}Header`) {
-            if (headerSkill.getElementsByClassName("standard-levels-maxed")[0]) {
-                if (total) {
-                    return 99 + parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
-                }
-                return 99;
-            }
-            return parseInt(headerSkill.getElementsByClassName("CircularProgressbar-text")[0].innerText);
-        }
-    }
-    // Compact header with skills as bars
-    const headerSkillBars = document.getElementsByClassName("skill-level-bar");
-    for (const headerSkill of headerSkillBars) {
-        if (headerSkill.dataset.for === `${skill}Header`) {
-            const level = parseInt(headerSkill.getElementsByClassName("skill-level-bar-exp-level")[0].innerText);
-            if (headerSkill.firstChild.classList.contains("max-skill-glow30")) {
-                if (total && level !== 99) {
-                    return 99 + level;
-                }
-                return 99;
-            }
-            return level;
-        }
-    }
-    // Last fallback
-    return 99;
+    const skillElement = document.getElementsByClassName(`anchor-levels-${skill}`)[0];
+    if (!skillElement) return 99;
+    const level = skillElement.getElementsByClassName("anchor-levels-level")[0].innerText;
+    if (!total) return parseInt(level);
+    const masteryLevel = skillElement.getElementsByClassName("anchor-levels-mastery-level")[0].innerText;
+    return parseInt(level) + parseInt(masteryLevel);
 }
 
 function insertTrackerButtons() {
