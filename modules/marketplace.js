@@ -451,7 +451,7 @@ class MarketplaceTracker {
             }
             let itemQuantity = parseNumberString(item.childNodes[2].textContent);
             if (
-                (itemId.includes("dagger") && !itemId.includes("beast_dagger")) ||
+                (itemId.includes("dagger") && !itemId.includes("beast_dagger") && !itemId.includes("shrimp_dagger")) ||
                 itemId.includes("boot") ||
                 itemId.includes("gloves") ||
                 itemId.includes("World_Walkers")

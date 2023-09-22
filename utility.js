@@ -110,6 +110,23 @@ function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
 }
 
+function getLeagueId() {
+    const leagueIcon = document.getElementsByClassName("header-league-icon")[0];
+    if (leagueIcon.src.endsWith("default_league_icon.png")) {
+        return 1;
+    } else if (leagueIcon.src.endsWith("ironman_league_icon_v5.png")) {
+        return 2;
+    } else if (leagueIcon.src.endsWith("nogather_ironman_league.png")) {
+        return 3;
+    } else if (leagueIcon.src.endsWith("group_ironman.png")) {
+        return 4;
+    } else if (leagueIcon.src.endsWith("pre_league_test.png")) {
+        return 5;
+    }
+    console.log("Unknown league icon: " + leagueIcon.src + ". Defaulting to normal league.");
+    return 1;
+}
+
 function getSelectedSkill() {
     const selectedSkill = document.getElementsByClassName("nav-tab selected-tab")[0];
     return selectedSkill ? selectedSkill.innerText : "";
