@@ -3,13 +3,24 @@ class Storage {
         this.APICallback = APICallback;
         this.storageKeys = {
             marketHistory: "TrackerMarketHistoryEncoded",
-            lastLogin: "TrackerLastLogin",
             lastAPIFetch: "TrackerLastAPIFetch",
         };
 
-        this.lastLogin = this.loadLocalStorage(this.storageKeys.lastLogin, Date.now());
-        this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch, 0);
-        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, () => this.loadFromV2ItemList());
+        if (isIronmanCharacter()) {
+            // Ironman Leagues use MainScape prices
+            this.leagueId = 1;
+        } else {
+            this.leagueId = getLeagueId();
+        }
+
+        // remove old key
+        if (localStorage.getItem(this.storageKeys.lastAPIFetch) !== null) {
+            localStorage.removeItem(this.storageKeys.lastAPIFetch);
+        }
+        this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch + this.leagueId, 0);
+        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory + this.leagueId, () =>
+            this.loadLeagueUnspecificStorage()
+        );
         this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
@@ -63,15 +74,13 @@ class Storage {
         }
     }
 
-    getLastLogin() {
-        return this.lastLogin;
-    }
-
     handleApiData(data) {
         const timestamp = Math.floor(new Date(data.timestamp).valueOf() / 1000 / 60 / 10);
         this.latestPriceList = {};
         data = data.manifest;
         for (let i = 0; i < data.length; i++) {
+            const leagueId = data[i].league;
+            if (leagueId !== this.leagueId) continue;
             const apiId = data[i].itemID;
             if (this.lastAPIFetch !== timestamp) {
                 // prevent duplicate entries
@@ -89,7 +98,7 @@ class Storage {
         }
         this.latestPriceList[2] = currentHeatValue.heatValue;
         this.lastAPIFetch = timestamp;
-        localStorage.setItem(this.storageKeys.lastAPIFetch, timestamp);
+        localStorage.setItem(this.storageKeys.lastAPIFetch + this.leagueId, timestamp);
     }
 
     bestHeatItem() {
@@ -184,7 +193,7 @@ class Storage {
         }, {});
         const { compressed, codes, skipLast } = HuffmanEncoding.encode(JSON.stringify(history));
         try {
-            localStorage.setItem(this.storageKeys.marketHistory, JSON.stringify([compressed, codes, skipLast]));
+            localStorage.setItem(this.storageKeys.marketHistory + this.leagueId, JSON.stringify([compressed, codes, skipLast]));
         } catch (e) {
             console.log(e);
         }
@@ -389,23 +398,12 @@ class Storage {
         }
     }
 
-    loadFromV1ItemList() {
-        const oldItemList = this.loadLocalStorage("itemList", {});
-        for (const apiId in oldItemList) {
-            oldItemList[apiId] = oldItemList[apiId].prices;
-        }
-        localStorage.removeItem("itemList");
-        this.marketHistory = oldItemList;
-        this.storeItemList();
-        return oldItemList;
-    }
-
-    loadFromV2ItemList() {
-        const oldItemList = this.loadLocalStorage("TrackerMarketHistory", () => this.loadFromV1ItemList());
-        localStorage.removeItem("TrackerMarketHistory");
-        this.marketHistory = oldItemList;
-        this.storeItemList();
-        return oldItemList;
+    loadLeagueUnspecificStorage() {
+        if (this.leagueId !== 1) return {};
+        const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory, {});
+        localStorage.removeItem(this.storageKeys.marketHistory);
+        localStorage.setItem(this.storageKeys.marketHistory + this.leagueId, JSON.stringify(storageHistory));
+        return storageHistory;
     }
 
     processStorageHistory(storageHistory) {
