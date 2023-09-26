@@ -501,10 +501,6 @@ input[type="time"].tracker-time:not(.browser-default) {
             </div>`
         );
         document.getElementById("tracker-settings-sidebar").addEventListener("click", () => {
-            // Hide sidebar unless it's pinned
-            if (!localStorage.getItem("navbarPinned")) {
-                document.getElementsByClassName("nav-drawer")[0].classList.add("drawer-closed");
-            }
             this.settingsPage();
         });
     }
