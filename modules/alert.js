@@ -73,6 +73,11 @@ class AlertTracker {
                          "label-below label-above";
 }
 
+.alert-popup-tip {
+    color: gray;
+    font-style: oblique;
+}
+
 .alert-popup-button-container {
     display: flex;
     justify-content: space-between;
@@ -351,14 +356,17 @@ class AlertTracker {
             <div class="alert-popup">
                 <div class="alert-popup-title">Notification thresholds</div>
                 <div class="alert-input-container">
-                    <input id="price-below" style="grid-area: input-below;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price-below" min="0" max="100_000_000_000">
+                    <input id="price-below" style="grid-area: input-below;" placeholder="Leave empty for no notification" name="price-below">
                     <label for="price-below" style="grid-area: label-below;">
                         <strong>Lower threshold</strong>
                     </label>
-                    <input id="price-above" style="grid-area: input-above;" type="number" inputmode="numeric" placeholder="Leave empty for no notification" name="price-above" min="0" max="100_000_000_000">
+                    <input id="price-above" style="grid-area: input-above;" placeholder="Leave empty for no notification" name="price-above">
                     <label for="price-above" style="grid-area: label-above;">
                         <strong>Upper threshold</strong>
                     </label>
+                </div>
+                <div class="alert-popup-tip">
+                    Inputs support k, m, b. Examples: 1k, 1.5m, 2.3b
                 </div>
                 <div class="alert-popup-button-container">
                     <div class="alert-popup-button cancel idlescape-button-gray">Close</div>
@@ -374,12 +382,16 @@ class AlertTracker {
             priceBelowInput.value = "";
             priceAboveInput.value = "";
         } else {
-            priceBelowInput.value = this.allAlerts[itemId].below;
-            priceAboveInput.value = this.allAlerts[itemId].above;
+            priceBelowInput.value = this.allAlerts[itemId].below || "";
+            priceAboveInput.value = this.allAlerts[itemId].above || "";
         }
 
         document.getElementsByClassName("save")[0].addEventListener("click", () => {
-            this.save(itemId, priceBelowInput.value, priceAboveInput.value);
+            this.save(
+                itemId,
+                this.priceStringToNumber(priceBelowInput.value),
+                this.priceStringToNumber(priceAboveInput.value)
+            );
         });
         document.getElementsByClassName("clear")[0].addEventListener("click", () => {
             this.save(itemId, 0, 0);
@@ -394,13 +406,17 @@ class AlertTracker {
         });
         alertPopup.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
-                this.save(itemId, priceBelowInput.value, priceAboveInput.value);
+                this.save(
+                    itemId,
+                    this.priceStringToNumber(priceBelowInput.value),
+                    this.priceStringToNumber(priceAboveInput.value)
+                );
             }
         });
     }
 
     save(itemId, priceBelow, priceAbove) {
-        if ((priceBelow === 0 || priceBelow === "") && (priceAbove === 0 || priceAbove === "")) {
+        if (priceBelow === 0 && priceAbove === 0) {
             delete this.allAlerts[itemId];
         } else {
             this.allAlerts[itemId] = {};
@@ -419,5 +435,23 @@ class AlertTracker {
 
     hasActiveAlert(itemId) {
         return itemId in this.allAlerts;
+    }
+
+    priceStringToNumber(priceString) {
+        priceString = priceString.replace(/[^0-9kKmMbB.]/g, "");
+        let price = parseFloat(priceString);
+        if (isNaN(price)) return 0;
+        const scale = {
+            k: 1000,
+            m: 1000000,
+            b: 1000000000,
+        };
+        const stringExponent = priceString.match(/[kKmMbB]/i);
+        if (stringExponent) {
+            const factor = stringExponent[0];
+            priceString = price.toString() + factor;
+            price *= scale[factor.toLowerCase()];
+        }
+        return price;
     }
 }
