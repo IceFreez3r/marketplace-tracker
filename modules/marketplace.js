@@ -256,6 +256,10 @@ class MarketplaceTracker {
         if (offers.length === 0) {
             return;
         }
+        // ignore buy order page, wouldn't be wondered if this breaks soon
+        if (offers[0].getElementsByClassName("offer-left")[0]) {
+            return;
+        }
         let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
         if (this.storage.itemRequiresFallback(itemId)) {
             itemId = offers[0].firstChild.firstChild.textContent;
