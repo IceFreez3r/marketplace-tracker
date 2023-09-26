@@ -274,7 +274,7 @@ class AlertTracker {
                 .join(", ");
             if (permission === "granted" && !document.hasFocus()) {
                 // notifications allowed and tab is not visible
-                const notification = new Notification("Idlescape Marketplace", {
+                const notification = new Notification(`Idlescape Marketplace (${getCharacterName()})`, {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                 });
