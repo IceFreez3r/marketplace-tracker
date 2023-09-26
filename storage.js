@@ -6,16 +6,26 @@ class Storage {
             lastAPIFetch: "TrackerLastAPIFetch",
         };
 
+        this.leagueId = null;
+        this.lastAPIFetch = null;
+        this.marketHistory = {};
+        this.itemNames = {};
+        this.itemVendorPrices = {};
+        this.heatItems = {};
+        this.latestPriceList = {};
+
+        // remove old key
+        if (localStorage.getItem(this.storageKeys.lastAPIFetch) !== null) {
+            localStorage.removeItem(this.storageKeys.lastAPIFetch);
+        }
+    }
+
+    onGameReady() {
         if (isIronmanCharacter()) {
             // Ironman Leagues use MainScape prices
             this.leagueId = 1;
         } else {
             this.leagueId = getLeagueId();
-        }
-
-        // remove old key
-        if (localStorage.getItem(this.storageKeys.lastAPIFetch) !== null) {
-            localStorage.removeItem(this.storageKeys.lastAPIFetch);
         }
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch + this.leagueId, 0);
         const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory + this.leagueId, () =>
@@ -24,13 +34,6 @@ class Storage {
         this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
-        this.itemNames = {};
-        this.itemVendorPrices = {};
-        this.heatItems = {};
-        this.latestPriceList = {};
-    }
-
-    onGameReady() {
         const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
         this.idMap = {};
         for (const apiId in vanillaItemsList) {
@@ -193,7 +196,10 @@ class Storage {
         }, {});
         const { compressed, codes, skipLast } = HuffmanEncoding.encode(JSON.stringify(history));
         try {
-            localStorage.setItem(this.storageKeys.marketHistory + this.leagueId, JSON.stringify([compressed, codes, skipLast]));
+            localStorage.setItem(
+                this.storageKeys.marketHistory + this.leagueId,
+                JSON.stringify([compressed, codes, skipLast])
+            );
         } catch (e) {
             console.log(e);
         }
