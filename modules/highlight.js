@@ -530,6 +530,7 @@ class MarketHighlights {
                 this.notificationInformation[itemId] === "below" &&
                 !itemNode.firstChild.classList.contains("alert-below")
             ) {
+                itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
@@ -544,6 +545,7 @@ class MarketHighlights {
                 this.notificationInformation[itemId] === "above" &&
                 !itemNode.firstChild.classList.contains("alert-above")
             ) {
+                itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
@@ -554,6 +556,8 @@ class MarketHighlights {
                         ${Templates.arrowDownTemplate()}
                     </div>`
                 );
+            } else {
+                itemNode.style.order = "";
             }
         });
     }
