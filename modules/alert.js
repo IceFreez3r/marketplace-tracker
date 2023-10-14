@@ -5,7 +5,7 @@ class AlertTracker {
     static category = "economy";
     css = `
 .marketplace-alert-button {
-    order: 1; /* always at the end */
+    order: 2; /* always at the end */
     color: #fff;
     height: 45px;
     width: 45px;
