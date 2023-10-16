@@ -243,8 +243,11 @@ class MarketplaceTracker {
         if (!marketplaceTable) {
             return;
         }
-        // Ignore offer table on sell page
-        if (document.getElementsByClassName("anchor-sell-all-items")[0]) {
+        // Ignore offer table on sell page and buy order page
+        if (
+            document.getElementsByClassName("anchor-sell-all-items")[0] ||
+            document.getElementsByClassName("anchor-sell-buy-orders")[0]
+        ) {
             return;
         }
         const offers = marketplaceTable.getElementsByClassName("marketplace-table-row");
