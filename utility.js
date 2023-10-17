@@ -122,6 +122,10 @@ function getLeagueId() {
         return 4;
     } else if (leagueIcon.src.endsWith("pre_league_test.png")) {
         return 5;
+    } else if (leagueIcon.src.endsWith("season1.png")) {
+        return 6;
+    } else if (leagueIcon.src.endsWith("season1ironman.png")) {
+        return 7;
     }
     console.log("Unknown league icon: " + leagueIcon.src + ". Defaulting to normal league.");
     return 1;

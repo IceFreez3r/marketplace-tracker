@@ -75,6 +75,7 @@ class MarketHighlights {
     height: 45px;
     width: 45px;
     background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
+    order: 1;
 }
 
 .marketplace-favorite-button:not(.svg-inactive) > span {
@@ -530,6 +531,7 @@ class MarketHighlights {
                 this.notificationInformation[itemId] === "below" &&
                 !itemNode.firstChild.classList.contains("alert-below")
             ) {
+                itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
@@ -544,6 +546,7 @@ class MarketHighlights {
                 this.notificationInformation[itemId] === "above" &&
                 !itemNode.firstChild.classList.contains("alert-above")
             ) {
+                itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
@@ -554,6 +557,8 @@ class MarketHighlights {
                         ${Templates.arrowDownTemplate()}
                     </div>`
                 );
+            } else {
+                itemNode.style.order = "";
             }
         });
     }

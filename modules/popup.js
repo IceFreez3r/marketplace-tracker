@@ -30,6 +30,7 @@ class PopupTracker {
     width: 15px;
 }
     `;
+    chestAmounts = [];
 
     constructor(tracker, settings, storage) {
         this.tracker = tracker;
@@ -227,6 +228,23 @@ class PopupTracker {
             this.chestObserver.disconnect();
             return;
         }
+        const titles = document.getElementsByClassName("MuiTypography-root MuiTypography-h6");
+        const chestAmounts = Array.from(titles).map((title) => {
+            const titleText = title.innerText;
+            const match = titleText.match(/\d+/);
+            if (match) {
+                return parseInt(match[0]);
+            } else {
+                return 1;
+            }
+        });
+        if (chestAmounts.length !== this.chestAmounts.length || chestAmounts.some((value, index) => value !== this.chestAmounts[index])) {
+            const existingInfoBoxes = document.getElementsByClassName("chest-info-box");
+            for (let i = existingInfoBoxes.length - 1; i >= 0; i--) {
+                existingInfoBoxes[i].remove();
+            }
+        }
+        this.chestAmounts = chestAmounts;
         for (let i = 0; i < chestPopups.length; i++) {
             const chestPopup = chestPopups[i];
             if (chestPopup.nextElementSibling && chestPopup.nextElementSibling.classList.contains("chest-info-box")) {

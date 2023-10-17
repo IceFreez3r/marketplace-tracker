@@ -51,7 +51,7 @@ class MarketplaceTracker {
 }
     `;
     historyCss = `
-.marketplace-history {
+.marketplace-history:not(.anchor-marketplace-history-modmode) {
     display: none;
 }
 
@@ -89,48 +89,43 @@ class MarketplaceTracker {
     line-height: 22px;
 }
 
-.marketplace-history-item-date-i {
+.tracker-history .marketplace-history-item-date-i {
     flex: unset;
 }
 
-.marketplace-history-item-icon {
-    margin-left: unset;
-    padding-left: 10px !important; /* Important is necessary to overwrite the !important flag of the original class */
-}
-
-.marketplace-history-item-date,
-.marketplace-history-item-icon,
-.marketplace-history-item-name,
-.marketplace-history-item-amount {
+.tracker-history .marketplace-history-item-date,
+.tracker-history .marketplace-history-item-name,
+.tracker-history .marketplace-history-item-amount {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.marketplace-history-item-name {
+.tracker-history .marketplace-history-item-name {
     justify-content: start;
 }
 
-.marketplace-history-item-per-item.purchase {
+.tracker-history .marketplace-history-item-per-item.purchase {
     color: #fa4d4d;
 }
 
-.marketplace-history-item-per-item.sale {
+.tracker-history .marketplace-history-item-per-item.sale {
     color: #4eff4e;
 }
 
-.marketplace-history-item-amount, .marketplace-history-item-price {
+.tracker-history .marketplace-history-item-amount,
+.tracker-history .marketplace-history-item-price {
     line-height: unset;
 }
 
-.marketplace-history-item-price-tax {
+.tracker-history .marketplace-history-item-price-tax {
     margin-top: -3px;
     width: 16px;
     height: 16px;
 }
 
-.marketplace-history-item-per-item,
-.marketplace-history-item-price {
+.tracker-history .marketplace-history-item-per-item,
+.tracker-history .marketplace-history-item-price {
     display: flex;
     flex-direction: column;
     align-items: end;
@@ -248,8 +243,11 @@ class MarketplaceTracker {
         if (!marketplaceTable) {
             return;
         }
-        // Ignore offer table on sell page
-        if (document.getElementsByClassName("anchor-sell-all-items")[0]) {
+        // Ignore offer table on sell page and buy order page
+        if (
+            document.getElementsByClassName("anchor-sell-all-items")[0] ||
+            document.getElementsByClassName("anchor-sell-buy-orders")[0]
+        ) {
             return;
         }
         const offers = marketplaceTable.getElementsByClassName("marketplace-table-row");
