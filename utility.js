@@ -6,10 +6,8 @@ function convertItemId(itemName) {
     return itemName;
 }
 
-function parseNumberString(numberString, numberSeparators = localNumberSeparators) {
-    return parseFloat(
-        numberString.replaceAll(numberSeparators["group"], "").replaceAll(numberSeparators["decimal"], ".")
-    );
+function parseNumberString(numberString) {
+    return parseFloat(numberString.replaceAll(",", ""));
 }
 
 function parseCompactNumberString(numberString) {
@@ -83,17 +81,6 @@ function profit(type, buyPrice, sellPrice, secondsPerAction = null, noMarketFee 
 function saveInsertAdjacentHTML(element, position, html) {
     element.insertAdjacentHTML(position, DOMPurify.sanitize(html));
 }
-
-// Inspired from https://github.com/daelidle/ISscripts/blob/ac93a2c4d2b52f37ffaefd42e3dd54959d6c258a/src/utils/GeneralUtils.js#L55
-function getLocalNumberSeparators() {
-    const parts = Intl.NumberFormat().formatToParts(10000000.1);
-    return {
-        group: parts.find((part) => part.type === "group").value,
-        decimal: parts.find((part) => part.type === "decimal").value,
-    };
-}
-
-const localNumberSeparators = getLocalNumberSeparators();
 
 function injectCSS(css) {
     let style = document.createElement("style");
