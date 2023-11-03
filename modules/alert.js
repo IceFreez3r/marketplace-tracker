@@ -176,7 +176,7 @@ class AlertTracker {
             });
         }
 
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const playAreaContainer = getPlayAreaContainer();
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true,
@@ -356,11 +356,11 @@ class AlertTracker {
             <div class="alert-popup">
                 <div class="alert-popup-title">Notification thresholds</div>
                 <div class="alert-input-container">
-                    <input id="price-below" style="grid-area: input-below;" placeholder="Leave empty for no notification" name="price-below">
+                    <input id="price-below" style="grid-area: input-below; width: 100%;" placeholder="Leave empty for no notification" name="price-below">
                     <label for="price-below" style="grid-area: label-below;">
                         <strong>Lower threshold</strong>
                     </label>
-                    <input id="price-above" style="grid-area: input-above;" placeholder="Leave empty for no notification" name="price-above">
+                    <input id="price-above" style="grid-area: input-above; width: 100%;" placeholder="Leave empty for no notification" name="price-above">
                     <label for="price-above" style="grid-area: label-above;">
                         <strong>Upper threshold</strong>
                     </label>

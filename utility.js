@@ -32,10 +32,26 @@ function parseTimeString(timeString, returnScale = false) {
         /(?<days>\d+d)?[s\s]*(?<hours>\d+h)?[s\s]*(?<minutes>\d+m)?[s\s]*(?<seconds>\d+(\.\d+)?s)?[s\s]*\.?$/;
     const match = timeString.match(regex);
     const compactMatch = timeString.match(compactRegex);
-    const days = match.groups.days ? parseInt(match.groups.days) : (compactMatch.groups.days ? parseInt(compactMatch.groups.days) : 0);
-    const hours = match.groups.hours ? parseInt(match.groups.hours) : (compactMatch.groups.hours ? parseInt(compactMatch.groups.hours) : 0);
-    const minutes = match.groups.minutes ? parseInt(match.groups.minutes) : (compactMatch.groups.minutes ? parseInt(compactMatch.groups.minutes) : 0);
-    const seconds = match.groups.seconds ? parseInt(match.groups.seconds) : (compactMatch.groups.seconds ? parseFloat(compactMatch.groups.seconds) : 0);
+    const days = match.groups.days
+        ? parseInt(match.groups.days)
+        : compactMatch.groups.days
+        ? parseInt(compactMatch.groups.days)
+        : 0;
+    const hours = match.groups.hours
+        ? parseInt(match.groups.hours)
+        : compactMatch.groups.hours
+        ? parseInt(compactMatch.groups.hours)
+        : 0;
+    const minutes = match.groups.minutes
+        ? parseInt(match.groups.minutes)
+        : compactMatch.groups.minutes
+        ? parseInt(compactMatch.groups.minutes)
+        : 0;
+    const seconds = match.groups.seconds
+        ? parseInt(match.groups.seconds)
+        : compactMatch.groups.seconds
+        ? parseFloat(compactMatch.groups.seconds)
+        : 0;
     const time = (((days * 24 + hours) * 60 + minutes) * 60 + seconds) * 1000;
     if (!returnScale) {
         return time;
@@ -119,8 +135,11 @@ function getLeagueId() {
 }
 
 function getSelectedSkill() {
-    const selectedSkill = document.getElementsByClassName("nav-tab selected-tab")[0];
-    return selectedSkill ? selectedSkill.innerText : "";
+    const selectedSkillNavTab = document.getElementsByClassName("nav-tab selected-tab")[0];
+    if (selectedSkillNavTab) return selectedSkillNavTab.innerText;
+    const selectedSkillMobileTab = document.getElementsByClassName("anchor-mobile-tab-active")[0];
+    if (selectedSkillMobileTab) return selectedSkillMobileTab.firstChild.firstChild.innerText;
+    return "";
 }
 
 function detectInfiniteLoop(mutations) {
@@ -224,4 +243,16 @@ function stringToHTMLElement(HTMLString) {
     const template = document.createElement("template");
     saveInsertAdjacentHTML(template, "beforeend", HTMLString);
     return template.children[0];
+}
+
+function getPlayAreaContainer() {
+    const mobileLayout = document.getElementsByClassName("mobile-layout")[0];
+    if (mobileLayout) {
+        return mobileLayout;
+    }
+    const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+    if (playAreaContainer) {
+        return playAreaContainer;
+    }
+    return undefined;
 }

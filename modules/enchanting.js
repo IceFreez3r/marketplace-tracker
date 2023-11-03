@@ -130,7 +130,7 @@ body .scrollcrafting-container {
     }
 
     connectPlayAreaObserver() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const playAreaContainer = getPlayAreaContainer();
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true,
