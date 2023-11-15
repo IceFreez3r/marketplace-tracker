@@ -5,7 +5,7 @@ class AlertTracker {
     static category = "economy";
     css = `
 .marketplace-alert-button {
-    order: 2; /* always at the end */
+    order: 2;
     color: #fff;
     height: 45px;
     width: 45px;
@@ -13,7 +13,7 @@ class AlertTracker {
 }
 
 .marketplace-buy-item-top .chakra-input__group {
-    order: 2;
+    order: 3;
 }
 
 .alert-sound {
@@ -134,7 +134,6 @@ class AlertTracker {
             this.settings.manualMute = "";
         }
         this.storageKey = "TrackerAlerts";
-        this.migrateAlerts();
         if (this.settings.allAlerts === undefined) {
             this.settings.allAlerts = {};
         }
@@ -246,24 +245,16 @@ class AlertTracker {
         this.tracker.notifyModule(MarketHighlights.id, "alerts", this.notificationInformation);
     }
 
-    migrateAlerts() {
-        if (localStorage.getItem(this.storageKey) !== null) {
-            this.settings.allAlerts = JSON.parse(localStorage.getItem(this.storageKey));
-            localStorage.removeItem(this.storageKey);
-            this.tracker.storeSettings();
-        }
-    }
-
     collectNotificationData() {
         const prices = this.storage.latestPrices();
         this.notificationInformation = {};
         let notificationNeeded = false;
-        for (let itemId in this.allAlerts) {
-            if (this.allAlerts[itemId].below && prices[itemId] <= this.allAlerts[itemId].below) {
-                this.notificationInformation[itemId] = "below";
+        for (let apiId in this.allAlerts) {
+            if (this.allAlerts[apiId].below && prices[apiId] <= this.allAlerts[apiId].below) {
+                this.notificationInformation[apiId] = "below";
                 notificationNeeded = true;
-            } else if (this.allAlerts[itemId].above && prices[itemId] >= this.allAlerts[itemId].above) {
-                this.notificationInformation[itemId] = "above";
+            } else if (this.allAlerts[apiId].above && prices[apiId] >= this.allAlerts[apiId].above) {
+                this.notificationInformation[apiId] = "above";
                 notificationNeeded = true;
             }
         }
@@ -279,7 +270,7 @@ class AlertTracker {
                 .join(", ");
             if (permission === "granted" && !document.hasFocus()) {
                 // notifications allowed and tab is not visible
-                const notification = new Notification(`Idlescape Marketplace (${getCharacterName()})`, {
+                new Notification(`Idlescape Marketplace (${getCharacterName()})`, {
                     body: "Interesting items for you: " + items,
                     icon: "https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/images/logo.svg",
                 });
@@ -322,33 +313,29 @@ class AlertTracker {
         if (document.getElementById("marketplace-alert-button")) {
             return;
         }
-        const offer = buyContainer.getElementsByClassName("marketplace-table-row")[0];
-        if (!offer) {
-            // not loaded yet
+        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
+        if (!marketplaceTableHeader) {
             return;
         }
-        let itemId = convertItemId(offer.childNodes[1].firstChild.src);
-        if (this.storage.itemRequiresFallback(itemId)) {
-            itemId = offer.firstChild.firstChild.textContent;
-        }
+        const apiId = convertApiId(marketplaceTableHeader.childNodes[1]);
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(
             refreshButton,
             "afterend",
             `
             <button id="marketplace-alert-button" class="marketplace-alert-button ${
-                this.hasActiveAlert(itemId) ? "" : "svg-inactive"
+                this.hasActiveAlert(apiId) ? "" : "svg-inactive"
             }" style="stroke: #ccffff; fill: #ccffff;" >
                 ${Templates.alertTemplate()}
             </button>`
         );
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.addEventListener("click", () => {
-            this.openPopUp(itemId);
+            this.openPopUp(apiId);
         });
     }
 
-    openPopUp(itemId) {
+    openPopUp(apiId) {
         saveInsertAdjacentHTML(
             document.body,
             "beforeend",
@@ -378,23 +365,19 @@ class AlertTracker {
         const alertPopup = document.getElementsByClassName("alert-popup")[0];
         const priceBelowInput = document.getElementById("price-below");
         const priceAboveInput = document.getElementById("price-above");
-        if (!this.hasActiveAlert(itemId)) {
+        if (!this.hasActiveAlert(apiId)) {
             priceBelowInput.value = "";
             priceAboveInput.value = "";
         } else {
-            priceBelowInput.value = this.allAlerts[itemId].below || "";
-            priceAboveInput.value = this.allAlerts[itemId].above || "";
+            priceBelowInput.value = this.allAlerts[apiId].below || "";
+            priceAboveInput.value = this.allAlerts[apiId].above || "";
         }
 
         document.getElementsByClassName("save")[0].addEventListener("click", () => {
-            this.save(
-                itemId,
-                this.priceStringToNumber(priceBelowInput.value),
-                this.priceStringToNumber(priceAboveInput.value)
-            );
+            this.save(apiId, priceStringToNumber(priceBelowInput.value), priceStringToNumber(priceAboveInput.value));
         });
         document.getElementsByClassName("clear")[0].addEventListener("click", () => {
-            this.save(itemId, 0, 0);
+            this.save(apiId, 0, 0);
         });
         document.getElementsByClassName("cancel")[0].addEventListener("click", () => {
             this.tracker.closePopup();
@@ -407,51 +390,33 @@ class AlertTracker {
         alertPopup.addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 this.save(
-                    itemId,
-                    this.priceStringToNumber(priceBelowInput.value),
-                    this.priceStringToNumber(priceAboveInput.value)
+                    apiId,
+                    priceStringToNumber(priceBelowInput.value),
+                    priceStringToNumber(priceAboveInput.value)
                 );
             }
         });
     }
 
-    save(itemId, priceBelow, priceAbove) {
+    save(apiId, priceBelow, priceAbove) {
         if (priceBelow === 0 && priceAbove === 0) {
-            delete this.allAlerts[itemId];
+            delete this.allAlerts[apiId];
         } else {
-            this.allAlerts[itemId] = {};
+            this.allAlerts[apiId] = {};
             if (priceBelow !== 0 && priceBelow !== "") {
-                this.allAlerts[itemId].below = parseInt(priceBelow);
+                this.allAlerts[apiId].below = parseInt(priceBelow);
             }
             if (priceAbove !== 0 && priceAbove !== "") {
-                this.allAlerts[itemId].above = parseInt(priceAbove);
+                this.allAlerts[apiId].above = parseInt(priceAbove);
             }
         }
         const alertButton = document.getElementById("marketplace-alert-button");
-        alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(itemId));
+        alertButton.classList.toggle("svg-inactive", !this.hasActiveAlert(apiId));
         this.tracker.storeSettings();
         this.tracker.closePopup();
     }
 
-    hasActiveAlert(itemId) {
-        return itemId in this.allAlerts;
-    }
-
-    priceStringToNumber(priceString) {
-        priceString = priceString.replace(/[^0-9kKmMbB.]/g, "");
-        let price = parseFloat(priceString);
-        if (isNaN(price)) return 0;
-        const scale = {
-            k: 1000,
-            m: 1000000,
-            b: 1000000000,
-        };
-        const stringExponent = priceString.match(/[kKmMbB]/i);
-        if (stringExponent) {
-            const factor = stringExponent[0];
-            priceString = price.toString() + factor;
-            price *= scale[factor.toLowerCase()];
-        }
-        return price;
+    hasActiveAlert(apiId) {
+        return apiId in this.allAlerts;
     }
 }

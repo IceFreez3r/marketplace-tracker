@@ -205,12 +205,7 @@ class Storage {
         }
     }
 
-    getItemName(itemId) {
-        if (!(itemId in this.idMap)) {
-            return "Unknown Item";
-        }
-        const apiId = this.idMap[itemId];
-        if (apiId === -1) return "Duplicate Item";
+    getItemName(apiId) {
         return this.itemNames[apiId];
     }
 
@@ -218,7 +213,13 @@ class Storage {
         return !itemId in this.idMap || this.idMap[itemId] === -1;
     }
 
-    analyzeItem(itemId) {
+    /**
+     *
+     * @param {number | null} itemId The itemId to analyze
+     * @param {number | null} forceApiId Leave null to use the itemId, otherwise use this as the apiId
+     * @returns {object} An object containing the min, median, max and vendor price of the item
+     */
+    analyzeItem(itemId, forceApiId = null) {
         if (itemId === "money_icon") {
             return {
                 minPrice: 1,
@@ -227,7 +228,7 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        if (itemId.endsWith("_essence")) {
+        if (itemId?.endsWith("_essence")) {
             const talismanAnalysis = this.analyzeItem(itemId.replace("_essence", "_talisman"));
             const essencePerTalisman = (35000 + 50000) / 2;
             return {
@@ -237,7 +238,7 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        const apiId = this.idMap[itemId];
+        const apiId = forceApiId ?? this.idMap[itemId];
         if (apiId === -1) {
             return {
                 minPrice: NaN,
@@ -275,45 +276,24 @@ class Storage {
         };
     }
 
-    /**
-     *
-     * @returns {Object} Object with pairs of itemIds and their latest prices
-     */
     latestPrices() {
-        const prices = {};
-        for (let itemId in this.idMap) {
-            if (this.idMap[itemId] === -1) continue;
-            prices[itemId] = ((itemId) => {
-                const apiId = this.idMap[itemId];
-                return this.latestPriceList[apiId] ?? NaN;
-            })(itemId);
-        }
-        return prices;
+        return this.latestPriceList;
     }
 
-    /**
-     * @param {Array} itemIdsWithFallbacks Array of itemIds or their fallback
-     * @returns {Object} Object with pairs of itemIds and their latest price quantiles
-     */
-    latestPriceQuantiles(itemIdsWithFallbacks) {
-        const quantiles = [];
-        for (const itemId of itemIdsWithFallbacks) {
-            const apiId = this.idMap[itemId];
-            if (apiId === -1 || this.marketHistory[apiId].length <= 1) {
-                quantiles.push(1);
-                continue;
+    latestPriceQuantiles(apiIds) {
+        return apiIds.map((apiId) => {
+            if (this.marketHistory[apiId].length <= 1) {
+                return 1;
             }
             const index = this.marketHistory[apiId].findLastIndex(
                 (priceTuple) => priceTuple[1] === this.latestPriceList[apiId]
             );
             if (index === -1) {
-                quantiles.push(1);
-                continue;
+                console.log("Couldn't find latest price in price list. How can this happen?");
+                return 1;
             }
-            const quantile = index / (this.marketHistory[apiId].length - 1);
-            quantiles.push(quantile);
-        }
-        return quantiles;
+            return index / (this.marketHistory[apiId].length - 1);
+        });
     }
 
     // Sort the price tuples of a given apiId by price and then by timestamp
@@ -490,5 +470,9 @@ class Storage {
 
     exportStorage() {
         return JSON.stringify(this.marketHistory);
+    }
+
+    convertItemIdToApiId(itemId) {
+        return this.idMap[itemId];
     }
 }

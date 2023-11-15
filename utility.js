@@ -6,6 +6,10 @@ function convertItemId(itemName) {
     return itemName;
 }
 
+function convertApiId(element) {
+    return parseInt(element.dataset.itemid);
+}
+
 function parseNumberString(numberString) {
     return parseFloat(numberString.replaceAll(",", ""));
 }
@@ -58,6 +62,24 @@ function parseTimeString(timeString, returnScale = false) {
     }
     const scaleOptions = [1000 * 60 * 60 * 24, 1000 * 60 * 60, 1000 * 60, 1000, 1];
     return [time, scaleOptions.find((scale) => time >= scale)];
+}
+
+function priceStringToNumber(priceString) {
+    priceString = priceString.replace(/[^0-9kKmMbB.]/g, "");
+    let price = parseFloat(priceString);
+    if (isNaN(price)) return 0;
+    const scale = {
+        k: 1000,
+        m: 1000000,
+        b: 1000000000,
+    };
+    const stringExponent = priceString.match(/[kKmMbB]/i);
+    if (stringExponent) {
+        const factor = stringExponent[0];
+        priceString = price.toString() + factor;
+        price *= scale[factor.toLowerCase()];
+    }
+    return price;
 }
 
 function totalRecipePrice(resourcePrices, resourceCounts, chance = 1) {

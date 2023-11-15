@@ -239,34 +239,16 @@ class MarketplaceTracker {
     }
 
     scanOfferList() {
-        const marketplaceTable = document.getElementsByClassName("marketplace-table")[0];
-        if (!marketplaceTable) {
+        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
+        if (!marketplaceTableHeader) {
             return;
         }
-        // Ignore offer table on sell page and buy order page
-        if (
-            document.getElementsByClassName("anchor-sell-all-items")[0] ||
-            document.getElementsByClassName("anchor-sell-buy-orders")[0]
-        ) {
-            return;
-        }
-        const offers = marketplaceTable.getElementsByClassName("marketplace-table-row");
-        if (offers.length === 0) {
-            return;
-        }
-        // ignore buy order page, wouldn't be wondered if this breaks soon
-        if (offers[0].getElementsByClassName("offer-left")[0]) {
-            return;
-        }
-        let itemId = convertItemId(offers[0].childNodes[1].firstChild.src);
-        if (this.storage.itemRequiresFallback(itemId)) {
-            itemId = offers[0].firstChild.firstChild.textContent;
-        }
-        const analysis = this.storage.analyzeItem(itemId);
+        const apiId = marketplaceTableHeader.childNodes[1].dataset.itemid;
+        const analysis = this.storage.analyzeItem(null, apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
-        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(itemId, analysis));
-        this.markOffers(offers, analysis.maxPrice);
+        saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(apiId, analysis));
+        this.markOffers(analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
@@ -305,7 +287,8 @@ class MarketplaceTracker {
         return table;
     }
 
-    markOffers(offers, maxPrice) {
+    markOffers(maxPrice) {
+        const offers = document.querySelectorAll('.market-buy > .marketplace-table-row');
         for (const offer of offers) {
             offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
             const offerPrice = parseNumberString(offer.childNodes[3].innerText);
