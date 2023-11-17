@@ -78,6 +78,10 @@ class MarketHighlights {
     order: 1;
 }
 
+.marketplace-buy-item-top .chakra-input__group {
+    order: 3;
+}
+
 .marketplace-favorite-button:not(.svg-inactive) > span {
     display: none;
 }
@@ -153,10 +157,10 @@ class MarketHighlights {
         if (this.settings.markerSize === undefined) {
             this.settings.markerSize = 40;
         }
-        this.migrateFavorites();
         if (this.settings.favorites === undefined) {
             this.settings.favorites = [];
         }
+        this.migrateFavorites();
         this.favorites = this.settings.favorites;
         if (this.settings.colorBlindMode === undefined) {
             this.settings.colorBlindMode = false;
@@ -173,7 +177,7 @@ class MarketHighlights {
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const playAreaContainer = getPlayAreaContainer();
         this.playAreaObserver.observe(playAreaContainer, {
             childList: true,
             subtree: true,
@@ -254,10 +258,11 @@ class MarketHighlights {
     }
 
     migrateFavorites() {
-        if (localStorage.getItem("favorites") !== null) {
-            this.settings.favorites = JSON.parse(localStorage.getItem("favorites"));
-            localStorage.removeItem("favorites");
-            this.saveData();
+        for (let i = 0; i < this.settings.favorites.length; i++) {
+            const favorite = Number(this.settings.favorites[i]);
+            if (isNaN(favorite)) {
+                this.settings.favorites[i] = this.storage.convertItemIdToApiId(this.settings.favorites[i]);
+            }
         }
     }
 
@@ -287,7 +292,7 @@ class MarketHighlights {
         // Buy page
         const buyHeader = document.getElementsByClassName("marketplace-buy-item-top")[0];
         if (buyHeader) {
-            this.toggleFavoriteButton(buyHeader.parentNode);
+            this.toggleFavoriteButton();
             return;
         }
         // Sell Page
@@ -354,11 +359,8 @@ class MarketHighlights {
 
     highlightFavorites(items) {
         items.childNodes.forEach((itemNode) => {
-            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (this.storage.itemRequiresFallback(itemId)) {
-                itemId = itemNode.firstChild.firstChild.alt;
-            }
-            if (this.isFavorite(itemId)) {
+            const apiId = convertApiId(itemNode.firstChild);
+            if (this.isFavorite(apiId)) {
                 itemNode.firstChild.classList.add("favorite-highlight");
             }
         });
@@ -368,7 +370,8 @@ class MarketHighlights {
             if (this.storage.itemRequiresFallback(itemId)) {
                 itemId = auction.childNodes[1].firstChild.alt;
             }
-            auction.classList.toggle("favorite-highlight", this.isFavorite(itemId));
+            const apiId = this.storage.convertItemIdToApiId(itemId);
+            auction.classList.toggle("favorite-highlight", this.isFavorite(apiId));
         }
     }
 
@@ -399,16 +402,8 @@ class MarketHighlights {
             return;
         }
         if (this.quantileColorsActive) {
-            const itemIdsWithFallbacks = [];
-            for (const item of items) {
-                const itemId = convertItemId(item.firstChild.src);
-                if (this.storage.itemRequiresFallback(itemId)) {
-                    itemIdsWithFallbacks.push(item.firstChild.alt);
-                } else {
-                    itemIdsWithFallbacks.push(itemId);
-                }
-            }
-            const priceQuantiles = this.storage.latestPriceQuantiles(itemIdsWithFallbacks);
+            const apiIds = Array.from(items).map((item) => convertApiId(item));
+            const priceQuantiles = this.storage.latestPriceQuantiles(apiIds);
             if (this.settings.quantileDisplay === "party") {
                 this.partyMode(items, priceQuantiles);
             } else {
@@ -479,20 +474,16 @@ class MarketHighlights {
         }, 100);
     }
 
-    toggleFavoriteButton(buyContainer) {
+    toggleFavoriteButton() {
         if (document.getElementById("marketplace-favorite-button")) {
             return;
         }
-        const offer = buyContainer.getElementsByClassName("marketplace-table-row")[0];
-        if (!offer) {
-            // not loaded yet
+        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
+        if (!marketplaceTableHeader) {
             return;
         }
-        let itemId = convertItemId(offer.childNodes[1].firstChild.src);
-        if (this.storage.itemRequiresFallback(itemId)) {
-            itemId = offer.firstChild.firstChild.textContent;
-        }
-        const isFavorite = this.isFavorite(itemId);
+        const apiId = convertApiId(marketplaceTableHeader.childNodes[1]);
+        const isFavorite = this.isFavorite(apiId);
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(
             refreshButton,
@@ -506,24 +497,24 @@ class MarketHighlights {
         );
         let toggleFavoriteButton = document.getElementById("marketplace-favorite-button");
         toggleFavoriteButton.addEventListener("click", () => {
-            this.toggleFavorite(itemId);
+            this.toggleFavorite(apiId);
             toggleFavoriteButton.classList.toggle("svg-inactive");
             this.saveData();
         });
     }
 
     highlightBestHeatItem(items) {
-        const bestHeatItem = this.storage.bestHeatItem();
+        const bestHeatApiId = this.storage.bestHeatItem();
         items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains("heat-highlight")) {
+            const apiId = convertApiId(itemNode.firstChild);
+            if (apiId === bestHeatApiId && !itemNode.firstChild.classList.contains("heat-highlight")) {
                 itemNode.firstChild.classList.add("heat-highlight");
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
                     `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`
                 );
-            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains("heat-highlight")) {
+            } else if (apiId !== bestHeatApiId && itemNode.firstChild.classList.contains("heat-highlight")) {
                 itemNode.firstChild.classList.remove("heat-highlight");
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
             }
@@ -536,12 +527,9 @@ class MarketHighlights {
             alertIcons[i].remove();
         }
         items.childNodes.forEach((itemNode) => {
-            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (this.storage.itemRequiresFallback(itemId)) {
-                itemId = itemNode.firstChild.firstChild.alt;
-            }
+            const apiId = convertApiId(itemNode.firstChild);
             if (
-                this.notificationInformation[itemId] === "below" &&
+                this.notificationInformation[apiId] === "below" &&
                 !itemNode.firstChild.classList.contains("alert-below")
             ) {
                 itemNode.style.order = -1;
@@ -556,7 +544,7 @@ class MarketHighlights {
                     </div>`
                 );
             } else if (
-                this.notificationInformation[itemId] === "above" &&
+                this.notificationInformation[apiId] === "above" &&
                 !itemNode.firstChild.classList.contains("alert-above")
             ) {
                 itemNode.style.order = -1;
@@ -576,16 +564,16 @@ class MarketHighlights {
         });
     }
 
-    isFavorite(itemId) {
-        return this.favorites.indexOf(itemId) > -1;
+    isFavorite(apiId) {
+        return this.favorites.indexOf(apiId) > -1;
     }
 
-    toggleFavorite(itemId) {
-        const isFavorite = this.isFavorite(itemId);
+    toggleFavorite(apiId) {
+        const isFavorite = this.isFavorite(apiId);
         if (isFavorite) {
-            this.favorites.splice(this.favorites.indexOf(itemId), 1);
+            this.favorites.splice(this.favorites.indexOf(apiId), 1);
         } else {
-            this.favorites.push(itemId);
+            this.favorites.push(apiId);
         }
         return !isFavorite;
     }

@@ -512,21 +512,30 @@ input[type="time"].tracker-time:not(.browser-default) {
         oldSettingsArea?.remove();
 
         const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-        const navTabContainer = playAreaContainer.getElementsByClassName("nav-tab-container")[0];
-        navTabContainer.style.display = "none";
+        // undefined on mobile
+        let tabContainer;
+        if (playAreaContainer) {
+            // bar at the top of the play area
+            tabContainer = playAreaContainer.getElementsByClassName("nav-tab-container")[0];
+            tabContainer.style.display = "none";
 
-        navTabContainer.insertAdjacentHTML(
-            "afterend",
-            `
-            <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
-                <div class="nav-tab selected-tab tracker">
-                    ${Templates.trackerLogoTemplate("nav-tab-icon icon-border")}
-                    Tracker
-                </div>
-            </div>`
-        );
+            tabContainer.insertAdjacentHTML(
+                "afterend",
+                `
+                <div id="tracker-settings-nav-tab-container" class="tracker-nav-tab-container">
+                    <div class="nav-tab selected-tab tracker">
+                        ${Templates.trackerLogoTemplate("nav-tab-icon icon-border")}
+                        Tracker
+                    </div>
+                </div>`
+            );
+        } else {
+            // box at the bottom of the screen with the currently active skill
+            tabContainer = document.getElementsByClassName("anchor-mobile-tabs")[0];
+            //TODO: simulate active tab
+        }
 
-        const playAreaBackground = playAreaContainer.getElementsByClassName("play-area-background")[0];
+        const playAreaBackground = document.getElementsByClassName("play-area-background")[0];
         const playAreas = playAreaBackground.getElementsByClassName("play-area");
         for (let i = 0; i < playAreas.length; i++) {
             playAreas[i].style.display = "none";
@@ -620,20 +629,21 @@ input[type="time"].tracker-time:not(.browser-default) {
         this.settingsResetObserver?.disconnect();
         this.settingsResetObserver = new MutationObserver((mutations) => {
             if (getSelectedSkill() !== selectedSkill) {
-                navTabContainer.style.display = "";
+                tabContainer.style.display = "";
                 for (let i = 0; i < playAreas.length; i++) {
                     playAreas[i].style.display = "block";
                 }
-                document.getElementById("tracker-settings-nav-tab-container").remove();
+                document.getElementById("tracker-settings-nav-tab-container")?.remove();
                 document.getElementById("tracker-settings-area").remove();
                 clearTimeout(this.saveCheckmarkTimeout);
                 // Stop observing
                 this.settingsResetObserver.disconnect();
             }
         });
-        this.settingsResetObserver.observe(navTabContainer, {
+        this.settingsResetObserver.observe(tabContainer, {
             childList: true,
             subtree: true,
+            attributes: true,
         });
     }
 
@@ -879,7 +889,7 @@ input[type="time"].tracker-time:not(.browser-default) {
             clearTimeout(this.gameReadyTimeout);
             this.gameReadyCallbacks.push(callback);
         }
-        const gameContainer = document.getElementsByClassName("play-area-container")[0];
+        const gameContainer = getPlayAreaContainer();
         if (!gameContainer) {
             this.gameReadyTimeout = setTimeout(() => this.onGameReady(), 250);
         } else {

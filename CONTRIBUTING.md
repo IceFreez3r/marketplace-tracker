@@ -1,4 +1,4 @@
-# Contributing 
+# Contributing
 
 If you have your own idea for another feature for the marketplace-tracker, you can either just open up an [issue](https://github.com/IceFreez3r/marketplace-tracker/issues/new/choose) or contact us through [discord](https://discord.com/invite/pwX6Xg5). Or you can also just [fork](https://github.com/IceFreez3r/marketplace-tracker/fork) the repository, implement your own feature and then open up a pull request to our repository.
 
@@ -13,10 +13,10 @@ Modules need to implement the following variables:
 
 and functions:
 
-- `constructor(tracker, settings, storage): void`: The constructor of the module. The `tracker` is the instance of the tracker class. The `settings` are the settings of your module. `storage` is the reference to the storage object. Add css nodes to the page here. Setup your own mutation observers here, but don't start them yet. 
-- `onGameReady(): void`: This function is called when the the `play-area-container` finished loading. Anything that interacts directly with the game (e.g. `observer.observe(...)`) should wait for this function to be called.
+- `constructor(tracker, settings, storage): void`: The constructor of the module. The `tracker` is the instance of the tracker class. The `settings` are the settings of your module. `storage` is the reference to the storage object. Add css nodes to the page here. Setup your own mutation observers here, but don't start them yet.
+- `onGameReady(): void`: This function is called when the `play-area-container` (or `mobile-layout` if we are on a phone) finished loading. Anything that interacts directly with the game (e.g. `observer.observe(...)`) should wait for this function to be called.
 - `deactivate(): void`: This function is called when the module is deactivated. Remove all your css nodes and disconnect all mutation observers here.
-- `settingsMenuContent(): string|HTMLElement|[string|HTMLElement]`: You can use this function to define subsettings of your module in the settings menu. Templates for a checkmark, a select menu or similar things can be found in [`templates.js`](templates.js). Settings can be either given as a HTML string or as a HTMLElement. If you have multiple settings, you can return an (mixed) array of strings and HTMLElements. Please check the existing modules for the correct structure and css classes.
+- `settingsMenuContent(): string|HTMLElement|(string|HTMLElement)[]`: You can use this function to define subsettings of your module in the settings menu. Templates for a checkmark, a select menu or similar things can be found in [`templates.js`](templates.js). Settings can be either given as a HTML string or as a HTMLElement. If you have multiple settings, you can return an (mixed) array of strings and HTMLElements. Please check the existing modules for the correct structure and css classes.
 - `onAPIUpdate(): void`: This function is called when the API data is updated. You can leave this function empty if you don't need to do anything when the API data is updated.
 - `settingChanged(settingId, value): void`: This function is called when a setting of your module is changed. The `settingId` is the id of the setting that was changed (without your module id prefix). The `value` is the new value of the setting. You can leave this function out if you don't have any subsettings. If you don't need to do anything when a setting is changed, you can just leave this function empty.
 - `onNotify(message, data): void`: Modules can receive messages from other modules that were send through `this.tracker.notify(message, data)`. The `message` is the message that was send. The `data` is the data that was send. You can leave this function out if you don't need to receive any messages.
@@ -48,7 +48,7 @@ If you need to inject HTML into the game, either make absolutely 100% sure, that
 
 **Variables**: Use camelCase for variables. Variables that can be `const` should be `const`. Don't use `var`.
 
-**Template strings**: HTML strings should be written in template strings. This makes it easier to read and write. Unless they are very short and fit in one line, start with the first HTML element on a new line, indented one more time then the line before.
+**Template strings**: HTML strings should be written in template strings. This makes it easier to read and write. Unless they are very short and fit in one line, start with the first HTML element on a new line, indented one more time than the line before.
 ```js
 function example() {
     let foo = `<span>Example</span>`;

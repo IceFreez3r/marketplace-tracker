@@ -8,6 +8,10 @@ class CraftingTracker {
     grid-template-rows: 1fr max-content;
 }
 
+.mobile-layout .crafting-container {
+    display: block;
+}
+
 .crafting-info-table {
     grid-column: span 2;
     display: grid; /* Grid Layout specified by js */
@@ -87,7 +91,7 @@ class CraftingTracker {
     }
 
     onGameReady() {
-        const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
+        const playAreaContainer = getPlayAreaContainer();
         this.playAreaObserver.observe(playAreaContainer, {
             attributes: true,
             attributeFilter: ["src"],
