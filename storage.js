@@ -105,7 +105,7 @@ class Storage {
     }
 
     bestHeatItem() {
-        return this.heatValue().itemId;
+        return this.heatValue().apiId;
     }
 
     heatValue() {
@@ -129,8 +129,7 @@ class Storage {
         return bestHeatItem;
     }
 
-    itemHeatValue(itemId) {
-        const apiId = this.idMap[itemId];
+    itemHeatValue(apiId) {
         if (apiId in this.heatItems) {
             return this.latestPriceList[apiId] / this.heatItems[apiId].heat;
         }

@@ -264,8 +264,8 @@ class AlertTracker {
     createNotification(permission = Notification.permission) {
         if (!this.muted()) {
             const items = Object.keys(this.notificationInformation)
-                .map((itemId) => {
-                    return this.storage.getItemName(itemId);
+                .map((apiId) => {
+                    return this.storage.getItemName(apiId);
                 })
                 .join(", ");
             if (permission === "granted" && !document.hasFocus()) {

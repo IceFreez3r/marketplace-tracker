@@ -250,7 +250,7 @@ class MarketHighlights {
     migrateFavorites() {
         for (let i = 0; i < this.settings.favorites.length; i++) {
             if (typeof this.settings.favorites[i] === "string") {
-                this.settings.favorites[i] = parseInt(this.settings.favorites[i]);
+                this.settings.favorites[i] = convertItemIdToApiId(this.settings.favorites[i]);
             }
         }
     }
@@ -391,10 +391,7 @@ class MarketHighlights {
             return;
         }
         if (this.quantileColorsActive) {
-            const apiIds = [];
-            for (const item of items) {
-                apiIds.push(convertApiId(item));
-            }
+            const apiIds = items.map((item) => convertApiId(item));
             const priceQuantiles = this.storage.latestPriceQuantiles(apiIds);
             if (this.settings.quantileDisplay === "party") {
                 this.partyMode(items, priceQuantiles);
@@ -463,7 +460,7 @@ class MarketHighlights {
         }, 100);
     }
 
-    toggleFavoriteButton(buyContainer) {
+    toggleFavoriteButton() {
         if (document.getElementById("marketplace-favorite-button")) {
             return;
         }
@@ -493,17 +490,17 @@ class MarketHighlights {
     }
 
     highlightBestHeatItem(items) {
-        const bestHeatItem = this.storage.bestHeatItem();
+        const bestHeatApiId = this.storage.bestHeatItem();
         items.childNodes.forEach((itemNode) => {
-            const itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (itemId === bestHeatItem && !itemNode.firstChild.classList.contains("heat-highlight")) {
+            const apiId = convertApiId(itemNode.firstChild);
+            if (apiId === bestHeatApiId && !itemNode.firstChild.classList.contains("heat-highlight")) {
                 itemNode.firstChild.classList.add("heat-highlight");
                 saveInsertAdjacentHTML(
                     itemNode.firstChild,
                     "beforeend",
                     `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`
                 );
-            } else if (itemId !== bestHeatItem && itemNode.firstChild.classList.contains("heat-highlight")) {
+            } else if (apiId !== bestHeatApiId && itemNode.firstChild.classList.contains("heat-highlight")) {
                 itemNode.firstChild.classList.remove("heat-highlight");
                 itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
             }
@@ -516,12 +513,9 @@ class MarketHighlights {
             alertIcons[i].remove();
         }
         items.childNodes.forEach((itemNode) => {
-            let itemId = convertItemId(itemNode.firstChild.firstChild.src);
-            if (this.storage.itemRequiresFallback(itemId)) {
-                itemId = itemNode.firstChild.firstChild.alt;
-            }
+            const apiId = convertApiId(itemNode.firstChild);
             if (
-                this.notificationInformation[itemId] === "below" &&
+                this.notificationInformation[apiId] === "below" &&
                 !itemNode.firstChild.classList.contains("alert-below")
             ) {
                 itemNode.style.order = -1;
@@ -536,7 +530,7 @@ class MarketHighlights {
                     </div>`
                 );
             } else if (
-                this.notificationInformation[itemId] === "above" &&
+                this.notificationInformation[apiId] === "above" &&
                 !itemNode.firstChild.classList.contains("alert-above")
             ) {
                 itemNode.style.order = -1;
@@ -556,8 +550,8 @@ class MarketHighlights {
         });
     }
 
-    isFavorite(itemId) {
-        return this.favorites.indexOf(itemId) > -1;
+    isFavorite(apiId) {
+        return this.favorites.indexOf(apiId) > -1;
     }
 
     toggleFavorite(apiId) {

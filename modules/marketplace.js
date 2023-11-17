@@ -243,7 +243,7 @@ class MarketplaceTracker {
         if (!marketplaceTableHeader) {
             return;
         }
-        const apiId = marketplaceTableHeader.childNodes[1].dataset.itemid;
+        const apiId = convertApiId(marketplaceTableHeader.childNodes[1]);
         const analysis = this.storage.analyzeItem(null, apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
@@ -252,7 +252,7 @@ class MarketplaceTracker {
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
-    priceAnalysisTableTemplate(itemId, analysis) {
+    priceAnalysisTableTemplate(apiId, analysis) {
         let table = `
             <div class="marketplace-analysis-table">
                 <div class="marketplace-analysis-table-content">
@@ -273,7 +273,7 @@ class MarketplaceTracker {
                 <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.maxPrice)}
                 </div>`;
-        const heatValue = this.storage.itemHeatValue(itemId);
+        const heatValue = this.storage.itemHeatValue(apiId);
         if (heatValue !== Infinity) {
             table += `
                 <div class="marketplace-analysis-table-content">
