@@ -138,6 +138,7 @@ class AlertTracker {
             this.settings.allAlerts = {};
         }
         this.allAlerts = this.settings.allAlerts;
+        this.migrateAlerts();
 
         this.cssNode = injectCSS(this.css);
 
@@ -243,6 +244,18 @@ class AlertTracker {
             this.createNotification();
         }
         this.tracker.notifyModule(MarketHighlights.id, "alerts", this.notificationInformation);
+    }
+
+    migrateAlerts() {
+        for (const apiId in this.allAlerts) {
+            if (isNaN(Number(apiId))) {
+                const newApiId = this.storage.convertItemIdToApiId(apiId);
+                if (newApiId !== undefined) {
+                    this.allAlerts[newApiId] = this.allAlerts[apiId];
+                }
+                delete this.allAlerts[apiId];
+            }
+        }
     }
 
     collectNotificationData() {

@@ -249,8 +249,9 @@ class MarketHighlights {
 
     migrateFavorites() {
         for (let i = 0; i < this.settings.favorites.length; i++) {
-            if (typeof this.settings.favorites[i] === "string") {
-                this.settings.favorites[i] = convertItemIdToApiId(this.settings.favorites[i]);
+            const favorite = Number(this.settings.favorites[i]);
+            if (isNaN(favorite)) {
+                this.settings.favorites[i] = this.storage.convertItemIdToApiId(this.settings.favorites[i]);
             }
         }
     }
@@ -391,7 +392,7 @@ class MarketHighlights {
             return;
         }
         if (this.quantileColorsActive) {
-            const apiIds = items.map((item) => convertApiId(item));
+            const apiIds = Array.from(items).map((item) => convertApiId(item));
             const priceQuantiles = this.storage.latestPriceQuantiles(apiIds);
             if (this.settings.quantileDisplay === "party") {
                 this.partyMode(items, priceQuantiles);

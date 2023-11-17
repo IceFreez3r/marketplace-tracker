@@ -7,7 +7,7 @@ function convertItemId(itemName) {
 }
 
 function convertApiId(element) {
-    return parseInt(element.dataset.itemid);
+    return element.dataset.itemid;
 }
 
 function parseNumberString(numberString) {
