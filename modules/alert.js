@@ -133,7 +133,6 @@ class AlertTracker {
             this.settings.manualMuteEnd = 0;
             this.settings.manualMute = "";
         }
-        this.storageKey = "TrackerAlerts";
         if (this.settings.allAlerts === undefined) {
             this.settings.allAlerts = {};
         }
