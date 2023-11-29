@@ -508,7 +508,10 @@ class MarketplaceTracker {
             .textContent.replace("Item sells to NPCs for:", "")
             .replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
-        const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
+        const priceInput = document.querySelector(".anchor-sell-price-input, .anchor-buy-price-input");
+        if (!priceInput) {
+            return;
+        }
         this.checkPrice(warningIcon, priceInput, vendorPrice);
         priceInput.addEventListener("input", () => {
             this.checkPrice(warningIcon, priceInput, vendorPrice);
