@@ -7,7 +7,12 @@ function convertItemId(itemName) {
 }
 
 function convertApiId(element) {
-    return element.dataset.itemid;
+    const apiId = element.dataset.itemid;
+    if (!apiId) {
+        console.error("Bad element passed to convertApiId: " + element);
+        return null;
+    }
+    return apiId;
 }
 
 function parseNumberString(numberString) {

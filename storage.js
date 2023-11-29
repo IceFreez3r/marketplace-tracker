@@ -238,7 +238,7 @@ class Storage {
             };
         }
         const apiId = forceApiId ?? this.idMap[itemId];
-        if (apiId === -1) {
+        if (apiId === undefined || apiId === -1 ) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,

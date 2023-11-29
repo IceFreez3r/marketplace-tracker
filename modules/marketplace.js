@@ -243,7 +243,7 @@ class MarketplaceTracker {
         if (!marketplaceTableHeader) {
             return;
         }
-        const apiId = convertApiId(marketplaceTableHeader.childNodes[1]);
+        const apiId = convertApiId(marketplaceTableHeader.childNodes[2]);
         const analysis = this.storage.analyzeItem(null, apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
@@ -508,7 +508,10 @@ class MarketplaceTracker {
             .textContent.replace("Item sells to NPCs for:", "")
             .replaceAll(" ", "");
         const vendorPrice = parseNumberString(vendorPriceString);
-        const priceInput = document.getElementsByClassName("anchor-sell-price-input")[0];
+        const priceInput = document.querySelector(".anchor-sell-price-input, .anchor-buy-price-input");
+        if (!priceInput) {
+            return;
+        }
         this.checkPrice(warningIcon, priceInput, vendorPrice);
         priceInput.addEventListener("input", () => {
             this.checkPrice(warningIcon, priceInput, vendorPrice);
