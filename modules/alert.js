@@ -329,7 +329,10 @@ class AlertTracker {
         if (!marketplaceTableHeader) {
             return;
         }
-        const apiId = convertApiId(marketplaceTableHeader.childNodes[1]);
+        const apiId = convertApiId(marketplaceTableHeader.childNodes[2]);
+        if (!apiId) {
+            return;
+        }
         const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
         saveInsertAdjacentHTML(
             refreshButton,
