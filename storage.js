@@ -296,6 +296,27 @@ class Storage {
         });
     }
 
+    editData(apiId, type) {
+        const data = this.marketHistory[apiId];
+        const onePercent = Math.max(1, Math.floor(data.length * 0.01));
+        switch (type) {
+            case "low":
+                data.splice(0, onePercent);
+                break;
+            case "high":
+                data.splice(data.length - onePercent, data.length);
+                break;
+            case "mid":
+                data.splice(0, onePercent);
+                data.splice(data.length - onePercent, data.length);
+                break;
+            default:
+                console.log("Unknown edit type: " + type);
+        }
+        console.log("Edited data for " + this.itemNames[apiId] + " with type " + type);
+        this.storeItemList();
+    }
+
     // Sort the price tuples of a given apiId by price and then by timestamp
     sortPriceList(apiId) {
         this.marketHistory[apiId].sort((a, b) => {
