@@ -88,7 +88,6 @@ class Templates {
      * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
      * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
      * @param {Number=} secondsPerAction only required if profitType is `per_hour`
-     * @param {Number=} chance chance to successfully craft the product
      * @returns {string} html string
      */
     static infoTableTemplate(
@@ -100,7 +99,6 @@ class Templates {
         compactDisplay = false,
         showCounts = false,
         secondsPerAction = null,
-        chance = 1,
         classes = ""
     ) {
         const [minColumn, medianColumn, maxColumn] = columns;
@@ -139,7 +137,6 @@ class Templates {
             profitType,
             compactDisplay,
             secondsPerAction,
-            chance,
             compactDisplay ? "Min" : "Minimal Marketprice"
         ) : "";
         const medianPrice = medianColumn ? Templates.infoTableRow(
@@ -152,7 +149,6 @@ class Templates {
             profitType,
             compactDisplay,
             secondsPerAction,
-            chance,
             compactDisplay ? "Median" : "Median Marketprice"
         ) : "";
         const maxPrice = maxColumn ? Templates.infoTableRow(
@@ -165,7 +161,6 @@ class Templates {
             profitType,
             compactDisplay,
             secondsPerAction,
-            chance,
             compactDisplay ? "Max" : "Maximal Marketprice"
         ) : "";
         return `
@@ -239,7 +234,6 @@ class Templates {
         profitType,
         compactDisplay,
         secondsPerAction,
-        chance,
         label
     ) {
         let row = Templates.infoTableCell(classId, label);
@@ -253,7 +247,7 @@ class Templates {
             )
             .join("");
         // Total crafting cost
-        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
+        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts);
         const betterToVendor = profit("flat", productVendorPrice, productPrice) < 0;
         const betterPrice = betterToVendor ? productVendorPrice : productPrice;
         const totalProductPrice = betterPrice * productCount;
