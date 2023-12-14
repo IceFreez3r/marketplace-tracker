@@ -219,7 +219,8 @@ class Storage {
      * @returns {object} An object containing the min, median, max and vendor price of the item
      */
     analyzeItem(itemId, forceApiId = null) {
-        if (itemId === "money_icon") {
+        // Specifically allow type conversion to string here
+        if (itemId === "money_icon" || forceApiId == 1) {
             return {
                 minPrice: 1,
                 medianPrice: 1,
@@ -238,7 +239,7 @@ class Storage {
             };
         }
         const apiId = forceApiId ?? this.idMap[itemId];
-        if (apiId === undefined || apiId === -1 ) {
+        if (apiId === undefined || apiId === -1) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
@@ -265,8 +266,8 @@ class Storage {
         };
     }
 
-    analyzeItems(itemIds) {
-        const analysisArray = itemIds.map((itemId) => this.analyzeItem(itemId));
+    analyzeItems(apiIds) {
+        const analysisArray = apiIds.map((apiId) => this.analyzeItem(null, apiId));
         return {
             minPrices: analysisArray.map((analysis) => analysis.minPrice),
             medianPrices: analysisArray.map((analysis) => analysis.medianPrice),
