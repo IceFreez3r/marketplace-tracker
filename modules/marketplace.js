@@ -40,6 +40,20 @@ class MarketplaceTracker {
 
 .marketplace-analysis-table-content {
     justify-self: center;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#tracker-edit-low,
+#tracker-edit-mid,
+#tracker-edit-high {
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 2px;
 }
 
 .text-green {
@@ -143,6 +157,9 @@ class MarketplaceTracker {
         if (this.settings.vendorWarning === undefined) {
             this.settings.vendorWarning = 1;
         }
+        if (this.settings.editMode === undefined) {
+            this.settings.editMode = 0;
+        }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged("history", this.settings.history);
@@ -189,7 +206,14 @@ class MarketplaceTracker {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + "-vendorWarning", this.settings.vendorWarning)}
             </div>`;
-        return history + vendorWarning;
+        const editMode = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Show buttons for manual data editing
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + "-editMode", this.settings.editMode)}
+            </div>`;
+        return history + vendorWarning + editMode;
     }
 
     settingChanged(setting, value) {
@@ -248,6 +272,11 @@ class MarketplaceTracker {
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
         saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(apiId, analysis));
+        if (this.settings.editMode) {
+            document.getElementById("tracker-edit-low").addEventListener("click", () => this.editData(apiId, "low"));
+            document.getElementById("tracker-edit-mid").addEventListener("click", () => this.editData(apiId, "mid"));
+            document.getElementById("tracker-edit-high").addEventListener("click", () => this.editData(apiId, "high"));
+        }
         this.markOffers(analysis.maxPrice);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
@@ -260,18 +289,21 @@ class MarketplaceTracker {
                 </div>
                 <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.minPrice)}
+                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-low") : ""}
                 </div>
                 <div class="marketplace-analysis-table-content">
                     Median
                 </div>
                 <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.medianPrice)}
+                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-mid") : ""}
                 </div>
                 <div class="marketplace-analysis-table-content">
                     Maximum
                 </div>
                 <div class="marketplace-analysis-table-content">
                     ${formatNumber(analysis.maxPrice)}
+                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-high") : ""}
                 </div>`;
         const heatValue = this.storage.itemHeatValue(apiId);
         if (heatValue !== Infinity) {
@@ -287,8 +319,13 @@ class MarketplaceTracker {
         return table;
     }
 
+    editData(apiId, type) {
+        this.storage.editData(apiId, type);
+        this.scanOfferList();
+    }
+
     markOffers(maxPrice) {
-        const offers = document.querySelectorAll('.market-buy > .marketplace-table-row');
+        const offers = document.querySelectorAll(".market-buy > .marketplace-table-row");
         for (const offer of offers) {
             offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
             const offerPrice = parseNumberString(offer.childNodes[3].innerText);

@@ -172,7 +172,13 @@ class PopupTracker {
             }
         }
 
-        const [totalMinValue, totalMaxValue] = this.totalValue(offlineProgressBox);
+        const title = document.getElementsByClassName("MuiTypography-root MuiTypography-h6")[0].innerText;
+        const isDaelsTracker = title === "Resources Tracker";
+        const [totalMinValue, totalMaxValue] = this.totalValue(
+            offlineProgressBox,
+            isDaelsTracker ? (itemNode) => JSON.parse(atob(itemNode.dataset.item)).stackSize : undefined,
+            isDaelsTracker ? (itemNode) => JSON.parse(atob(itemNode.dataset.item)).itemID : undefined
+        );
 
         /* Offline Time
             - Offline Tracker:
@@ -185,8 +191,6 @@ class PopupTracker {
             - Dael's Tracker:
             Just use the scrapped time.
         */
-        const title = document.getElementsByClassName("MuiTypography-root MuiTypography-h6")[0].innerText;
-        const isDaelsTracker = title === "Resources Tracker";
         const offlineTimeScrappedString = offlineProgressBox.previousElementSibling.innerText;
         const [offlineTimeScrapped, offlineTimeScrappedScale] = parseTimeString(offlineTimeScrappedString, true);
         let offlineTime;
@@ -238,7 +242,10 @@ class PopupTracker {
                 return 1;
             }
         });
-        if (chestAmounts.length !== this.chestAmounts.length || chestAmounts.some((value, index) => value !== this.chestAmounts[index])) {
+        if (
+            chestAmounts.length !== this.chestAmounts.length ||
+            chestAmounts.some((value, index) => value !== this.chestAmounts[index])
+        ) {
             const existingInfoBoxes = document.getElementsByClassName("chest-info-box");
             for (let i = existingInfoBoxes.length - 1; i >= 0; i--) {
                 existingInfoBoxes[i].remove();
@@ -306,7 +313,8 @@ class PopupTracker {
                 return;
             }
         }
-        const [totalMinValue, totalMaxValue] = this.totalValue(resourcePopup, (percentString) => {
+        const [totalMinValue, totalMaxValue] = this.totalValue(resourcePopup, (itemNode) => {
+            const percentString = itemNode.getElementsByClassName("centered")[0].innerText;
             if (percentString === "???" || percentString.endsWith("Rarity")) return 0;
             return parseFloat(percentString) / 100;
         });
@@ -350,29 +358,33 @@ class PopupTracker {
         return template;
     }
 
-    totalValue(itemBox, parse = parseCompactNumberString) {
+    totalValue(itemBox, parseCount = undefined, parseApiId = undefined) {
         const items = {};
         for (let itemNode of itemBox.childNodes) {
-            const itemId = convertItemId(itemNode.getElementsByClassName("item-icon")[0].src);
-            if (!this.settings.include_gold && itemId === "money_icon") {
+            const apiId = parseApiId !== undefined ? parseApiId(itemNode) : convertApiId(itemNode);
+            if (!apiId) continue;
+            // Specifically allow type conversion to string here
+            if (!this.settings.include_gold && apiId == 1) {
                 continue;
             }
-            const itemCount = parse(itemNode.getElementsByClassName("centered")[0].innerText);
+            const itemCount =
+                parseCount !== undefined
+                    ? parseCount(itemNode)
+                    : parseCompactNumberString(itemNode.getElementsByClassName("centered")[0]?.innerText ?? "1");
             // adds to existing count if itemId already occured
-            items[itemId] ??= 0;
-            items[itemId] += itemCount;
+            items[apiId] ??= 0;
+            items[apiId] += itemCount;
         }
         // filter out items with 0 count
-        for (let itemId in items) {
-            if (items[itemId] === 0) {
-                delete items[itemId];
+        for (let apiId in items) {
+            if (items[apiId] === 0) {
+                delete items[apiId];
             }
         }
 
-        const itemValues = this.storage.analyzeItems(Object.keys(items));
+        const { minPrices, maxPrices, vendorPrices } = this.storage.analyzeItems(Object.keys(items));
         const itemCounts = Object.values(items);
 
-        const { minPrices, maxPrices, vendorPrices } = itemValues;
         const sanitizedMinPrices = minPrices.map((price) => (isNaN(price) ? 0 : price));
         const sanitizedMaxPrices = maxPrices.map((price) => (isNaN(price) ? 0 : price));
         const sanitizedVendorPrices = vendorPrices.map((price) => (isNaN(price) ? 0 : price));

@@ -88,7 +88,6 @@ class Templates {
      * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
      * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
      * @param {Number=} secondsPerAction only required if profitType is `per_hour`
-     * @param {Number=} chance chance to successfully craft the product
      * @returns {string} html string
      */
     static infoTableTemplate(
@@ -100,7 +99,6 @@ class Templates {
         compactDisplay = false,
         showCounts = false,
         secondsPerAction = null,
-        chance = 1,
         classes = ""
     ) {
         const [minColumn, medianColumn, maxColumn] = columns;
@@ -129,45 +127,48 @@ class Templates {
             profitType,
             showCounts
         );
-        const minPrice = minColumn ? Templates.infoTableRow(
-            classId,
-            ingredientMinPrices,
-            ingredientCounts,
-            productMinPrice,
-            productVendorPrice,
-            productCount,
-            profitType,
-            compactDisplay,
-            secondsPerAction,
-            chance,
-            compactDisplay ? "Min" : "Minimal Marketprice"
-        ) : "";
-        const medianPrice = medianColumn ? Templates.infoTableRow(
-            classId,
-            ingredientMedianPrices,
-            ingredientCounts,
-            productMedianPrices,
-            productVendorPrice,
-            productCount,
-            profitType,
-            compactDisplay,
-            secondsPerAction,
-            chance,
-            compactDisplay ? "Median" : "Median Marketprice"
-        ) : "";
-        const maxPrice = maxColumn ? Templates.infoTableRow(
-            classId,
-            ingredientMaxPrices,
-            ingredientCounts,
-            productMaxPrice,
-            productVendorPrice,
-            productCount,
-            profitType,
-            compactDisplay,
-            secondsPerAction,
-            chance,
-            compactDisplay ? "Max" : "Maximal Marketprice"
-        ) : "";
+        const minPrice = minColumn
+            ? Templates.infoTableRow(
+                  classId,
+                  ingredientMinPrices,
+                  ingredientCounts,
+                  productMinPrice,
+                  productVendorPrice,
+                  productCount,
+                  profitType,
+                  compactDisplay,
+                  secondsPerAction,
+                  compactDisplay ? "Min" : "Minimal Marketprice"
+              )
+            : "";
+        const medianPrice = medianColumn
+            ? Templates.infoTableRow(
+                  classId,
+                  ingredientMedianPrices,
+                  ingredientCounts,
+                  productMedianPrices,
+                  productVendorPrice,
+                  productCount,
+                  profitType,
+                  compactDisplay,
+                  secondsPerAction,
+                  compactDisplay ? "Median" : "Median Marketprice"
+              )
+            : "";
+        const maxPrice = maxColumn
+            ? Templates.infoTableRow(
+                  classId,
+                  ingredientMaxPrices,
+                  ingredientCounts,
+                  productMaxPrice,
+                  productVendorPrice,
+                  productCount,
+                  profitType,
+                  compactDisplay,
+                  secondsPerAction,
+                  compactDisplay ? "Max" : "Maximal Marketprice"
+              )
+            : "";
         return `
             <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
             ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
@@ -239,7 +240,6 @@ class Templates {
         profitType,
         compactDisplay,
         secondsPerAction,
-        chance,
         label
     ) {
         let row = Templates.infoTableCell(classId, label);
@@ -253,7 +253,7 @@ class Templates {
             )
             .join("");
         // Total crafting cost
-        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts) / chance;
+        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts);
         const betterToVendor = profit("flat", productVendorPrice, productPrice) < 0;
         const betterPrice = betterToVendor ? productVendorPrice : productPrice;
         const totalProductPrice = betterPrice * productCount;
@@ -530,5 +530,14 @@ class Templates {
             toggle.classList.toggle("accordion-toggle-open");
         });
         return toggle;
+    }
+
+    // FaScissors from React Icons
+    static scissorTemplate(identifier, classes = "") {
+        return `
+            <svg id="${identifier}" class="${classes}" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"">
+                <path d="M256 192l-39.5-39.5c4.9-12.6 7.5-26.2 7.5-40.5C224 50.1 173.9 0 112 0S0 50.1 0 112s50.1 112 112 112c14.3 0 27.9-2.7 40.5-7.5L192 256l-39.5 39.5c-12.6-4.9-26.2-7.5-40.5-7.5C50.1 288 0 338.1 0 400s50.1 112 112 112s112-50.1 112-112c0-14.3-2.7-27.9-7.5-40.5L499.2 76.8c7.1-7.1 7.1-18.5 0-25.6c-28.3-28.3-74.1-28.3-102.4 0L256 192zm22.6 150.6L396.8 460.8c28.3 28.3 74.1 28.3 102.4 0c7.1-7.1 7.1-18.5 0-25.6L342.6 278.6l-64 64zM64 112a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm48 240a48 48 0 1 1 0 96 48 48 0 1 1 0-96z">
+                </path>
+            </svg>`;
     }
 }

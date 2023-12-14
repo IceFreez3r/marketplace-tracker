@@ -194,15 +194,13 @@ body .scrollcrafting-container {
                 false,
                 false,
                 standardResources.timePerAction,
-                standardResources.chance
             )
         );
     }
 
     getStandardResources(node) {
         return {
-            scrolls: this.getResource(node.childNodes[3].firstChild).amount,
-            chance: parseFloat(this.getResource(node.childNodes[2].firstChild).amount) / 100,
+            scrolls: this.getResource(node.childNodes[2].firstChild).amount,
             timePerAction: parseFloat(this.getResource(node.childNodes[1].firstChild).amount),
         };
     }
