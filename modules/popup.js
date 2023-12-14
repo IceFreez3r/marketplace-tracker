@@ -362,6 +362,7 @@ class PopupTracker {
         const items = {};
         for (let itemNode of itemBox.childNodes) {
             const apiId = parseApiId !== undefined ? parseApiId(itemNode) : convertApiId(itemNode);
+            if (!apiId) continue;
             // Specifically allow type conversion to string here
             if (!this.settings.include_gold && apiId == 1) {
                 continue;
@@ -369,7 +370,7 @@ class PopupTracker {
             const itemCount =
                 parseCount !== undefined
                     ? parseCount(itemNode)
-                    : parseCompactNumberString(itemNode.getElementsByClassName("centered")[0].innerText);
+                    : parseCompactNumberString(itemNode.getElementsByClassName("centered")[0]?.innerText ?? "1");
             // adds to existing count if itemId already occured
             items[apiId] ??= 0;
             items[apiId] += itemCount;
