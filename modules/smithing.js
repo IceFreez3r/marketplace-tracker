@@ -160,7 +160,7 @@ class SmithingTracker {
         const outputContainer = smithingInfo.getElementsByClassName("smithing-information-output")[0];
         // game reuses the input css classes for the output
         const outputs = outputContainer.getElementsByClassName("smithing-information-input");
-        const productId = convertApiId(outputs[0]);
+        const productApiId = convertApiId(outputs[0]);
         const productIcon = outputs[0].getElementsByClassName("smithing-information-input-icon")[0].src;
         let productCount = parseInt(outputs[0].getElementsByClassName("smithing-information-input-amount")[0].innerText);
         // more than one output -> second one is chance to get an extra bar
@@ -168,7 +168,7 @@ class SmithingTracker {
             productCount += parseInt(outputs[1].getElementsByClassName("smithing-information-input-owned")[0].childNodes[2].textContent) / 100;
         }
 
-        const recipePrices = this.storage.handleRecipe(ingredientApiIds, productId);
+        const recipePrices = this.storage.handleRecipe(ingredientApiIds, productApiId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientCounts });
         if (!forceUpdate && deepCompare(this.ingredients, ingredients)) {
             return;

@@ -221,7 +221,7 @@ class Storage {
      */
     analyzeItem(apiId) {
         apiId = Number(apiId);
-        if (isNaN(apiId)) {
+        if (isNaN(apiId) || apiId === 0) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
