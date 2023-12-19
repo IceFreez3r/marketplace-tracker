@@ -245,9 +245,13 @@ function deepCompare(object1, object2) {
     return JSON.stringify(object1) === JSON.stringify(object2);
 }
 
-function getSkillLevel(skill, total) {
+function getSkillLevel(skill, total, effective = false) {
     const skillElement = document.getElementsByClassName(`anchor-levels-${skill}`)[0];
     if (!skillElement) return 99;
+    if (effective) {
+        const effectiveLevel = skillElement.getElementsByClassName("anchor-levels-effective-level")[0].innerText;
+        return parseInt(effectiveLevel);
+    }
     const level = skillElement.getElementsByClassName("anchor-levels-level")[0].innerText;
     if (!total) return parseInt(level);
     const masteryLevel = skillElement.getElementsByClassName("anchor-levels-mastery-level")[0].innerText;

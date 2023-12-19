@@ -173,11 +173,11 @@ body .runecrafting-essence-counter {
     processRecipe(recipe, activeTab, activeTalisman) {
         recipe.getElementsByClassName("runecrafting-info-table")[0]?.remove();
 
-        const productId = convertItemId(recipe.getElementsByClassName("resource-as-row-image")[0].src);
+        const productApiId = convertApiId(recipe);
         const productIcon = recipe.getElementsByClassName("resource-as-row-image")[0].src;
 
         const resources = recipe.getElementsByClassName("resource-node-time-tooltip"); // very interesting class name
-        const ingredientIds = [];
+        const ingredientApiIds = [];
         const ingredientIcons = [];
         const ingredientAmounts = [];
         let timePerAction = 0;
@@ -196,13 +196,13 @@ body .runecrafting-essence-counter {
                 experiencePerAction = parseInt(resource.childNodes[1].innerText);
                 continue;
             }
-            ingredientIds.push(ingredientId);
+            ingredientApiIds.push(convertApiId(resource));
             ingredientIcons.push(resource.firstElementChild.src);
             ingredientAmounts.push(parseInt(resource.childNodes[1].innerText));
         }
         const productAmount = this.productAmount(activeTab, activeTalisman);
 
-        const recipePrices = this.storage.handleRecipe(ingredientIds, productId);
+        const recipePrices = this.storage.handleRecipe(ingredientApiIds, productApiId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientAmounts });
         const product = Object.assign(recipePrices.product, { icon: productIcon, count: productAmount });
         saveInsertAdjacentHTML(
@@ -226,7 +226,7 @@ body .runecrafting-essence-counter {
             return 1;
         }
         if (activeTab === "Runecrafting") {
-            return 1 + getSkillLevel("runecrafting", true) / 20 + activeTalisman;
+            return 1 + getSkillLevel("runecrafting", false, true) / 20 + activeTalisman;
         }
     }
 }

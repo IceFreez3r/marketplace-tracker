@@ -88,6 +88,7 @@ class Templates {
      * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
      * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
      * @param {Number=} secondsPerAction only required if profitType is `per_hour`
+     * @param {string=} classes additional css classes
      * @returns {string} html string
      */
     static infoTableTemplate(

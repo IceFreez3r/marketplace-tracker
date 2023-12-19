@@ -268,7 +268,7 @@ class MarketplaceTracker {
             return;
         }
         const apiId = convertApiId(marketplaceTableHeader.childNodes[2]);
-        const analysis = this.storage.analyzeItem(null, apiId);
+        const analysis = this.storage.analyzeItem(apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
         saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(apiId, analysis));

@@ -145,22 +145,22 @@ class SmithingTracker {
     smithingTracker(forceUpdate = false) {
         const smithingInfo = document.getElementsByClassName("smithing-information")[0];
         const inputContainer = smithingInfo.getElementsByClassName("smithing-information-inputs")[0];
-        const inputs = inputContainer.getElementsByClassName("smithing-information-input");
-        const ingredientIds = [];
+        const inputs = inputContainer.getElementsByClassName("anchor-resource-cost");
+        const ingredientApiIds = [];
         const ingredientIcons = [];
         const ingredientCounts = [];
         for (const input of inputs) {
-            ingredientIds.push(convertItemId(input.getElementsByClassName("smithing-information-input-icon")[0].src));
-            ingredientIcons.push(input.getElementsByClassName("smithing-information-input-icon")[0].src);
+            ingredientApiIds.push(convertApiId(input));
+            ingredientIcons.push(input.getElementsByClassName("anchor-resource-cost-icon")[0].src);
             ingredientCounts.push(
-                parseCompactNumberString(input.getElementsByClassName("smithing-information-input-amount")[0].innerText)
+                parseCompactNumberString(input.getElementsByClassName("anchor-resource-cost-amount")[0].innerText)
             );
         }
 
         const outputContainer = smithingInfo.getElementsByClassName("smithing-information-output")[0];
         // game reuses the input css classes for the output
         const outputs = outputContainer.getElementsByClassName("smithing-information-input");
-        const productId = convertItemId(outputs[0].getElementsByClassName("smithing-information-input-icon")[0].src);
+        const productApiId = convertApiId(outputs[0]);
         const productIcon = outputs[0].getElementsByClassName("smithing-information-input-icon")[0].src;
         let productCount = parseInt(outputs[0].getElementsByClassName("smithing-information-input-amount")[0].innerText);
         // more than one output -> second one is chance to get an extra bar
@@ -168,7 +168,7 @@ class SmithingTracker {
             productCount += parseInt(outputs[1].getElementsByClassName("smithing-information-input-owned")[0].childNodes[2].textContent) / 100;
         }
 
-        const recipePrices = this.storage.handleRecipe(ingredientIds, productId);
+        const recipePrices = this.storage.handleRecipe(ingredientApiIds, productApiId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientCounts });
         if (!forceUpdate && deepCompare(this.ingredients, ingredients)) {
             return;
