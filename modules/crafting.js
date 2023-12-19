@@ -83,7 +83,7 @@ class CraftingTracker {
         }
         this.cssNode = injectCSS(this.css);
 
-        this.lastCraftedItemId = null;
+        this.lastCraftedApiId = null;
         this.lastSelectedNavTab = null;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
@@ -177,13 +177,13 @@ class CraftingTracker {
     craftingTracker(forceUpdate = false) {
         let recipeNode = document.getElementsByClassName("crafting-recipe")[0];
         if (!recipeNode) {
-            this.lastCraftedItemId = null;
+            this.lastCraftedApiId = null;
             return;
         }
         const craftedItem = recipeNode.querySelector(".crafting-item-icon > .item");
         const craftedApiId = convertApiId(craftedItem);
         // prevent repeated calls
-        if (!forceUpdate && craftedApiId === this.lastCraftedItemId) {
+        if (!forceUpdate && craftedApiId === this.lastCraftedApiId) {
             // for items with multiple recipes
             const selectedNavTab = recipeNode.getElementsByClassName("selected-tab")[0];
             if (!selectedNavTab) {
@@ -194,7 +194,7 @@ class CraftingTracker {
             }
             this.lastSelectedNavTab = selectedNavTab.innerText;
         }
-        this.lastCraftedItemId = craftedApiId;
+        this.lastCraftedApiId = craftedApiId;
         const craftedItemIcon = craftedItem.getElementsByTagName("img")[0].src;
         const craftingAmount = parseInt(document.getElementById("craftCount").firstChild.value);
         const productCount = parseInt(document.querySelector(".crafting-item-icon > .centered")?.textContent) ?? 1;
