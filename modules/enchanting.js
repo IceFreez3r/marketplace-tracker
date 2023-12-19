@@ -155,10 +155,7 @@ body .scrollcrafting-container {
 
     processEnchantment(recipe) {
         recipe.getElementsByClassName("enchanting-info-table")[0]?.remove();
-        let scrollId = convertItemId(recipe.firstChild.src);
-        if (this.storage.itemRequiresFallback(scrollId)) {
-            scrollId = recipe.childNodes[1].innerText;
-        }
+        let scrollApiId = convertApiId(recipe);
         const scrollIcon = recipe.firstChild.src;
 
         let standardResources = this.getStandardResources(
@@ -168,15 +165,16 @@ body .scrollcrafting-container {
             recipe.getElementsByClassName("scrollcrafting-dynamic-resources")[0]
         );
         // combine lists of objects into separate lists
-        // "Scroll" is the fallback item id for the scroll, some ability books also use the same icon
-        let resourceItemIds = ["Scroll"].concat(dynamicResources.map((resource) => resource.itemId));
+        let resourceApiIds = ["1600"].concat(
+            dynamicResources.map((resource) => resource.apiId)
+        );
         let resourceItemIcons = ["/images/enchanting/scroll.png"].concat(
             dynamicResources.map((resource) => resource.icon)
         );
         let resourceItemCounts = [standardResources.scrolls].concat(
             dynamicResources.map((resource) => resource.amount)
         );
-        const recipePrices = this.storage.handleRecipe(resourceItemIds, scrollId);
+        const recipePrices = this.storage.handleRecipe(resourceApiIds, scrollApiId);
         const ingredients = Object.assign(recipePrices.ingredients, {
             icons: resourceItemIcons,
             counts: resourceItemCounts,
@@ -215,7 +213,7 @@ body .scrollcrafting-container {
 
     getResource(node) {
         return {
-            itemId: convertItemId(node.childNodes[0].src),
+            apiId: convertApiId(node),
             icon: node.childNodes[0].src,
             amount: node.childNodes[1].innerText,
         };

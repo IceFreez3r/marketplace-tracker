@@ -93,13 +93,15 @@ class Storage {
             this.latestPriceList[apiId] = data[i].minPrice;
         }
         const currentHeatValue = this.heatValue();
-        if (this.lastAPIFetch !== timestamp) {
-            // prevent duplicate entries
-            this.marketHistory[2].push([timestamp, currentHeatValue.heatValue]);
-            this.sortPriceList(2);
-            this.storeItemList();
+        if (currentHeatValue.heatValue !== Infinity) {
+            if (this.lastAPIFetch !== timestamp) {
+                // prevent duplicate entries
+                this.marketHistory[2].push([timestamp, currentHeatValue.heatValue]);
+                this.sortPriceList(2);
+                this.storeItemList();
+            }
+            this.latestPriceList[2] = currentHeatValue.heatValue;
         }
-        this.latestPriceList[2] = currentHeatValue.heatValue;
         this.lastAPIFetch = timestamp;
         localStorage.setItem(this.storageKeys.lastAPIFetch + this.leagueId, timestamp);
     }
@@ -136,10 +138,10 @@ class Storage {
         return Infinity;
     }
 
-    handleRecipe(ingredientItemIds, productItemId) {
+    handleRecipe(ingredientApiIds, productApiId) {
         return {
-            ingredients: this.analyzeItems(ingredientItemIds),
-            product: this.analyzeItem(productItemId),
+            ingredients: this.analyzeItems(ingredientApiIds),
+            product: this.analyzeItem(productApiId),
         };
     }
 
@@ -214,13 +216,20 @@ class Storage {
 
     /**
      *
-     * @param {number | null} itemId The itemId to analyze
-     * @param {number | null} forceApiId Leave null to use the itemId, otherwise use this as the apiId
+     * @param {string | number} apiId The apiId to analyze
      * @returns {object} An object containing the min, median, max and vendor price of the item
      */
-    analyzeItem(itemId, forceApiId = null) {
-        // Specifically allow type conversion to string here
-        if (itemId === "money_icon" || forceApiId == 1) {
+    analyzeItem(apiId) {
+        apiId = Number(apiId);
+        if (isNaN(apiId)) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+                vendorPrice: NaN,
+            };
+        }
+        if (apiId === 1) {
             return {
                 minPrice: 1,
                 medianPrice: 1,
@@ -228,22 +237,16 @@ class Storage {
                 vendorPrice: NaN,
             };
         }
-        if (itemId?.endsWith("_essence")) {
-            const talismanAnalysis = this.analyzeItem(itemId.replace("_essence", "_talisman"));
+        const essenceIds = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        if (essenceIds.includes(apiId)) {
+            const talismanIds = [500, 501, 502, 503, 504, 505, 506, 507, 508, 509];
+            const talismanId = talismanIds[essenceIds.indexOf(apiId)];
+            const talismanAnalysis = this.analyzeItem(talismanId);
             const essencePerTalisman = (35000 + 50000) / 2;
             return {
                 minPrice: talismanAnalysis.minPrice / essencePerTalisman,
                 medianPrice: talismanAnalysis.medianPrice / essencePerTalisman,
                 maxPrice: talismanAnalysis.maxPrice / essencePerTalisman,
-                vendorPrice: NaN,
-            };
-        }
-        const apiId = forceApiId ?? this.idMap[itemId];
-        if (apiId === undefined || apiId === -1) {
-            return {
-                minPrice: NaN,
-                medianPrice: NaN,
-                maxPrice: NaN,
                 vendorPrice: NaN,
             };
         }
@@ -267,7 +270,7 @@ class Storage {
     }
 
     analyzeItems(apiIds) {
-        const analysisArray = apiIds.map((apiId) => this.analyzeItem(null, apiId));
+        const analysisArray = apiIds.map((apiId) => this.analyzeItem(apiId));
         return {
             minPrices: analysisArray.map((analysis) => analysis.minPrice),
             medianPrices: analysisArray.map((analysis) => analysis.medianPrice),
