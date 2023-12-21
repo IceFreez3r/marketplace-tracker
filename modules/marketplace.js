@@ -160,6 +160,9 @@ class MarketplaceTracker {
         if (this.settings.editMode === undefined) {
             this.settings.editMode = 0;
         }
+        if (this.settings.colorBlindMode === undefined) {
+            this.settings.colorBlindMode = 0;
+        }
         this.cssNode = injectCSS(this.css);
         this.historyCssNode = undefined;
         this.settingChanged("history", this.settings.history);
@@ -192,6 +195,13 @@ class MarketplaceTracker {
     }
 
     settingsMenuContent() {
+        const colorBlindMode = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Colorblind mode
+                </div>
+                ${Templates.checkboxTemplate(MarketplaceTracker.id + "-colorBlindMode", this.settings.colorBlindMode)}
+            </div>`;
         const history = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
@@ -213,7 +223,7 @@ class MarketplaceTracker {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + "-editMode", this.settings.editMode)}
             </div>`;
-        return history + vendorWarning + editMode;
+        return colorBlindMode + history + vendorWarning + editMode;
     }
 
     settingChanged(setting, value) {
@@ -277,7 +287,7 @@ class MarketplaceTracker {
             document.getElementById("tracker-edit-mid").addEventListener("click", () => this.editData(apiId, "mid"));
             document.getElementById("tracker-edit-high").addEventListener("click", () => this.editData(apiId, "high"));
         }
-        this.markOffers(analysis.maxPrice);
+        this.markOffers(apiId);
         // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
@@ -324,17 +334,17 @@ class MarketplaceTracker {
         this.scanOfferList();
     }
 
-    markOffers(maxPrice) {
-        const offers = document.querySelectorAll(".market-buy > .marketplace-table-row");
+    markOffers(apiId) {
+        const header = document.querySelector(".market-buy .marketplace-table-header");
+        const priceColumnIndex = Array.from(header.childNodes).findIndex((node) => node.innerText.startsWith("Price"));
+        const offers = document.querySelectorAll(".market-buy .marketplace-table-row");
         for (const offer of offers) {
-            offer.classList.remove("marketplace-offer-low", "marketplace-offer-medium", "marketplace-offer-high");
-            const offerPrice = parseNumberString(offer.childNodes[3].innerText);
-            if (offerPrice < maxPrice * 0.6) {
-                offer.classList.add("marketplace-offer-low");
-            } else if (offerPrice < maxPrice * 0.8) {
-                offer.classList.add("marketplace-offer-medium");
-            } else if (offerPrice < maxPrice * 0.95) {
-                offer.classList.add("marketplace-offer-high");
+            const offerPrice = parseNumberString(offer.childNodes[priceColumnIndex].innerText);
+            const quantile = this.storage.priceQuantile(apiId, offerPrice);
+            if (offer.classList.contains("marketplace-own-listing")) {
+                offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(quantile, this.settings.colorBlindMode)}, inset 7px 0 0 green`;
+            } else {
+                offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(quantile, this.settings.colorBlindMode)}`;
             }
         }
     }

@@ -283,19 +283,23 @@ class Storage {
         return this.latestPriceList;
     }
 
+    priceQuantile(apiId, price) {
+        if (this.marketHistory[apiId].length <= 1) {
+            return 1;
+        }
+        const index = this.marketHistory[apiId].findIndex((priceTuple) => priceTuple[1] >= price);
+        if (index === -1) {
+            return 1;
+        }
+        return index / (this.marketHistory[apiId].length - 1);
+    }
+
     latestPriceQuantiles(apiIds) {
         return apiIds.map((apiId) => {
-            if (this.marketHistory[apiId].length <= 1) {
-                return 1;
+            if (apiId in this.latestPriceList) {
+                return this.priceQuantile(apiId, this.latestPriceList[apiId]);
             }
-            const index = this.marketHistory[apiId].findLastIndex(
-                (priceTuple) => priceTuple[1] === this.latestPriceList[apiId]
-            );
-            if (index === -1) {
-                console.log("Couldn't find latest price in price list. How can this happen?");
-                return 1;
-            }
-            return index / (this.marketHistory[apiId].length - 1);
+            return 1;
         });
     }
 

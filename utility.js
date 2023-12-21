@@ -287,3 +287,11 @@ function getPlayAreaContainer() {
     }
     return undefined;
 }
+
+function getHSLColor(quantile, colorBlindMode = false) {
+    let hue = 120 * (1 - quantile);
+    if (colorBlindMode) {
+        hue = 360 - hue * 1.5;
+    }
+    return `hsl(${hue}, 80%, 40%)`;
+}
