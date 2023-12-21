@@ -162,6 +162,9 @@ class MarketHighlights {
         }
         this.migrateFavorites();
         this.favorites = this.settings.favorites;
+        if (this.settings.colorBlindMode === undefined) {
+            this.settings.colorBlindMode = false;
+        }
         this.cssNode = injectCSS(this.css);
 
         this.favoriteFilterActive = false;
@@ -187,6 +190,13 @@ class MarketHighlights {
     }
 
     settingsMenuContent() {
+        let colorBlindMode = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Colorblind mode
+                </div>
+                ${Templates.checkboxTemplate(MarketHighlights.id + "-colorBlindMode", this.settings.colorBlindMode)}
+            </div>`;
         let quantileDisplay = document.createElement("div");
         quantileDisplay.classList.add("tracker-module-setting");
         quantileDisplay.insertAdjacentHTML(
@@ -229,7 +239,7 @@ class MarketHighlights {
         // add onchange listener to slider
         let slider = markerSize.querySelector("input");
         slider.addEventListener("input", this.updatePreview.bind(this));
-        return [quantileDisplay, markerSize];
+        return [colorBlindMode, quantileDisplay, markerSize];
     }
 
     settingChanged(settingId, value) {
@@ -437,7 +447,10 @@ class MarketHighlights {
     }
 
     getHSLColor(quantile) {
-        const hue = 120 * (1 - quantile);
+        let hue = 120 * (1 - quantile);
+        if (this.settings.colorBlindMode) {
+            hue = 360 - (hue * 1.5);
+        }
         return `hsl(${hue}, 80%, 40%)`;
     }
 
