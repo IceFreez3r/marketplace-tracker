@@ -287,7 +287,7 @@ class Storage {
         if (this.marketHistory[apiId].length <= 1) {
             return 1;
         }
-        const index = this.marketHistory[apiId].findIndex((priceTuple) => priceTuple[1] >= price);
+        const index = this.marketHistory[apiId].findLastIndex((priceTuple) => priceTuple[1] <= price);
         if (index === -1) {
             return 1;
         }
