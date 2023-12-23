@@ -410,7 +410,7 @@ class MarketHighlights {
                 for (let i = 0; i < items.length; i++) {
                     const item = items[i];
                     const quantile = priceQuantiles[i];
-                    const color = this.getHSLColor(quantile);
+                    const color = getHSLColor(quantile, this.settings.colorBlindMode);
                     item.style.backgroundImage = "url(/images/ui/frame_box.png), linear-gradient(#1c2024, #1c2024)";
                     if (this.settings.quantileDisplay === "dot") {
                         this.quantileDot(item, color);
@@ -446,14 +446,6 @@ class MarketHighlights {
         }
     }
 
-    getHSLColor(quantile) {
-        let hue = 120 * (1 - quantile);
-        if (this.settings.colorBlindMode) {
-            hue = 360 - (hue * 1.5);
-        }
-        return `hsl(${hue}, 80%, 40%)`;
-    }
-
     partyMode(items, priceQuantiles, offset = 0) {
         // Stop if item is no longer in DOM
         if (!this.quantileColorsActive || !items[0].parentNode) {
@@ -464,7 +456,7 @@ class MarketHighlights {
         for (let i = 0; i < items.length && i < priceQuantiles.length; i++) {
             const item = items[i];
             const quantile = (priceQuantiles[i] + offset) % 3;
-            const color = this.getHSLColor(quantile);
+            const color = getHSLColor(quantile, this.settings.colorBlindMode);
             item.style.border = `3px solid ${color}`;
             this.quantileDot(item, color);
             item.getElementsByClassName("item-icon")[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;

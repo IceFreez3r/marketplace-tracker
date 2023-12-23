@@ -188,6 +188,10 @@ body .runecrafting-essence-counter {
                 // required runecrafting level, irrelevant for us
                 continue;
             }
+            if (ingredientId === "imbued_elder_cloth") {
+                // dungeon drop chance, irrelevant for us
+                continue;
+            }
             if (ingredientId === "clock") {
                 timePerAction = parseFloat(resource.childNodes[1].innerText);
                 continue;
