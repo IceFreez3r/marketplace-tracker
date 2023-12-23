@@ -197,7 +197,7 @@ class CraftingTracker {
         this.lastCraftedApiId = craftedApiId;
         const craftedItemIcon = craftedItem.getElementsByTagName("img")[0].src;
         const craftingAmount = parseInt(document.getElementById("craftCount").firstChild.value);
-        const productCount = parseInt((document.querySelector(".crafting-item-icon .centered") ?? 1).textContent) ?? 1;
+        const productCount = parseInt(document.querySelector(".crafting-item-icon .centered")?.textContent ?? 1);
 
         const resourceItemNodes = recipeNode.getElementsByClassName("anchor-resource-cost");
         let resourceApiIds = [];
