@@ -284,12 +284,12 @@ class Storage {
     }
 
     priceQuantile(apiId, price) {
-        if (this.marketHistory[apiId].length <= 1) {
+        if (!this.marketHistory[apiId] || this.marketHistory[apiId].length <= 1) {
             return 1;
         }
         const index = this.marketHistory[apiId].findLastIndex((priceTuple) => priceTuple[1] <= price);
         if (index === -1) {
-            return 1;
+            return 0;
         }
         return index / (this.marketHistory[apiId].length - 1);
     }

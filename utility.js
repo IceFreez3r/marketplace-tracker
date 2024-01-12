@@ -9,6 +9,7 @@ function convertItemId(itemName) {
 function convertApiId(element) {
     const apiId = element.dataset.itemid;
     if (!apiId) {
+        // throw new Error("No apiId found on element: " + element);
         console.error("Bad element passed to convertApiId: " + element);
         return null;
     }

@@ -277,7 +277,8 @@ class MarketplaceTracker {
         if (!marketplaceTableHeader) {
             return;
         }
-        const apiId = convertApiId(marketplaceTableHeader.childNodes[2]);
+        const apiId = convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
+        if (!apiId) return;
         const analysis = this.storage.analyzeItem(apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
