@@ -64,96 +64,11 @@ class MarketplaceTracker {
     color: rgb(128, 0, 0);
 }
     `;
-    historyCss = `
-.marketplace-history:not(.anchor-marketplace-history-modmode) {
-    display: none;
-}
-
-.tracker-history {
-    display: grid;
-    grid-template-columns: max-content 1fr repeat(3, minmax(max-content, 0.4fr));
-    overflow-y: auto;
-    flex: 1 1;
-    border-radius: 6px 6px 0 0;
-}
-
-.tracker-history > :not(.marketplace-history-item-price, .marketplace-history-item-icon) {
-    border-right: 2px solid #2c2c2c;
-}
-
-.tracker-history > * {
-    background: #494949;
-}
-
-/* Alternating background */
-.tracker-history > :nth-child(10n-4),
-.tracker-history > :nth-child(10n-3),
-.tracker-history > :nth-child(10n-2),
-.tracker-history > :nth-child(10n-1),
-.tracker-history > :nth-child(10n) {
-    background: #3b3b3b;
-}
-
-.tracker-history > :not(.tracker-history-header) {
-    padding: 15px 10px;
-}
-
-.tracker-history-header {
-    text-align: center;
-    line-height: 22px;
-}
-
-.tracker-history .marketplace-history-item-date-i {
-    flex: unset;
-}
-
-.tracker-history .marketplace-history-item-date,
-.tracker-history .marketplace-history-item-name,
-.tracker-history .marketplace-history-item-amount {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.tracker-history .marketplace-history-item-name {
-    justify-content: start;
-}
-
-.tracker-history .marketplace-history-item-per-item.purchase {
-    color: #fa4d4d;
-}
-
-.tracker-history .marketplace-history-item-per-item.sale {
-    color: #4eff4e;
-}
-
-.tracker-history .marketplace-history-item-amount,
-.tracker-history .marketplace-history-item-price {
-    line-height: unset;
-}
-
-.tracker-history .marketplace-history-item-price-tax {
-    margin-top: -3px;
-    width: 16px;
-    height: 16px;
-}
-
-.tracker-history .marketplace-history-item-per-item,
-.tracker-history .marketplace-history-item-price {
-    display: flex;
-    flex-direction: column;
-    align-items: end;
-    justify-content: center;
-}
-    `;
 
     constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
         this.storage = storage;
-        if (this.settings.history === undefined) {
-            this.settings.history = 1;
-        }
         if (this.settings.vendorWarning === undefined) {
             this.settings.vendorWarning = 1;
         }
@@ -164,10 +79,6 @@ class MarketplaceTracker {
             this.settings.colorBlindMode = 0;
         }
         this.cssNode = injectCSS(this.css);
-        this.historyCssNode = undefined;
-        this.settingChanged("history", this.settings.history);
-
-        this.lastHistoryPage = 0;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
             this.playAreaObserver.disconnect();
@@ -202,13 +113,6 @@ class MarketplaceTracker {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + "-colorBlindMode", this.settings.colorBlindMode)}
             </div>`;
-        const history = `
-            <div class="tracker-module-setting">
-                <div class="tracker-module-setting-name">
-                    More infos in history
-                </div>
-                ${Templates.checkboxTemplate(MarketplaceTracker.id + "-history", this.settings.history)}
-            </div>`;
         const vendorWarning = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
@@ -223,18 +127,11 @@ class MarketplaceTracker {
                 </div>
                 ${Templates.checkboxTemplate(MarketplaceTracker.id + "-editMode", this.settings.editMode)}
             </div>`;
-        return colorBlindMode + history + vendorWarning + editMode;
+        return colorBlindMode + vendorWarning + editMode;
     }
 
     settingChanged(setting, value) {
         switch (setting) {
-            case "history":
-                if (value) {
-                    this.historyCssNode = injectCSS(this.historyCss);
-                } else {
-                    this.historyCssNode?.remove();
-                }
-                break;
             case "vendorWarning":
                 if (value) {
                     this.connectSellDialogChecker();
@@ -267,9 +164,6 @@ class MarketplaceTracker {
 
     marketplaceTracker() {
         this.scanOfferList();
-        if (this.settings.history) {
-            this.initMarketHistory();
-        }
     }
 
     scanOfferList() {
@@ -343,7 +237,10 @@ class MarketplaceTracker {
             const offerPrice = parseNumberString(offer.childNodes[priceColumnIndex].innerText);
             const quantile = this.storage.priceQuantile(apiId, offerPrice);
             if (offer.classList.contains("marketplace-own-listing")) {
-                offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(quantile, this.settings.colorBlindMode)}, inset 7px 0 0 green`;
+                offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(
+                    quantile,
+                    this.settings.colorBlindMode
+                )}, inset 7px 0 0 green`;
             } else {
                 offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(quantile, this.settings.colorBlindMode)}`;
             }
@@ -411,129 +308,6 @@ class MarketplaceTracker {
                     </div>
                 </div>
             </div>`;
-    }
-
-    // ###########################################################################
-
-    initMarketHistory() {
-        // Return if current page isn't the market history page
-        let history = document.getElementsByClassName("marketplace-history")[0];
-        if (!history) {
-            return;
-        }
-        // Return if the header isn't loaded yet
-        const header = document.getElementsByClassName("marketplace-history-header")[0];
-        if (!header) {
-            return;
-        }
-        this.marketHistory(history);
-        // Add observer to the original table
-        const observer = new MutationObserver((mutations) => {
-            this.marketHistory(history);
-        });
-        observer.observe(history, {
-            characterData: true,
-            subtree: true,
-        });
-    }
-
-    marketHistory(history) {
-        const oldTrackerHistory = document.getElementsByClassName("tracker-history")[0]; // might be undefined
-        let currentHistoryPage = document.getElementsByClassName("marketplace-history-page selected")[0]?.textContent;
-        currentHistoryPage = currentHistoryPage ?? "1";
-        // Return if the custom history already exists and the user has not changed the page
-        if (oldTrackerHistory && currentHistoryPage === this.lastHistoryPage) {
-            return;
-        }
-        // Delete old history if it exists
-        oldTrackerHistory?.remove();
-        // Create new table
-        history.insertAdjacentHTML(
-            "afterend",
-            `
-            <div class="tracker-history">
-                <div class="tracker-history-header">
-                    DATE
-                </div>
-                <div class="tracker-history-header">
-                    ITEM
-                </div>
-                <div class="tracker-history-header">
-                    QUANTITY
-                </div>
-                <div class="tracker-history-header">
-                    PER ITEM
-                </div>
-                <div class="tracker-history-header">
-                    TOTAL
-                </div>
-            </div>`
-        );
-        const trackerHistory = history.nextElementSibling;
-        // Copy and modify rows
-        const historyItems = history.getElementsByClassName("marketplace-history-item");
-        for (let item of historyItems) {
-            // Copy date, name and quantity
-            for (let i = 0; i < 3; i++) {
-                trackerHistory.insertAdjacentElement("beforeend", item.childNodes[i].cloneNode(true));
-            }
-            // Build new price per item and total
-            let itemId = convertItemId(item.childNodes[1].firstChild.src);
-            if (this.storage.itemRequiresFallback(itemId)) {
-                itemId = item.childNodes[1].textContent;
-            }
-            let itemQuantity = parseNumberString(item.childNodes[2].textContent);
-            if (
-                (itemId.includes("dagger") && !itemId.includes("beast_dagger") && !itemId.includes("shrimp_dagger")) ||
-                itemId.includes("boot") ||
-                itemId.includes("gloves") ||
-                itemId.includes("World_Walkers")
-            ) {
-                itemQuantity *= 2;
-            }
-            const totalDiv = item.childNodes[4];
-            const total = parseNumberString(totalDiv.textContent);
-            const type = totalDiv.classList[1]; // "purchase" or "sale"
-            saveInsertAdjacentHTML(
-                trackerHistory,
-                "beforeend",
-                `
-                <div class="marketplace-history-item-per-item ${type}">
-                    <div>
-                        ${formatNumber(total / itemQuantity, { showSign: true })}
-                        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
-                    </div>
-                    ${
-                        type === "sale"
-                            ? `
-                    <div>
-                        ~ ${formatNumber(profit("flat", 0, total / itemQuantity), { showSign: true })}
-                        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
-                    </div>
-                    `
-                            : ""
-                    }
-                </div>
-                <div class="marketplace-history-item-price ${type}">
-                    <div>
-                        ${formatNumber(total, { showSign: true })}
-                        <img class="marketplace-history-item-price-gold" src="images/gold_coin.png">
-                    </div>
-                    ${
-                        type === "sale"
-                            ? `
-                    <div>
-                        ${formatNumber(profit("flat", 0, total), { showSign: true })}
-                        <img class="marketplace-history-item-price-tax" src="/images/ui/marketplace_icon.png">
-                    </div>
-                    `
-                            : ""
-                    }
-                </div>`
-            );
-        }
-        // Save current history page
-        this.lastHistoryPage = currentHistoryPage;
     }
 
     connectSellDialogChecker() {
