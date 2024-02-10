@@ -78,7 +78,7 @@ class MarketHighlights {
     order: 1;
 }
 
-.marketplace-buy-item-top .chakra-input__group {
+.marketplace-buy-item-top .anchor-idlescape-input {
     order: 3;
 }
 

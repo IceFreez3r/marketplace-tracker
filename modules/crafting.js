@@ -196,7 +196,6 @@ class CraftingTracker {
         }
         this.lastCraftedApiId = craftedApiId;
         const craftedItemIcon = craftedItem.getElementsByTagName("img")[0].src;
-        const craftingAmount = parseInt(document.getElementById("craftCount").firstChild.value);
         const productCount = parseInt(document.querySelector(".crafting-item-icon .centered")?.textContent ?? 1);
 
         const resourceItemNodes = recipeNode.getElementsByClassName("anchor-resource-cost");
@@ -209,7 +208,7 @@ class CraftingTracker {
             resourceItemCounts.push(
                 parseNumberString(
                     resourceItemNodes[i].getElementsByClassName("anchor-resource-cost-amount")[0].textContent
-                ) / craftingAmount
+                )
             );
         }
 
@@ -247,7 +246,7 @@ class CraftingTracker {
     goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount) {
         document.getElementsByClassName("crafting-gold-per-exp")[0]?.remove();
         const experienceNode = recipeNode.getElementsByClassName("crafting-item-exp")[0];
-        const experience = parseNumberString(experienceNode.childNodes[2].textContent);
+        const experience = parseNumberString(experienceNode.childNodes[1].textContent);
         if (experience === 0) {
             return;
         }

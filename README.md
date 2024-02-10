@@ -19,10 +19,6 @@ On the buy tab items are highlighted based on the quantile of their price.
 
 <img src="./images/readme/marketplace_buy.png" alt="Marketplace Buy" width="600">
 
-The history shows tax-free prices for sold items.
-
-<img src="./images/readme/marketplace_history.png" alt="Marketplace Buy" width="600">
-
 ### Highlights
 
 Adds the option to mark items as favorite, which highlights them in the market overview and lets you filter for them with a single button click.
