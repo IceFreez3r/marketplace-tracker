@@ -535,7 +535,7 @@ input[type="time"].tracker-time:not(.browser-default) {
             //TODO: simulate active tab
         }
 
-        const playAreaBackground = document.getElementsByClassName("play-area-background")[0];
+        const playAreaBackground = document.getElementsByClassName("play-area-wrapper")[0];
         const playAreas = playAreaBackground.getElementsByClassName("play-area");
         for (let i = 0; i < playAreas.length; i++) {
             playAreas[i].style.display = "none";
