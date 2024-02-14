@@ -345,7 +345,7 @@ class MarketHighlights {
             ".anchor-buy-all-items .item:not(.favorite-highlight), .anchor-sell-all-items .item:not(.favorite-highlight)"
         );
         for (let i = 0; i < notFavoriteItems.length; i++) {
-            notFavoriteItems[i].parentNode.classList.toggle("hidden", this.favoriteFilterActive);
+            notFavoriteItems[i].classList.toggle("hidden", this.favoriteFilterActive);
         }
         const notFavoriteAuctions = document.querySelectorAll(".marketplace-table-row:not(.favorite-highlight");
         for (let i = 0; i < notFavoriteAuctions.length; i++) {
@@ -358,12 +358,13 @@ class MarketHighlights {
     }
 
     highlightFavorites(items) {
-        items.childNodes.forEach((itemNode) => {
-            const apiId = convertApiId(itemNode.firstChild);
+        const children = items.getElementsByClassName("item");
+        for (const itemNode of children) {
+            const apiId = convertApiId(itemNode);
             if (this.isFavorite(apiId)) {
-                itemNode.firstChild.classList.add("favorite-highlight");
+                itemNode.classList.add("favorite-highlight");
             }
-        });
+        };
         const ownAuctions = items.parentNode.getElementsByClassName("marketplace-table-row");
         for (const auction of ownAuctions) {
             let itemId = convertItemId(auction.childNodes[1].firstChild.src);
@@ -498,20 +499,21 @@ class MarketHighlights {
 
     highlightBestHeatItem(items) {
         const bestHeatApiId = this.storage.bestHeatItem();
-        items.childNodes.forEach((itemNode) => {
-            const apiId = convertApiId(itemNode.firstChild);
-            if (apiId === bestHeatApiId && !itemNode.firstChild.classList.contains("heat-highlight")) {
-                itemNode.firstChild.classList.add("heat-highlight");
+        const children = items.getElementsByClassName("item");
+        for (const itemNode of children) {
+            const apiId = convertApiId(itemNode);
+            if (apiId === bestHeatApiId && !itemNode.classList.contains("heat-highlight")) {
+                itemNode.classList.add("heat-highlight");
                 saveInsertAdjacentHTML(
-                    itemNode.firstChild,
+                    itemNode,
                     "beforeend",
                     `<img src=/images/heat_icon.png style="position: absolute; top: 0px; right: 0px; width: ${this.settings.markerSize}%; height: ${this.settings.markerSize}%;">`
                 );
-            } else if (apiId !== bestHeatApiId && itemNode.firstChild.classList.contains("heat-highlight")) {
-                itemNode.firstChild.classList.remove("heat-highlight");
-                itemNode.firstChild.removeChild(itemNode.firstChild.lastChild);
+            } else if (apiId !== bestHeatApiId && itemNode.classList.contains("heat-highlight")) {
+                itemNode.classList.remove("heat-highlight");
+                itemNode.removeChild(itemNode.lastChild);
             }
-        });
+        };
     }
 
     highlightAlertItems(items) {
@@ -519,15 +521,16 @@ class MarketHighlights {
         for (let i = alertIcons.length - 1; i >= 0; i--) {
             alertIcons[i].remove();
         }
-        items.childNodes.forEach((itemNode) => {
-            const apiId = convertApiId(itemNode.firstChild);
+        const children = items.getElementsByClassName("item");
+        for (const itemNode of children) {
+            const apiId = convertApiId(itemNode);
             if (
                 this.notificationInformation[apiId] === "below" &&
-                !itemNode.firstChild.classList.contains("alert-below")
+                !itemNode.classList.contains("alert-below")
             ) {
                 itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
-                    itemNode.firstChild,
+                    itemNode,
                     "beforeend",
                     `
                     <div class="alert-icon below" style="width:${this.settings.markerSize}%; height:${
@@ -538,11 +541,11 @@ class MarketHighlights {
                 );
             } else if (
                 this.notificationInformation[apiId] === "above" &&
-                !itemNode.firstChild.classList.contains("alert-above")
+                !itemNode.classList.contains("alert-above")
             ) {
                 itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
-                    itemNode.firstChild,
+                    itemNode,
                     "beforeend",
                     `
                     <div class="alert-icon above" style="width:${this.settings.markerSize}%; height:${
@@ -554,7 +557,7 @@ class MarketHighlights {
             } else {
                 itemNode.style.order = "";
             }
-        });
+        };
     }
 
     isFavorite(apiId) {
