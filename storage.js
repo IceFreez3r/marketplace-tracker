@@ -82,11 +82,12 @@ class Storage {
         const timestamp = Math.floor(new Date(data.timestamp).valueOf() / 1000 / 60 / 10);
         this.latestPriceList = {};
         data = data.manifest;
+        const isNewData = this.lastAPIFetch !== timestamp;
         for (let i = 0; i < data.length; i++) {
             const leagueId = data[i].league;
             if (leagueId !== this.leagueId) continue;
             const apiId = data[i].itemID;
-            if (this.lastAPIFetch !== timestamp) {
+            if (isNewData) {
                 // prevent duplicate entries
                 this.marketHistory[apiId].push([timestamp, data[i].minPrice]);
                 this.sortPriceList(apiId);
@@ -95,13 +96,15 @@ class Storage {
         }
         const currentHeatValue = this.heatValue();
         if (currentHeatValue.heatValue !== Infinity) {
-            if (this.lastAPIFetch !== timestamp) {
+            if (isNewData) {
                 // prevent duplicate entries
                 this.marketHistory[2].push([timestamp, currentHeatValue.heatValue]);
                 this.sortPriceList(2);
-                this.storeItemList();
             }
             this.latestPriceList[2] = currentHeatValue.heatValue;
+        }
+        if (isNewData) {
+            this.storeItemList();
         }
         this.lastAPIFetch = timestamp;
         localStorage.setItem(this.storageKeys.lastAPIFetch + this.leagueId, timestamp);
