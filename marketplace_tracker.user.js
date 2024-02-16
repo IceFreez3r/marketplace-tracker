@@ -23,13 +23,14 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/runecrafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/smithing.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/tracker.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/cleaner.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    let tracker = new Tracker();
+    const tracker = new Tracker();
     tracker.addModule(MarketplaceTracker);
     tracker.addModule(MarketHighlights);
     tracker.addModule(PopupTracker);
@@ -39,4 +40,5 @@
     tracker.addModule(RunecraftingTracker);
     tracker.addModule(AlertTracker);
 
+    const cleaner = new Cleaner();
 })();

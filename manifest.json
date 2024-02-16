@@ -24,6 +24,7 @@
                 "modules/runecrafting.js",
                 "modules/smithing.js",
                 "tracker.js",
+                "cleaner.js",
                 "main.js"
             ]
         }

@@ -141,8 +141,7 @@ function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
 }
 
-function getLeagueId() {
-    const leagueIcon = document.getElementsByClassName("header-league-icon")[0];
+function getLeagueId(leagueIcon) {
     if (leagueIcon.src.endsWith("default_league_icon.png")) {
         return 1;
     } else if (leagueIcon.src.endsWith("ironman_league_icon_v5.png")) {

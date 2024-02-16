@@ -25,7 +25,8 @@ class Storage {
             // Ironman Leagues use MainScape prices
             this.leagueId = 1;
         } else {
-            this.leagueId = getLeagueId();
+            const leagueIcon = document.getElementsByClassName("header-league-icon")[0];
+            this.leagueId = getLeagueId(leagueIcon);
         }
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch + this.leagueId, 0);
         const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory + this.leagueId, () =>
