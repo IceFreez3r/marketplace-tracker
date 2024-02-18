@@ -293,3 +293,12 @@ function getHSLColor(quantile, colorBlindMode = false) {
     }
     return `hsl(${hue}, 80%, 40%)`;
 }
+
+function getIdlescapeWindowObject() {
+    return window.wrappedJSObject?.Idlescape.data ?? window.Idlescape.data;
+}
+
+function getEnchantmentBySrc(src) {
+    const enchantments = getIdlescapeWindowObject().enchantments;
+    return Object.values(enchantments).find((enchantment) => enchantment.buffIcon.endsWith(src));
+}

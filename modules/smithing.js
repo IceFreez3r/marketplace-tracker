@@ -175,7 +175,7 @@ class SmithingTracker {
         }
         this.ingredients = ingredients;
 
-        const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
+        const product = Object.assign(recipePrices.products, { icons: [productIcon], counts: [productCount] });
         const timePerAction = parseTimeString(
             smithingInfo
                 .getElementsByClassName("smithing-information-calculations")[0]

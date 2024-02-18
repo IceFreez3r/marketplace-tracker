@@ -179,7 +179,7 @@ body .scrollcrafting-container {
             icons: resourceItemIcons,
             counts: resourceItemCounts,
         });
-        const product = Object.assign(recipePrices.product, { icon: scrollIcon, count: 1 });
+        const product = Object.assign(recipePrices.products, { icons: [scrollIcon], counts: [1] });
         saveInsertAdjacentHTML(
             recipe,
             "beforeend",

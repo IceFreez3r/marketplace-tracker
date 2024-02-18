@@ -7,5 +7,6 @@ tracker.addModule(SmithingTracker);
 tracker.addModule(CraftingTracker);
 tracker.addModule(RunecraftingTracker);
 tracker.addModule(AlertTracker);
+tracker.addModule(CookingTracker);
 
 const cleaner = new Cleaner();

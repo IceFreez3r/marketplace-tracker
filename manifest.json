@@ -16,6 +16,7 @@
                 "external/DOMpurify.min.js",
                 "external/huffman.js",
                 "modules/alert.js",
+                "modules/cooking.js",
                 "modules/crafting.js",
                 "modules/enchanting.js",
                 "modules/highlight.js",

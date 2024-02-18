@@ -35,7 +35,7 @@ class Storage {
         this.marketHistory = this.processStorageHistory(storageHistory);
         this.filterItemList();
 
-        const vanillaItemsList = window.wrappedJSObject?.Idlescape.data.items ?? window.Idlescape.data.items;
+        const vanillaItemsList = getIdlescapeWindowObject().items;
         this.idMap = {};
         for (const apiId in vanillaItemsList) {
             this.marketHistory[apiId] ??= [];
@@ -145,7 +145,7 @@ class Storage {
     handleRecipe(ingredientApiIds, productApiId) {
         return {
             ingredients: this.analyzeItems(ingredientApiIds),
-            product: this.analyzeItem(productApiId),
+            products: this.analyzeItems([productApiId]),
         };
     }
 

@@ -208,7 +208,7 @@ body .runecrafting-essence-counter {
 
         const recipePrices = this.storage.handleRecipe(ingredientApiIds, productApiId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientAmounts });
-        const product = Object.assign(recipePrices.product, { icon: productIcon, count: productAmount });
+        const product = Object.assign(recipePrices.products, { icons: [productIcon], counts: [productAmount] });
         saveInsertAdjacentHTML(
             recipe,
             "beforeend",

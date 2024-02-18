@@ -221,7 +221,7 @@ class CraftingTracker {
             icons: resourceItemIcons,
             counts: resourceItemCounts,
         });
-        const product = Object.assign(recipePrices.product, { icon: craftedItemIcon, count: productCount });
+        const product = Object.assign(recipePrices.products, { icons: [craftedItemIcon], counts: [productCount] });
         saveInsertAdjacentHTML(
             recipeContainer,
             "afterend",

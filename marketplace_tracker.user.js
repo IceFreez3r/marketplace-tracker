@@ -15,6 +15,7 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/DOMpurify.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/huffman.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/alert.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/cooking.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/crafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/enchanting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/highlight.js
