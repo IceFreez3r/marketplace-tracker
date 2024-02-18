@@ -302,3 +302,18 @@ function getEnchantmentBySrc(src) {
     const enchantments = getIdlescapeWindowObject().enchantments;
     return Object.values(enchantments).find((enchantment) => enchantment.buffIcon.endsWith(src));
 }
+
+// https://stackoverflow.com/a/52486921/12540220
+function setReactNativeValue(element, value) {
+    const lastValue = element.value;
+    element.value = value;
+    const event = new Event("input", { target: element, bubbles: true });
+    // React 15
+    event.simulated = true;
+    // React 16
+    const tracker = element._valueTracker;
+    if (tracker) {
+        tracker.setValue(lastValue);
+    }
+    element.dispatchEvent(event);
+}

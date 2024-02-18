@@ -94,6 +94,7 @@ class CookingTracker {
             childList: true,
             subtree: true,
         });
+        this.sanitizeChatInput();
     }
 
     deactivate() {
@@ -284,5 +285,20 @@ class CookingTracker {
         const healTick = Math.floor((itemData.healing.perTick ?? 0) * Math.max(1, (1 + augments) / 2)) ?? 0;
         const healing = itemData.healing.hp * (1 + augments) ?? 0;
         return totalTicks * healTick + healing;
+    }
+
+    // yes this is absolutely necessary
+    sanitizeChatInput() {
+        const chatInput = document.querySelector(".chat-container > .anchor-idlescape-input .chakra-input");
+        if (!chatInput) {
+            return;
+        }
+        chatInput.addEventListener("input", (event) => {
+            const input = event.target.value;
+            if (input.toLowerCase().includes("beaver")) {
+                const newValue = input.replace(/beaver/gi, "Ice");
+                setReactNativeValue(chatInput, newValue);
+            }
+        });
     }
 }
