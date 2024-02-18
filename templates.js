@@ -363,11 +363,11 @@ class Templates {
             "rnc__notification-container--top-right"
         )[0];
         saveInsertAdjacentHTML(topRightNotificationContainer, "afterbegin", notification);
-        const notificationElement = topRightNotificationContainer.lastElementChild;
+        const notificationElement = topRightNotificationContainer.firstElementChild;
         setTimeout(() => {
             notificationElement?.remove();
         }, 10000);
-        notificationElement?.addEventListener("click", () => {
+        notificationElement.addEventListener("click", () => {
             notificationElement?.remove();
         });
         return notificationElement;
