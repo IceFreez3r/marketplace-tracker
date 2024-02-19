@@ -4,6 +4,44 @@ class CookingTracker {
     static icon = "<img src='/images/cooking/cooking_icon.png' alt='Cooking Tracker Icon' />";
     static category = "recipe";
     css = `
+.anchor-cooking-preparation,
+.anchor-cooking-preparation-list {
+    height: unset;
+}
+
+.cooking-prep-table-container {
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.cooking-prep-table {
+    display: grid;
+    grid-auto-flow: column;
+    overflow-x: auto;
+}
+
+.cooking-prep-table-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 10px;
+}
+
+.cooking-prep-table-content.left-border {
+    border-left: 2px solid rgba(0, 0, 0, 0.8);
+}
+
+.cooking-prep-table-content:first-child {
+    grid-row: 3;
+}
+
+.cooking-prep-table-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
 .anchor-cooking-content {
     flex-direction: column;
     flex-wrap: unset;
@@ -58,6 +96,8 @@ class CookingTracker {
     line-height: 2.5rem;
 }`;
 
+    alchemyTags = ["spicy", "sweet", "sour", "bitter"];
+
     constructor(tracker, settings, storage) {
         this.tracker = tracker;
         this.settings = settings;
@@ -82,6 +122,8 @@ class CookingTracker {
         this.lastAugment = null;
         this.lastBuffSrc = null;
 
+        this.cachedPreparationTable = "";
+
         this.playAreaObserver = new MutationObserver((mutations) => {
             this.checkForCooking(mutations);
         });
@@ -95,6 +137,7 @@ class CookingTracker {
             subtree: true,
         });
         this.sanitizeChatInput();
+        this.cachedPreparationTable = this.preparationTable();
     }
 
     deactivate() {
@@ -146,6 +189,7 @@ class CookingTracker {
     }
 
     onAPIUpdate() {
+        this.cachedPreparationTable = this.preparationTable();
         this.checkForCooking(null, true);
     }
 
@@ -162,8 +206,195 @@ class CookingTracker {
         const selectedTabNode = document.querySelector(".cooking-tab-selected");
         const selectedTab = selectedTabNode.lastChild.textContent;
         if (selectedTab === "Preparing") {
+            this.preparationTracker(forceUpdate);
+        } else {
+            this.recipeTable(forceUpdate);
+        }
+    }
+
+    preparationTracker(forceUpdate = false) {
+        const oldTable = document.querySelector(".cooking-prep-table");
+        if (!forceUpdate && oldTable) {
             return;
         }
+        oldTable?.remove();
+        const prepContainer = document.querySelector(".cooking-container .idlescape-container");
+        saveInsertAdjacentHTML(prepContainer.parentElement, "beforeend", this.cachedPreparationTable);
+    }
+
+    getBestIngredient(allIngredientApiIds, ingredientPriceData, ingredientIndices, cookingData, isAlchemy, field) {
+        const bestIngredient = ingredientIndices.reduce(
+            (min, index) => {
+                const ingredientPrice = ingredientPriceData[field][index];
+                const apiId = allIngredientApiIds[index];
+                const size = isAlchemy ? cookingData[apiId].alchemySize : cookingData[apiId].size;
+                if (ingredientPrice / size < min.price / min.size) {
+                    return {
+                        apiId: apiId,
+                        price: ingredientPrice,
+                        prices: {
+                            minPrice: ingredientPriceData.minPrices[index],
+                            medianPrice: ingredientPriceData.medianPrices[index],
+                            maxPrice: ingredientPriceData.maxPrices[index],
+                        },
+                        size: size,
+                    };
+                }
+                return min;
+            },
+            {
+                apiId: undefined,
+                price: Infinity,
+                prices: {
+                    minPrice: Infinity,
+                    medianPrice: Infinity,
+                    maxPrice: Infinity,
+                },
+                size: 0,
+            }
+        );
+        delete bestIngredient.price;
+        return bestIngredient;
+    }
+
+    preparationTable() {
+        const itemObject = getIdlescapeWindowObject().items;
+        const cookingData = getIdlescapeWindowObject().cooking;
+        const preparedApiIds = Object.keys(cookingData).filter((apiId) => cookingData[apiId].prepared);
+        const allIngredientApiIds = Object.keys(cookingData).filter((apiId) => !cookingData[apiId].prepared);
+        const ingredientPriceData = this.storage.analyzeItems(allIngredientApiIds);
+        const inputData = preparedApiIds.map((apiId) => {
+            const ingredientTag = cookingData[apiId].ingredientTags[0];
+            const ingredientIndices = allIngredientApiIds
+                .map((id, index) => index)
+                .filter((index) => cookingData[allIngredientApiIds[index]].ingredientTags?.includes(ingredientTag));
+            const isAlchemy = this.alchemyTags.includes(ingredientTag);
+            return {
+                apiId,
+                prices: this.storage.analyzeItem(apiId),
+                minIngredient: this.getBestIngredient(
+                    allIngredientApiIds,
+                    ingredientPriceData,
+                    ingredientIndices,
+                    cookingData,
+                    isAlchemy,
+                    "minPrices"
+                ),
+                medianIngredient: this.getBestIngredient(
+                    allIngredientApiIds,
+                    ingredientPriceData,
+                    ingredientIndices,
+                    cookingData,
+                    isAlchemy,
+                    "medianPrices"
+                ),
+                maxIngredient: this.getBestIngredient(
+                    allIngredientApiIds,
+                    ingredientPriceData,
+                    ingredientIndices,
+                    cookingData,
+                    isAlchemy,
+                    "maxPrices"
+                ),
+            };
+        });
+        // 5 rows (prep icon, market icon + ingredients, min, median, max), 4 columns per preparation ingredient (market, min, median, max)
+        let fields = {
+            min: this.settings.min_column,
+            median: this.settings.median_column,
+            max: this.settings.max_column,
+        };
+        const rows = 2 + this.settings.min_column + this.settings.median_column + this.settings.max_column;
+        // left side
+        let table = `
+            <div class="cooking-prep-table-container idlescape-container">
+                <div class="cooking-prep-table" style="grid-template-rows: repeat(${rows}, 1fr);">`;
+        if (fields.min) table += `<div class="cooking-prep-table-content">Minimum Marketprice</div>`;
+        if (fields.median) table += `<div class="cooking-prep-table-content">Median Marketprice</div>`;
+        if (fields.max) table += `<div class="cooking-prep-table-content">Maximum Marketprice</div>`;
+        // main table
+        for (const data of inputData) {
+            // Prevent duplicate columns
+            const columns = Object.keys(fields).reduce((acc, key) => {
+                if (fields[key] && data[key + "Ingredient"].apiId !== undefined) {
+                    acc[key] = [key];
+                }
+                return acc;
+            }, {});
+            for (const column in columns) {
+                const apiId = data[column + "Ingredient"].apiId;
+                // if there is another column with the same id, add it's array to this and delete the other
+                for (const otherColumn in columns) {
+                    if (column === otherColumn) continue;
+                    const otherApiId = data[otherColumn + "Ingredient"].apiId;
+                    if (apiId === otherApiId) {
+                        columns[column].push(...columns[otherColumn]);
+                        delete columns[otherColumn];
+                    }
+                }
+            }
+            const span = 1 + Object.keys(columns).length;
+            // Top Icon
+            table += `
+                <div class="cooking-prep-table-content top-icon left-border" style="grid-column: span ${span}">
+                    <img class="cooking-prep-table-icon" src="${itemObject[data.apiId].itemImage}" alt="${
+                itemObject[data.apiId].name
+            }"/>
+                </div>`;
+            // Marketplace column
+            table += `
+                <div class="cooking-prep-table-content left-border">
+                    <img class="cooking-prep-table-icon" src="/images/ui/marketplace_icon.png" alt="Marketprice"/>
+                </div>`;
+            for (const column in fields) {
+                if (!fields[column]) continue;
+                table += `
+                    <div class="cooking-prep-table-content left-border">
+                        ${formatNumber(data.prices[column + "Price"])}
+                    </div>`;
+            }
+            // Best min/median/max ingredient columns
+            for (const column in columns) {
+                const columnData = data[column + "Ingredient"];
+                if (!columnData.apiId) continue;
+                table += `
+                    <div class="cooking-prep-table-content">
+                        <img class="cooking-prep-table-icon" src="${itemObject[columnData.apiId].itemImage}" alt="${
+                    itemObject[columnData.apiId].name
+                }"/>
+                        ${columnData.size}
+                    </div>
+                    ${
+                        fields["min"]
+                            ? `<div class="cooking-prep-table-content">
+                        ${formatNumber(columnData.prices.minPrice)}
+                        ${columns[column].includes("min") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
+                    </div>`
+                            : ""
+                    }
+                    ${
+                        fields["median"]
+                            ? `<div class="cooking-prep-table-content">
+                        ${formatNumber(columnData.prices.medianPrice)}
+                        ${columns[column].includes("median") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
+                    </div>`
+                            : ""
+                    }
+                    ${
+                        fields["max"]
+                            ? `<div class="cooking-prep-table-content">
+                        ${formatNumber(columnData.prices.maxPrice)}
+                        ${columns[column].includes("max") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
+                    </div>`
+                            : ""
+                    }`;
+            }
+        }
+        table += "</div></div>";
+        return table;
+    }
+
+    recipeTable(forceUpdate = false) {
         const productNode = document.querySelector(".anchor-cooking-result");
         const productIcon = productNode.querySelector(".item-icon")?.src;
         if (!productIcon) {
