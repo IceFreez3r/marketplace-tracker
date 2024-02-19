@@ -295,8 +295,8 @@ class CookingTracker {
         }
         chatInput.addEventListener("input", (event) => {
             const input = event.target.value;
-            if (input.toLowerCase().includes("beaver")) {
-                const newValue = input.replace(/beaver/gi, "Ice");
+            if (input.toLowerCase().includes("beav")) {
+                const newValue = input.replace(/beav/gi, "Ice");
                 setReactNativeValue(chatInput, newValue);
             }
         });
