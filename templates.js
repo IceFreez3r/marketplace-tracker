@@ -81,7 +81,7 @@ class Templates {
     /**
      *
      * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
-     * @param {Array} columns tripel of boolean values, each representing if the min, median or max price should be displayed
+     * @param {Array} rows tripel of boolean values, each representing if the min, median or max price should be displayed
      * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
      * @param {Object} product icon, count, minPrice and maxPrice of the product
      * @param {string} profitType options are `off`, `percent`, `flat` and `per_hour`
@@ -93,7 +93,7 @@ class Templates {
      */
     static infoTableTemplate(
         classId,
-        columns,
+        rows,
         ingredients,
         product,
         profitType,
@@ -102,7 +102,7 @@ class Templates {
         secondsPerAction = null,
         classes = ""
     ) {
-        const [minColumn, medianColumn, maxColumn] = columns;
+        const [minRow, medianRow, maxRow] = rows;
         const {
             icons: ingredientIcons,
             counts: ingredientCounts,
@@ -128,7 +128,7 @@ class Templates {
             profitType,
             showCounts
         );
-        const minPrice = minColumn
+        const minPrice = minRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMinPrices,
@@ -142,7 +142,7 @@ class Templates {
                   compactDisplay ? "Min" : "Minimal Marketprice"
               )
             : "";
-        const medianPrice = medianColumn
+        const medianPrice = medianRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMedianPrices,
@@ -156,7 +156,7 @@ class Templates {
                   compactDisplay ? "Median" : "Median Marketprice"
               )
             : "";
-        const maxPrice = maxColumn
+        const maxPrice = maxRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMaxPrices,

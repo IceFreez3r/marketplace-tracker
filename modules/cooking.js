@@ -104,13 +104,13 @@ class CookingTracker {
         this.storage = storage;
 
         if (
-            this.settings.min_column === undefined ||
-            this.settings.median_column === undefined ||
-            this.settings.max_column === undefined
+            this.settings.min_row === undefined ||
+            this.settings.median_row === undefined ||
+            this.settings.max_row === undefined
         ) {
-            this.settings.min_column = true;
-            this.settings.median_column = true;
-            this.settings.max_column = true;
+            this.settings.min_row = true;
+            this.settings.median_row = true;
+            this.settings.max_row = true;
         }
         if (this.settings.ignore_pots === undefined) {
             this.settings.ignore_pots = true;
@@ -146,24 +146,24 @@ class CookingTracker {
     }
 
     settingsMenuContent() {
-        let columns = `
+        let rows = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Minimum Column
+                    Min Row
                 </div>
-                ${Templates.checkboxTemplate(CookingTracker.id + "-min_column", this.settings.min_column)}
+                ${Templates.checkboxTemplate(CookingTracker.id + "-min_row", this.settings.min_row)}
             </div>
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Median Column
+                    Median Row
                 </div>
-                ${Templates.checkboxTemplate(CookingTracker.id + "-median_column", this.settings.median_column)}
+                ${Templates.checkboxTemplate(CookingTracker.id + "-median_row", this.settings.median_row)}
             </div>
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Maximum Column
+                    Max Row
                 </div>
-                ${Templates.checkboxTemplate(CookingTracker.id + "-max_column", this.settings.max_column)}
+                ${Templates.checkboxTemplate(CookingTracker.id + "-max_row", this.settings.max_row)}
             </div>`;
 
         let ignorePots = `
@@ -173,7 +173,7 @@ class CookingTracker {
                 </div>
                 ${Templates.checkboxTemplate(CookingTracker.id + "-ignore_pots", this.settings.ignore_pots)}
             </div>`;
-        return [columns, ignorePots];
+        return [rows, ignorePots];
     }
 
     settingChanged(settingId, value) {
@@ -300,11 +300,11 @@ class CookingTracker {
         });
         // 5 rows (prep icon, market icon + ingredients, min, median, max), 4 columns per preparation ingredient (market, min, median, max)
         let fields = {
-            min: this.settings.min_column,
-            median: this.settings.median_column,
-            max: this.settings.max_column,
+            min: this.settings.min_row,
+            median: this.settings.median_row,
+            max: this.settings.max_row,
         };
-        const rows = 2 + this.settings.min_column + this.settings.median_column + this.settings.max_column;
+        const rows = 2 + this.settings.min_row + this.settings.median_row + this.settings.max_row;
         // left side
         let table = `
             <div class="cooking-prep-table-container idlescape-container">
@@ -480,7 +480,7 @@ class CookingTracker {
             "beforeend",
             Templates.infoTableTemplate(
                 "cooking",
-                [this.settings.min_column, this.settings.median_column, this.settings.max_column],
+                [this.settings.min_row, this.settings.median_row, this.settings.max_row],
                 ingredients,
                 product,
                 "off",
