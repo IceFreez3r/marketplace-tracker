@@ -1,4 +1,4 @@
-let tracker = new Tracker();
+const tracker = new Tracker();
 tracker.addModule(MarketplaceTracker);
 tracker.addModule(MarketHighlights);
 tracker.addModule(PopupTracker);
@@ -7,3 +7,6 @@ tracker.addModule(SmithingTracker);
 tracker.addModule(CraftingTracker);
 tracker.addModule(RunecraftingTracker);
 tracker.addModule(AlertTracker);
+tracker.addModule(CookingTracker);
+
+const cleaner = new Cleaner();

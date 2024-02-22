@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Idlescape Marketplace Tracker
 // @namespace    https://github.com/IceFreez3r
-// @version      1.3.14
+// @version      1.3.15
 // @description  Automatically tracks prices of items on the Idlescape Marketplace
 // @author       IceFreez3r
 // @match        https://www.play.idlescape.com/*
@@ -15,6 +15,7 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/DOMpurify.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/huffman.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/alert.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/cooking.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/crafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/enchanting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/highlight.js
@@ -23,13 +24,14 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/runecrafting.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/smithing.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/tracker.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/cleaner.js
 // @grant        none
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    let tracker = new Tracker();
+    const tracker = new Tracker();
     tracker.addModule(MarketplaceTracker);
     tracker.addModule(MarketHighlights);
     tracker.addModule(PopupTracker);
@@ -38,5 +40,7 @@
     tracker.addModule(CraftingTracker);
     tracker.addModule(RunecraftingTracker);
     tracker.addModule(AlertTracker);
+    tracker.addModule(CookingTracker);
 
+    const cleaner = new Cleaner();
 })();

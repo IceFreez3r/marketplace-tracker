@@ -423,6 +423,7 @@ input[type="time"].tracker-time:not(.browser-default) {
                 : {
                       activeModules: {
                           crafting_tracker: 1,
+                          cooking_tracker: 1,
                           enchanting_tracker: 1,
                           farming_tracker: 1,
                           market_highlights: 1,

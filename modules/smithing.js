@@ -49,13 +49,13 @@ class SmithingTracker {
             this.settings.profit = "percent";
         }
         if (
-            this.settings.min_column === undefined ||
-            this.settings.median_column === undefined ||
-            this.settings.max_column === undefined
+            this.settings.min_row === undefined ||
+            this.settings.median_row === undefined ||
+            this.settings.max_row === undefined
         ) {
-            this.settings.min_column = true;
-            this.settings.median_column = true;
-            this.settings.max_column = true;
+            this.settings.min_row = true;
+            this.settings.median_row = true;
+            this.settings.max_row = true;
         }
         this.cssNode = injectCSS(this.css);
         this.ingredients = {};
@@ -101,26 +101,26 @@ class SmithingTracker {
                 this.settings.profit
             )
         );
-        const columns = `
+        const rows = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Min Column
+                    Min Row
                 </div>
-                ${Templates.checkboxTemplate(SmithingTracker.id + "-min_column", this.settings.min_column)}
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-min_row", this.settings.min_row)}
             </div>
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Median Column
+                    Median Row
                 </div>
-                ${Templates.checkboxTemplate(SmithingTracker.id + "-median_column", this.settings.median_column)}
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-median_row", this.settings.median_row)}
             </div>
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Max Column
+                    Max Row
                 </div>
-                ${Templates.checkboxTemplate(SmithingTracker.id + "-max_column", this.settings.max_column)}
+                ${Templates.checkboxTemplate(SmithingTracker.id + "-max_row", this.settings.max_row)}
             </div>`;
-        return [profitType, columns];
+        return [profitType, rows];
     }
 
     settingChanged(settingId, value) {
@@ -175,7 +175,7 @@ class SmithingTracker {
         }
         this.ingredients = ingredients;
 
-        const product = Object.assign(recipePrices.product, { icon: productIcon, count: productCount });
+        const product = Object.assign(recipePrices.products, { icons: [productIcon], counts: [productCount] });
         const timePerAction = parseTimeString(
             smithingInfo
                 .getElementsByClassName("smithing-information-calculations")[0]
@@ -190,7 +190,7 @@ class SmithingTracker {
             <div class="idlescape-container tracker-ignore">
                 ${Templates.infoTableTemplate(
                     "smithing",
-                    [this.settings.min_column, this.settings.median_column, this.settings.max_column],
+                    [this.settings.min_row, this.settings.median_row, this.settings.max_row],
                     this.ingredients,
                     product,
                     this.settings.profit,

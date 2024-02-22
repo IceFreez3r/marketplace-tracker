@@ -81,7 +81,7 @@ class Templates {
     /**
      *
      * @param {string} classId used for css classes, `[classId]-info-table`, `[classId]-info-table-content`, `[classId]-info-table-icon` and `[classId]-info-table-font` can be used to style the table
-     * @param {Array} columns tripel of boolean values, each representing if the min, median or max price should be displayed
+     * @param {Array} rows tripel of boolean values, each representing if the min, median or max price should be displayed
      * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
      * @param {Object} product icon, count, minPrice and maxPrice of the product
      * @param {string} profitType options are `off`, `percent`, `flat` and `per_hour`
@@ -93,7 +93,7 @@ class Templates {
      */
     static infoTableTemplate(
         classId,
-        columns,
+        rows,
         ingredients,
         product,
         profitType,
@@ -102,7 +102,7 @@ class Templates {
         secondsPerAction = null,
         classes = ""
     ) {
-        const [minColumn, medianColumn, maxColumn] = columns;
+        const [minRow, medianRow, maxRow] = rows;
         const {
             icons: ingredientIcons,
             counts: ingredientCounts,
@@ -111,69 +111,70 @@ class Templates {
             maxPrices: ingredientMaxPrices,
         } = ingredients;
         const {
-            icon: productIcon,
-            count: productCount,
-            minPrice: productMinPrice,
-            medianPrice: productMedianPrices,
-            maxPrice: productMaxPrice,
-            vendorPrice: productVendorPrice,
+            icons: productIcons,
+            counts: productCounts,
+            minPrices: productMinPrices,
+            medianPrices: productMedianPrices,
+            maxPrices: productMaxPrices,
+            vendorPrices: productVendorPrices,
         } = product;
 
         const header = Templates.infoTableHeader(
             classId,
             ingredientIcons,
             ingredientCounts,
-            productIcon,
-            productCount,
+            productIcons,
+            productCounts,
             profitType,
             showCounts
         );
-        const minPrice = minColumn
+        const minPrice = minRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMinPrices,
                   ingredientCounts,
-                  productMinPrice,
-                  productVendorPrice,
-                  productCount,
+                  productMinPrices,
+                  productVendorPrices,
+                  productCounts,
                   profitType,
                   compactDisplay,
                   secondsPerAction,
                   compactDisplay ? "Min" : "Minimal Marketprice"
               )
             : "";
-        const medianPrice = medianColumn
+        const medianPrice = medianRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMedianPrices,
                   ingredientCounts,
                   productMedianPrices,
-                  productVendorPrice,
-                  productCount,
+                  productVendorPrices,
+                  productCounts,
                   profitType,
                   compactDisplay,
                   secondsPerAction,
                   compactDisplay ? "Median" : "Median Marketprice"
               )
             : "";
-        const maxPrice = maxColumn
+        const maxPrice = maxRow
             ? Templates.infoTableRow(
                   classId,
                   ingredientMaxPrices,
                   ingredientCounts,
-                  productMaxPrice,
-                  productVendorPrice,
-                  productCount,
+                  productMaxPrices,
+                  productVendorPrices,
+                  productCounts,
                   profitType,
                   compactDisplay,
                   secondsPerAction,
                   compactDisplay ? "Max" : "Maximal Marketprice"
               )
             : "";
+        const totalProductCount = productCounts.reduce((acc, val) => acc + val, 0);
         return `
             <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
-            ingredientMinPrices.length + 2 + (productCount > 1) + (profitType !== "off")
-        }, 1fr)">
+            ingredientMinPrices.length + 1 + productMinPrices.length + (totalProductCount > 1) + (profitType !== "off")
+        }, auto)">
                 ${header}
                 ${minPrice}
                 ${medianPrice}
@@ -185,106 +186,132 @@ class Templates {
         classId,
         ingredientIcons,
         ingredientCounts,
-        productIcon,
+        productIcons,
         productCount,
         profitType,
         showCounts = false
     ) {
-        let header = "";
+        let header = [];
         // Ingredients
-        for (let i = 0; i < ingredientIcons.length; i++) {
-            header += Templates.infoTableCell(
+        header.push(
+            ...ingredientIcons.map((icon, index) =>
+                Templates.infoTableCell(
+                    classId,
+                    `
+                        <img class="${classId}-info-table-icon" src="${icon}">
+                        ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}`
+                )
+            )
+        );
+        // Total crafting cost
+        header.push(
+            Templates.infoTableCell(
                 classId,
                 `
-                <img class="${classId}-info-table-icon" src="${ingredientIcons[i]}">
-                ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}`
-            );
-        }
-        // Total crafting cost
-        header += Templates.infoTableCell(
-            classId,
-            `
-            <span class="${classId}-info-table-font">
-                &Sigma;
-            </span>`
+                    <span class="${classId}-info-table-font">
+                        &Sigma;
+                    </span>`
+            )
         );
         // Product
-        header += Templates.infoTableCell(classId, `<img class="${classId}-info-table-icon" src="${productIcon}">`);
+        header.push(
+            ...productIcons.map((icon) =>
+                Templates.infoTableCell(
+                    classId,
+                    `
+                        ${icon.endsWith(".png") ? `<img class="${classId}-info-table-icon" src="${icon}">` : icon}
+                        ${showCounts ? `<span class="${classId}-info-table-font">${productCount}</span>` : ""}`
+                )
+            )
+        );
         if (productCount > 1) {
-            header += Templates.infoTableCell(
-                classId,
-                `
-                <span class="${classId}-info-table-font">
-                    &Sigma;
-                </span>`
+            header.push(
+                Templates.infoTableCell(
+                    classId,
+                    `
+                        <span class="${classId}-info-table-font">
+                            &Sigma;
+                        </span>`
+                )
             );
         }
         // Profit
         if (profitType !== "off") {
-            header += Templates.infoTableCell(
-                classId,
-                `
-                <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
-                ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}`
+            header.push(
+                Templates.infoTableCell(
+                    classId,
+                    `
+                        <img class="${classId}-info-table-icon" src="/images/money_icon.png" alt="Profit">
+                        ${profitType === "per_hour" ? `<span class="${classId}-info-table-font">/h</span>` : ""}`
+                )
             );
         }
-        return header;
+        return header.join("");
     }
 
     static infoTableRow(
         classId,
         ingredientPrices,
         ingredientCounts,
-        productPrice,
-        productVendorPrice,
-        productCount,
+        productPrices,
+        productVendorPrices,
+        productCounts,
         profitType,
         compactDisplay,
         secondsPerAction,
         label
     ) {
-        let row = Templates.infoTableCell(classId, label);
+        const row = [Templates.infoTableCell(classId, label)];
         // Ingredients
-        row += ingredientPrices
-            .map((price) =>
+        row.push(
+            ...ingredientPrices.map((price) =>
                 Templates.infoTableCell(
                     classId,
                     formatNumber(price, { compactDisplay: compactDisplay, fraction: true })
                 )
             )
-            .join("");
+        );
         // Total crafting cost
         const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts);
-        const betterToVendor = profit("flat", productVendorPrice, productPrice) < 0;
-        const betterPrice = betterToVendor ? productVendorPrice : productPrice;
-        const totalProductPrice = betterPrice * productCount;
-        row += Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }));
-        // Product
-        row += Templates.infoTableCell(
-            classId,
-            formatNumber(betterPrice, { compactDisplay: compactDisplay, fraction: true }),
-            betterToVendor
+        const betterToVendor =
+            productPrices.length === 1 ? profit("flat", productVendorPrices[0], productPrices[0]) < 0 : false;
+        const betterPrices = betterToVendor ? productVendorPrices : productPrices;
+        const totalProductPrice = totalRecipePrice(betterPrices, productCounts);
+        const totalProductCount = productCounts.reduce((acc, val) => acc + val, 0);
+        row.push(
+            Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }))
         );
-        if (productCount > 1) {
-            row += Templates.infoTableCell(
-                classId,
-                formatNumber(totalProductPrice, { compactDisplay: compactDisplay })
+        // Product
+        row.push(
+            ...betterPrices.map((price) =>
+                Templates.infoTableCell(
+                    classId,
+                    formatNumber(price, { compactDisplay: compactDisplay, fraction: true }),
+                    betterToVendor
+                )
+            )
+        );
+        if (totalProductCount > 1) {
+            row.push(
+                Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }))
             );
         }
         // Profit
         if (profitType !== "off") {
-            row += Templates.infoTableCell(
-                classId,
-                formatNumber(
-                    profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction, betterToVendor),
-                    {
-                        compactDisplay: compactDisplay,
-                        profitType: profitType,
-                    }
+            row.push(
+                Templates.infoTableCell(
+                    classId,
+                    formatNumber(
+                        profit(profitType, totalIngredientPrice, totalProductPrice, secondsPerAction, betterToVendor),
+                        {
+                            compactDisplay: compactDisplay,
+                            profitType: profitType,
+                        }
+                    )
                 )
             );
         }
-        return row;
+        return row.join("");
     }
 
     static infoTableCell(classId, content, vendorIcon = false) {
@@ -336,11 +363,11 @@ class Templates {
             "rnc__notification-container--top-right"
         )[0];
         saveInsertAdjacentHTML(topRightNotificationContainer, "afterbegin", notification);
-        const notificationElement = topRightNotificationContainer.lastElementChild;
+        const notificationElement = topRightNotificationContainer.firstElementChild;
         setTimeout(() => {
             notificationElement?.remove();
         }, 10000);
-        notificationElement?.addEventListener("click", () => {
+        notificationElement.addEventListener("click", () => {
             notificationElement?.remove();
         });
         return notificationElement;
