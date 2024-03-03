@@ -42,6 +42,16 @@ class CookingTracker {
     object-fit: contain;
 }
 
+.cooking-prep-table-price {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+}
+
+.cooking-prep-table-relative-price {
+    font-size: 0.8em;
+}
+
 .anchor-cooking-content {
     flex-direction: column;
     flex-wrap: unset;
@@ -213,7 +223,7 @@ class CookingTracker {
     }
 
     preparationTracker(forceUpdate = false) {
-        const oldTable = document.querySelector(".cooking-prep-table");
+        const oldTable = document.querySelector(".cooking-prep-table-container");
         if (!forceUpdate && oldTable) {
             return;
         }
@@ -260,7 +270,9 @@ class CookingTracker {
     preparationTable() {
         const itemObject = getIdlescapeWindowObject().items;
         const cookingData = getIdlescapeWindowObject().cooking;
-        const preparedApiIds = Object.keys(cookingData).filter((apiId) => cookingData[apiId].prepared);
+        const preparedApiIds = Object.keys(cookingData).filter(
+            (apiId) => cookingData[apiId].prepared && itemObject[apiId].tradeable
+        );
         const allIngredientApiIds = Object.keys(cookingData).filter((apiId) => !cookingData[apiId].prepared);
         const ingredientPriceData = this.storage.analyzeItems(allIngredientApiIds);
         const inputData = preparedApiIds.map((apiId) => {
@@ -367,7 +379,12 @@ class CookingTracker {
                     ${
                         fields["min"]
                             ? `<div class="cooking-prep-table-content">
-                        ${formatNumber(columnData.prices.minPrice)}
+                        <div class="cooking-prep-table-price">
+                            <div>${formatNumber(columnData.prices.minPrice)}</div>
+                            <div class="cooking-prep-table-relative-price">(${formatNumber(
+                                columnData.prices.minPrice / columnData.size
+                            )})</div>
+                        </div>
                         ${columns[column].includes("min") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
@@ -375,7 +392,12 @@ class CookingTracker {
                     ${
                         fields["median"]
                             ? `<div class="cooking-prep-table-content">
-                        ${formatNumber(columnData.prices.medianPrice)}
+                        <div class="cooking-prep-table-price">
+                            <div>${formatNumber(columnData.prices.medianPrice)}</div>
+                            <div class="cooking-prep-table-relative-price">(${formatNumber(
+                                columnData.prices.medianPrice / columnData.size
+                            )})</div>
+                        </div>
                         ${columns[column].includes("median") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
@@ -383,7 +405,12 @@ class CookingTracker {
                     ${
                         fields["max"]
                             ? `<div class="cooking-prep-table-content">
-                        ${formatNumber(columnData.prices.maxPrice)}
+                        <div class="cooking-prep-table-price">
+                            <div>${formatNumber(columnData.prices.maxPrice)}</div>
+                            <div class="cooking-prep-table-relative-price">(${formatNumber(
+                                columnData.prices.maxPrice / columnData.size
+                            )})</div>
+                        </div>
                         ${columns[column].includes("max") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
@@ -401,7 +428,7 @@ class CookingTracker {
             return;
         }
         const productApiId = convertApiId(productNode.firstChild);
-        const augment = parseInt(productNode.querySelector(".item-augment")?.textContent.split("+")[1]);
+        const augment = parseInt(productNode.querySelector(".item-augment")?.textContent.split("+")[1] ?? 0);
         const buffSrc = productNode.querySelector(".anchor-item-enchant")?.src;
         const buffSrcShort = buffSrc ? buffSrc.split("/").pop() : null;
         if (
