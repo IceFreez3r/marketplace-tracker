@@ -275,13 +275,9 @@ function stringToHTMLElement(HTMLString) {
 }
 
 function getPlayAreaContainer() {
-    const mobileLayout = document.getElementsByClassName("mobile-layout")[0];
-    if (mobileLayout) {
-        return mobileLayout;
-    }
-    const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-    if (playAreaContainer) {
-        return playAreaContainer;
+    const playAreaWrapper = document.getElementsByClassName("play-area-wrapper")[0];
+    if (playAreaWrapper) {
+        return playAreaWrapper;
     }
     return undefined;
 }
