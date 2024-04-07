@@ -95,12 +95,6 @@ class CookingTracker {
     margin-left: 0;
 }
 
-.cooking-info-table-vendor-icon {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-}
-
 .cooking-info-table-font {
     font-size: 2.25rem;
     line-height: 2.5rem;
@@ -511,8 +505,6 @@ class CookingTracker {
                 ingredients,
                 product,
                 "off",
-                false,
-                false,
                 timePerAction,
                 "idlescape-container"
             )
@@ -535,7 +527,7 @@ class CookingTracker {
     }
 
     totalHeal(apiId, augments) {
-        const itemData = getIdlescapeWindowObject().items[apiId];
+        const itemData = getItemData(apiId);
         if (!itemData?.healing) {
             return 0;
         }

@@ -247,6 +247,7 @@ function deepCompare(object1, object2) {
 
 function getSkillLevel(skill, total, effective = false) {
     const skillElement = document.getElementsByClassName(`anchor-levels-${skill}`)[0];
+    // Fallback, this shouldn't happen
     if (!skillElement) return 99;
     if (effective) {
         const effectiveLevel = skillElement.getElementsByClassName("anchor-levels-effective-level")[0].innerText;
@@ -294,6 +295,10 @@ function getIdlescapeWindowObject() {
     return window.wrappedJSObject?.Idlescape.data ?? window.Idlescape.data;
 }
 
+function getItemData(apiId) {
+    return getIdlescapeWindowObject().items[apiId];
+}
+
 function getEnchantmentBySrc(src) {
     const enchantments = getIdlescapeWindowObject().enchantments;
     return Object.values(enchantments).find((enchantment) => enchantment.buffIcon.endsWith(src));
@@ -312,4 +317,24 @@ function setReactNativeValue(element, value) {
         tracker.setValue(lastValue);
     }
     element.dispatchEvent(event);
+}
+
+// vanilla function
+function getItemTier(itemData) {
+    let highestRequiredLevel;
+    if (itemData.requiredLevel) {
+        // Highest level of the required skills
+        highestRequiredLevel = Math.max(...Object.values(itemData.requiredLevel));
+        highestRequiredLevel = Number(highestRequiredLevel / 10);
+    }
+    return itemData.overrideItemTier ?? highestRequiredLevel ?? itemData.enchantmentTier ?? 1;
+}
+
+function combineWithSelfPrices(ingredientPrices, ingredientSelfPrices) {
+    return ingredientPrices.map((price, index) => {
+        if ((price || Infinity) > ingredientSelfPrices[index].price) {
+            return ingredientSelfPrices[index];
+        }
+        return { price, type: null };
+    });
 }

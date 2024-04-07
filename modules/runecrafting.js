@@ -204,7 +204,7 @@ body .runecrafting-essence-counter {
             ingredientIcons.push(resource.firstElementChild.src);
             ingredientAmounts.push(parseInt(resource.childNodes[1].innerText));
         }
-        const productAmount = this.productAmount(activeTab, activeTalisman);
+        const productAmount = RunecraftingTracker.productAmount(activeTab, activeTalisman);
 
         const recipePrices = this.storage.handleRecipe(ingredientApiIds, productApiId);
         const ingredients = Object.assign(recipePrices.ingredients, { icons: ingredientIcons, counts: ingredientAmounts });
@@ -218,14 +218,12 @@ body .runecrafting-essence-counter {
                 ingredients,
                 product,
                 this.settings.profit,
-                false,
-                false,
                 timePerAction
             )
         );
     }
 
-    productAmount(activeTab, activeTalisman) {
+    static productAmount(activeTab, activeTalisman) {
         if (activeTab === "Cloth Weaving") {
             return 1;
         }

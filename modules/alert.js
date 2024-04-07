@@ -27,6 +27,7 @@ class AlertTracker {
 .alert-popup {
     text-align: center;
     width: 100%;
+    max-width: 200px;
     position: absolute;
     left: 50%;
     top: 5%;
@@ -93,7 +94,6 @@ class AlertTracker {
     width: 100%;
     padding: 6px 16px;
     display: inline-flex;
-    align-items: center;
     justify-content: center;
     background-size: 100% 100%;
     margin-top: 0 !important;
@@ -149,7 +149,7 @@ class AlertTracker {
                 // Buy page
                 let buyHeader = document.getElementsByClassName("marketplace-buy-item-top")[0];
                 if (buyHeader) {
-                    this.createAlertButton(buyHeader.parentNode);
+                    this.createAlertButton();
                     return;
                 }
             }
@@ -321,7 +321,7 @@ class AlertTracker {
         return false;
     }
 
-    createAlertButton(buyContainer) {
+    createAlertButton() {
         if (document.getElementById("marketplace-alert-button")) {
             return;
         }
@@ -375,7 +375,6 @@ class AlertTracker {
                 </div>
             </div>`)
         );
-        const alertPopup = document.getElementsByClassName("alert-popup")[0];
         const priceBelowInput = document.getElementById("price-below");
         const priceAboveInput = document.getElementById("price-above");
         if (!this.hasActiveAlert(apiId)) {
@@ -400,13 +399,15 @@ class AlertTracker {
                 this.tracker.closePopup();
             }
         });
-        alertPopup.addEventListener("keydown", (event) => {
+        document.getElementsByClassName("alert-popup")[0].addEventListener("keydown", (event) => {
             if (event.key === "Enter") {
                 this.save(
                     apiId,
                     priceStringToNumber(priceBelowInput.value),
                     priceStringToNumber(priceAboveInput.value)
                 );
+            } else if (event.key === "Escape") {
+                this.tracker.closePopup();
             }
         });
     }

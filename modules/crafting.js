@@ -38,12 +38,6 @@ class CraftingTracker {
     object-fit: contain;
 }
 
-.crafting-info-table-vendor-icon {
-    width: 16px;
-    height: 16px;
-    object-fit: contain;
-}
-
 .crafting-info-table-font {
     font-size: 2.25rem;
     line-height: 2.5rem;
@@ -231,8 +225,6 @@ class CraftingTracker {
                 ingredients,
                 product,
                 this.settings.profit,
-                false,
-                false,
                 undefined,
                 "idlescape-container"
             )
