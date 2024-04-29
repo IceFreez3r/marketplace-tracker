@@ -278,11 +278,7 @@ function stringToHTMLElement(HTMLString) {
 }
 
 function getPlayAreaContainer() {
-    const playAreaWrapper = document.getElementsByClassName("play-area-wrapper")[0];
-    if (playAreaWrapper) {
-        return playAreaWrapper;
-    }
-    return undefined;
+    return document.getElementsByClassName("play-area-wrapper")[0];
 }
 
 function getHSLColor(quantile, colorBlindMode = false) {
