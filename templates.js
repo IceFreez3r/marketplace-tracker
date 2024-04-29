@@ -46,6 +46,10 @@ class Templates {
             </label>`;
     }
 
+    static inputTemplate(id, value, type, classes = "") {
+        return `<input id="${id}" type="${type}" class="tracker-settings-input ${classes}" value="${value}">`;
+    }
+
     static checkmarkTemplate(classes = "") {
         return `
             <svg class="checkmark ${classes}" viewBox="0 0 24 24">
@@ -97,83 +101,87 @@ class Templates {
         ingredients,
         product,
         profitType,
-        compactDisplay = false,
-        showCounts = false,
         secondsPerAction = null,
-        classes = ""
+        classes = "",
+        options = {}
     ) {
-        const [minRow, medianRow, maxRow] = rows;
         const {
-            icons: ingredientIcons,
-            counts: ingredientCounts,
             minPrices: ingredientMinPrices,
             medianPrices: ingredientMedianPrices,
             maxPrices: ingredientMaxPrices,
+            minSelfPrices: ingredientMinSelfPrices,
+            medianSelfPrices: ingredientMedianSelfPrices,
+            maxSelfPrices: ingredientMaxSelfPrices,
         } = ingredients;
-        const {
-            icons: productIcons,
-            counts: productCounts,
-            minPrices: productMinPrices,
-            medianPrices: productMedianPrices,
-            maxPrices: productMaxPrices,
-            vendorPrices: productVendorPrices,
-        } = product;
+        const bestIngredientMinPrices = combineWithSelfPrices(ingredientMinPrices, ingredientMinSelfPrices);
+        const bestIngredientMedianPrices = combineWithSelfPrices(ingredientMedianPrices, ingredientMedianSelfPrices);
+        const bestIngredientMaxPrices = combineWithSelfPrices(ingredientMaxPrices, ingredientMaxSelfPrices);
+
+        const { compactDisplay, showCounts, hideSum } = options;
 
         const header = Templates.infoTableHeader(
             classId,
-            ingredientIcons,
-            ingredientCounts,
-            productIcons,
-            productCounts,
+            ingredients.icons,
+            ingredients.counts,
+            product.icons,
+            product.counts,
             profitType,
-            showCounts
+            showCounts,
+            hideSum
         );
-        const minPrice = minRow
+        const minPrice = rows[0]
             ? Templates.infoTableRow(
                   classId,
-                  ingredientMinPrices,
-                  ingredientCounts,
-                  productMinPrices,
-                  productVendorPrices,
-                  productCounts,
+                  bestIngredientMinPrices,
+                  ingredients.counts,
+                  product.minPrices,
+                  product.vendorPrices,
+                  product.counts,
                   profitType,
                   compactDisplay,
+                  hideSum,
                   secondsPerAction,
-                  compactDisplay ? "Min" : "Minimal Marketprice"
+                  compactDisplay ? "Min" : "Minimum"
               )
             : "";
-        const medianPrice = medianRow
+        const medianPrice = rows[1]
             ? Templates.infoTableRow(
                   classId,
-                  ingredientMedianPrices,
-                  ingredientCounts,
-                  productMedianPrices,
-                  productVendorPrices,
-                  productCounts,
+                  bestIngredientMedianPrices,
+                  ingredients.counts,
+                  product.medianPrices,
+                  product.vendorPrices,
+                  product.counts,
                   profitType,
                   compactDisplay,
+                  hideSum,
                   secondsPerAction,
-                  compactDisplay ? "Median" : "Median Marketprice"
+                  compactDisplay ? "Mid" : "Median"
               )
             : "";
-        const maxPrice = maxRow
+        const maxPrice = rows[2]
             ? Templates.infoTableRow(
                   classId,
-                  ingredientMaxPrices,
-                  ingredientCounts,
-                  productMaxPrices,
-                  productVendorPrices,
-                  productCounts,
+                  bestIngredientMaxPrices,
+                  ingredients.counts,
+                  product.maxPrices,
+                  product.vendorPrices,
+                  product.counts,
                   profitType,
                   compactDisplay,
+                  hideSum,
                   secondsPerAction,
-                  compactDisplay ? "Max" : "Maximal Marketprice"
+                  compactDisplay ? "Max" : "Maximum"
               )
             : "";
-        const totalProductCount = productCounts.reduce((acc, val) => acc + val, 0);
+        const totalProductCount = product.counts.reduce((acc, val) => acc + val, 0);
         return `
             <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
-            ingredientMinPrices.length + 1 + productMinPrices.length + (totalProductCount > 1) + (profitType !== "off")
+            ingredientMinPrices.length +
+            !hideSum +
+            product.minPrices.length +
+            (!hideSum && totalProductCount > 1) +
+            (profitType !== "off")
         }, auto)">
                 ${header}
                 ${minPrice}
@@ -189,7 +197,8 @@ class Templates {
         productIcons,
         productCount,
         profitType,
-        showCounts = false
+        showCounts = false,
+        hideSum = false
     ) {
         let header = [];
         // Ingredients
@@ -199,27 +208,37 @@ class Templates {
                     classId,
                     `
                         <img class="${classId}-info-table-icon" src="${icon}">
-                        ${showCounts ? `<span class="${classId}-info-table-font">${ingredientCounts[i]}</span>` : ""}`
+                        ${
+                            showCounts
+                                ? `<span class="${classId}-info-table-font">${ingredientCounts[index]}</span>`
+                                : ""
+                        }`
                 )
             )
         );
-        // Total crafting cost
-        header.push(
-            Templates.infoTableCell(
-                classId,
-                `
+        if (!hideSum) {
+            // Total crafting cost
+            header.push(
+                Templates.infoTableCell(
+                    classId,
+                    `
                     <span class="${classId}-info-table-font">
                         &Sigma;
                     </span>`
-            )
-        );
+                )
+            );
+        }
         // Product
         header.push(
             ...productIcons.map((icon) =>
                 Templates.infoTableCell(
                     classId,
                     `
-                        ${icon.endsWith(".png") ? `<img class="${classId}-info-table-icon" src="${icon}">` : icon}
+                        ${
+                            icon.toLowerCase().endsWith(".png")
+                                ? `<img class="${classId}-info-table-icon" src="${icon}">`
+                                : icon
+                        }
                         ${showCounts ? `<span class="${classId}-info-table-font">${productCount}</span>` : ""}`
                 )
             )
@@ -251,43 +270,50 @@ class Templates {
 
     static infoTableRow(
         classId,
-        ingredientPrices,
+        bestIngredientPrices,
         ingredientCounts,
         productPrices,
         productVendorPrices,
         productCounts,
         profitType,
         compactDisplay,
+        hideSum,
         secondsPerAction,
         label
     ) {
         const row = [Templates.infoTableCell(classId, label)];
         // Ingredients
         row.push(
-            ...ingredientPrices.map((price) =>
+            ...bestIngredientPrices.map((best) =>
                 Templates.infoTableCell(
                     classId,
-                    formatNumber(price, { compactDisplay: compactDisplay, fraction: true })
+                    formatNumber(best.price, { compactDisplay: compactDisplay, fraction: true }),
+                    best.type
                 )
             )
         );
         // Total crafting cost
-        const totalIngredientPrice = totalRecipePrice(ingredientPrices, ingredientCounts);
+        const totalIngredientPrice = totalRecipePrice(
+            bestIngredientPrices.map((best) => best.price),
+            ingredientCounts
+        );
+        if (!hideSum) {
+            row.push(
+                Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }))
+            );
+        }
         const betterToVendor =
             productPrices.length === 1 ? profit("flat", productVendorPrices[0], productPrices[0]) < 0 : false;
         const betterPrices = betterToVendor ? productVendorPrices : productPrices;
         const totalProductPrice = totalRecipePrice(betterPrices, productCounts);
         const totalProductCount = productCounts.reduce((acc, val) => acc + val, 0);
-        row.push(
-            Templates.infoTableCell(classId, formatNumber(totalIngredientPrice, { compactDisplay: compactDisplay }))
-        );
         // Product
         row.push(
             ...betterPrices.map((price) =>
                 Templates.infoTableCell(
                     classId,
                     formatNumber(price, { compactDisplay: compactDisplay, fraction: true }),
-                    betterToVendor
+                    betterToVendor ? "vendor" : null
                 )
             )
         );
@@ -314,18 +340,70 @@ class Templates {
         return row.join("");
     }
 
-    static infoTableCell(classId, content, vendorIcon = false) {
+    static infoTableCell(classId, content, source = null) {
         return `
             <div class="${classId}-info-table-content">
                 ${content}
                 ${
-                    vendorIcon
+                    source === null
+                        ? ""
+                        : source === "vendor"
                         ? `
                             <div style="position: relative;">
-                                <img class="crafting-info-table-vendor-icon" src="/images/money_icon.png" alt="Vendor">
+                                <img class="tracker-info-table-type-icon" src="/images/money_icon.png" alt="Vendor">
                                 <div class="tracker-tooltip">
                                     <div class="tracker-tooltip-text">
                                         Vendor Price
+                                    </div>
+                                </div>
+                            </div>`
+                        : source === "crafting"
+                        ? `
+                            <div style="position: relative;">
+                                <img class="tracker-info-table-type-icon" src="/images/ui/crafting_icon.png" alt="Crafting">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        Crafting Cost
+                                    </div>
+                                </div>
+                            </div>`
+                        : source === "smithing"
+                        ? `
+                            <div style="position: relative;">
+                                <img class="tracker-info-table-type-icon" src="/images/smithing/smithing_icon.png" alt="Smithing">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        Smithing Cost
+                                    </div>
+                                </div>
+                            </div>`
+                        : source === "runecrafting"
+                        ? `
+                            <div style="position: relative;">
+                                <img class="tracker-info-table-type-icon" src="/images/runecrafting/RuneCraftingIcon.png" alt="Runecrafting">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        Runecrafting Cost
+                                    </div>
+                                </div>
+                            </div>`
+                        : source === "scrollcrafting"
+                        ? `
+                            <div style="position: relative;">
+                                <img class="tracker-info-table-type-icon" src="/images/enchanting/enchanted_scroll.png" alt="Srollcrafting">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        Srollcrafting Cost
+                                    </div>
+                                </div>
+                            </div>`
+                        : source === "general-shop"
+                        ? `
+                            <div style="position: relative;">
+                                <img class="tracker-info-table-type-icon" src="/images/ui/shop_icon.png" alt="General Shop">
+                                <div class="tracker-tooltip">
+                                    <div class="tracker-tooltip-text">
+                                        General Shop Cost
                                     </div>
                                 </div>
                             </div>`

@@ -23,6 +23,10 @@ class CraftingTracker {
     place-items: center;
 }
 
+.mobile-layout .crafting-info-table {
+    grid-column: span 1;
+}
+
 .crafting-info-table-content:first-child {
     grid-column: 2;
 }
@@ -35,12 +39,6 @@ class CraftingTracker {
     margin: 4px 10px;
     width: 32px;
     height: 32px;
-    object-fit: contain;
-}
-
-.crafting-info-table-vendor-icon {
-    width: 16px;
-    height: 16px;
     object-fit: contain;
 }
 
@@ -231,8 +229,6 @@ class CraftingTracker {
                 ingredients,
                 product,
                 this.settings.profit,
-                false,
-                false,
                 undefined,
                 "idlescape-container"
             )

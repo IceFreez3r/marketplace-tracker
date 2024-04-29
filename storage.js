@@ -1,3 +1,20 @@
+/**
+ * @typedef {Object} PriceAnalysis
+ * @property {number} minPrice
+ * @property {number} medianPrice
+ * @property {number} maxPrice
+ * @property {SelfPrice} minSelfPrice
+ * @property {SelfPrice} medianSelfPrice
+ * @property {SelfPrice} maxSelfPrice
+ * @property {number} vendorPrice
+ */
+
+/**
+ * @typedef {Object} SelfPrice
+ * @property {number} price
+ * @property {null | 'crafting' | 'smithing' | 'scrollcrafting' | 'runecrafting' | 'general-shop' } type
+ */
+
 class Storage {
     constructor(APICallback) {
         this.APICallback = APICallback;
@@ -13,6 +30,7 @@ class Storage {
         this.itemVendorPrices = {};
         this.heatItems = {};
         this.latestPriceList = {};
+        this.selfPrices = {}; // Prices to make an item yourself
 
         // remove old key
         if (localStorage.getItem(this.storageKeys.lastAPIFetch) !== null) {
@@ -79,8 +97,11 @@ class Storage {
     }
 
     handleApiData(data) {
-        const timestamp = Math.floor(new Date(data.timestamp).valueOf() / 1000 / 60 / 10);
+        // Reset self cache
+        this.selfPrices = {};
         this.latestPriceList = {};
+
+        const timestamp = Math.floor(new Date(data.timestamp).valueOf() / 1000 / 60 / 10);
         data = data.manifest;
         const isNewData = this.lastAPIFetch !== timestamp;
         for (let i = 0; i < data.length; i++) {
@@ -219,9 +240,9 @@ class Storage {
     }
 
     /**
-     *
+     * Analyzes prices of an item
      * @param {string | number} apiId The apiId to analyze
-     * @returns {object} An object containing the min, median, max and vendor price of the item
+     * @returns {PriceAnalysis} The analyzed prices
      */
     analyzeItem(apiId) {
         apiId = Number(apiId);
@@ -230,14 +251,39 @@ class Storage {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
+                minSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                medianSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                maxSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
                 vendorPrice: NaN,
             };
         }
+        // This is gold
         if (apiId === 1) {
             return {
                 minPrice: 1,
                 medianPrice: 1,
                 maxPrice: 1,
+                minSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                medianSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                maxSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
                 vendorPrice: NaN,
             };
         }
@@ -251,15 +297,29 @@ class Storage {
                 minPrice: talismanAnalysis.minPrice / essencePerTalisman,
                 medianPrice: talismanAnalysis.medianPrice / essencePerTalisman,
                 maxPrice: talismanAnalysis.maxPrice / essencePerTalisman,
+                minSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                medianSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
+                maxSelfPrice: {
+                    price: NaN,
+                    type: null,
+                },
                 vendorPrice: NaN,
             };
         }
+        const selfPrices = this.getSelfPrices(apiId);
         if (this.marketHistory[apiId].length === 0) {
             return {
                 minPrice: NaN,
                 medianPrice: NaN,
                 maxPrice: NaN,
                 vendorPrice: this.itemVendorPrices[apiId],
+                ...selfPrices,
             };
         }
         const minQuantile = Math.floor((this.marketHistory[apiId].length - 1) * 0.05);
@@ -270,6 +330,7 @@ class Storage {
             medianPrice: this.marketHistory[apiId][medianQuantile][1],
             maxPrice: this.marketHistory[apiId][maxQuantile][1],
             vendorPrice: this.itemVendorPrices[apiId],
+            ...selfPrices,
         };
     }
 
@@ -279,12 +340,214 @@ class Storage {
             minPrices: analysisArray.map((analysis) => analysis.minPrice),
             medianPrices: analysisArray.map((analysis) => analysis.medianPrice),
             maxPrices: analysisArray.map((analysis) => analysis.maxPrice),
+            minSelfPrices: analysisArray.map((analysis) => analysis.minSelfPrice),
+            medianSelfPrices: analysisArray.map((analysis) => analysis.medianSelfPrice),
+            maxSelfPrices: analysisArray.map((analysis) => analysis.maxSelfPrice),
             vendorPrices: analysisArray.map((analysis) => analysis.vendorPrice),
         };
     }
 
     latestPrices() {
         return this.latestPriceList;
+    }
+
+    getSelfPrices(apiId) {
+        if (apiId in this.selfPrices) {
+            return this.selfPrices[apiId];
+        }
+        // Fill selfPrices with NaNs to prevent infinite loops
+        this.selfPrices[apiId] = {
+            minSelfPrice: {
+                price: NaN,
+                type: null,
+            },
+            medianSelfPrice: {
+                price: NaN,
+                type: null,
+            },
+            maxSelfPrice: {
+                price: NaN,
+                type: null,
+            },
+        };
+
+        function mapIndexToType(index) {
+            switch (index) {
+                case 0:
+                    return "crafting";
+                case 1:
+                    return "smithing";
+                case 2:
+                    return "scrollcrafting";
+                case 3:
+                    return "runecrafting";
+                case 4:
+                    return "general-shop";
+                default:
+                    return null;
+            }
+        }
+
+        const productionPrices = [
+            this.craftingPrices(apiId),
+            this.smithingPrices(apiId),
+            this.scrollcraftingPrices(apiId),
+            this.runecraftingPrices(apiId),
+            this.generalShopPrices(apiId),
+        ];
+
+        const minPrice = Math.min(...productionPrices.map((price) => price.minPrice || Infinity));
+        const medianPrice = Math.min(...productionPrices.map((price) => price.medianPrice || Infinity));
+        const maxPrice = Math.min(...productionPrices.map((price) => price.maxPrice || Infinity));
+
+        this.selfPrices[apiId] = {
+            minSelfPrice: {
+                price: minPrice,
+                type: mapIndexToType(productionPrices.findIndex((price) => price.minPrice === minPrice)),
+            },
+            medianSelfPrice: {
+                price: medianPrice,
+                type: mapIndexToType(productionPrices.findIndex((price) => price.medianPrice === medianPrice)),
+            },
+            maxSelfPrice: {
+                price: maxPrice,
+                type: mapIndexToType(productionPrices.findIndex((price) => price.maxPrice === maxPrice)),
+            },
+        };
+
+        return this.selfPrices[apiId];
+    }
+
+    craftingPrices(apiId) {
+        const craftingAugmenting = getIdlescapeWindowObject().craftingAugmenting;
+        // Permission denied to access object without the structuredClone
+        const recipes = structuredClone(craftingAugmenting[apiId]?.crafting);
+        if (!recipes) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+            };
+        }
+        const prices = recipes.reduce(
+            (acc, r) => {
+                const { recipe, multiplier } = r;
+                const apiIds = Object.keys(recipe);
+                const counts = Object.values(recipe).map((count) => count / (multiplier ?? 1));
+                const recipePrices = this.analyzeItems(apiIds);
+                const bestSelfPrices = this.getBestSelfPrices(recipePrices, counts);
+                return {
+                    minPrice: Math.min(acc.minPrice, bestSelfPrices.minPrice),
+                    medianPrice: Math.min(acc.medianPrice, bestSelfPrices.medianPrice),
+                    maxPrice: Math.min(acc.maxPrice, bestSelfPrices.maxPrice),
+                };
+            },
+            { minPrice: Infinity, medianPrice: Infinity, maxPrice: Infinity }
+        );
+        return prices;
+    }
+
+    smithingPrices(apiId) {
+        // smithing is complicated
+        return {
+            minPrice: NaN,
+            medianPrice: NaN,
+            maxPrice: NaN,
+        };
+    }
+
+    scrollcraftingPrices(apiId) {
+        // Scrolls aren't used in any recipes, so we don't really need this
+        return {
+            minPrice: NaN,
+            medianPrice: NaN,
+            maxPrice: NaN,
+        };
+        const craftingAugmenting = getIdlescapeWindowObject().craftingAugmenting;
+        const recipe = craftingAugmenting[apiId]?.scrollcrafting;
+        if (!recipe) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+            };
+        }
+
+        const apiIds = Object.keys(recipe);
+        const counts = Object.values(recipe);
+        const recipePrices = this.analyzeItems(apiIds);
+        const bestSelfPrices = this.getBestSelfPrices(recipePrices, counts);
+        return bestSelfPrices;
+    }
+
+    runecraftingPrices(apiId) {
+        const craftingAugmenting = getIdlescapeWindowObject().craftingAugmenting;
+        const recipe = craftingAugmenting[apiId]?.runecrafting;
+        if (!recipe) {
+            return {
+                minPrice: NaN,
+                medianPrice: NaN,
+                maxPrice: NaN,
+            };
+        }
+
+        const itemData = getItemData(apiId);
+        const multiplier = RunecraftingTracker.productAmount(
+            itemData.class === "cloth" ? "Cloth Weaving" : "Runecrafting",
+            false
+        );
+        const apiIds = Object.keys(recipe);
+        // 113 are rune slates, which scale with the multiplier
+        const counts = Object.values(recipe).map((count, index) => (apiIds[index] === "113" ? 1 : count / multiplier));
+        const recipePrices = this.analyzeItems(apiIds);
+        const bestSelfPrices = this.getBestSelfPrices(recipePrices, counts);
+        return bestSelfPrices;
+    }
+
+    getBestSelfPrices(recipePrices, counts) {
+        return {
+            minPrice: counts.reduce(
+                (sum, count, i) =>
+                    sum +
+                    count *
+                        Math.min(
+                            recipePrices.minPrices[i] || Infinity,
+                            recipePrices.minSelfPrices[i].price || Infinity
+                        ),
+                0
+            ),
+            medianPrice: counts.reduce(
+                (sum, count, i) =>
+                    sum +
+                    count *
+                        Math.min(
+                            recipePrices.medianPrices[i] || Infinity,
+                            recipePrices.medianSelfPrices[i].price || Infinity
+                        ),
+                0
+            ),
+            maxPrice: counts.reduce(
+                (sum, count, i) =>
+                    sum +
+                    count *
+                        Math.min(
+                            recipePrices.maxPrices[i] || Infinity,
+                            recipePrices.maxSelfPrices[i].price || Infinity
+                        ),
+                0
+            ),
+        };
+    }
+
+    generalShopPrices(apiId) {
+        const price = Object.values(getIdlescapeWindowObject().gameShopItems).find(
+            (item) => item.itemID === apiId
+        )?.price ?? NaN;
+        return {
+            minPrice: price,
+            medianPrice: price,
+            maxPrice: price,
+        };
     }
 
     priceQuantile(apiId, price) {

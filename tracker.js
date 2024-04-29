@@ -393,6 +393,13 @@ input[type="time"].tracker-time:not(.browser-default) {
     transform: rotate(-180deg);
     fill: white;
 }
+
+.tracker-info-table-type-icon {
+    margin-left: 3px;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
     `;
 
     constructor() {
@@ -836,6 +843,11 @@ input[type="time"].tracker-time:not(.browser-default) {
         const timeInputs = document.querySelectorAll(".tracker-time, .tracker-time-duration");
         for (const timeInput of timeInputs) {
             this.setSetting(timeInput.id, timeInput.value);
+        }
+        // Normal Inputs
+        const inputs = document.querySelectorAll(".tracker-settings-input");
+        for (const input of inputs) {
+            this.setSetting(input.id, input.value);
         }
         // Save settings
         this.storeSettings();

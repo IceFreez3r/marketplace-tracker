@@ -194,8 +194,6 @@ class SmithingTracker {
                     this.ingredients,
                     product,
                     this.settings.profit,
-                    false,
-                    false,
                     timePerAction
                 )}
             </div>`

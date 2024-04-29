@@ -156,6 +156,8 @@ function getLeagueId(leagueIcon) {
         return 6;
     } else if (leagueIcon.src.endsWith("season1ironman.png")) {
         return 7;
+    } else if (leagueIcon.src.endsWith("season2.png")) {
+        return 8;
     }
     console.log("Unknown league icon: " + leagueIcon.src + ". Defaulting to normal league.");
     return 1;
@@ -247,6 +249,7 @@ function deepCompare(object1, object2) {
 
 function getSkillLevel(skill, total, effective = false) {
     const skillElement = document.getElementsByClassName(`anchor-levels-${skill}`)[0];
+    // Fallback, this shouldn't happen
     if (!skillElement) return 99;
     if (effective) {
         const effectiveLevel = skillElement.getElementsByClassName("anchor-levels-effective-level")[0].innerText;
@@ -275,15 +278,7 @@ function stringToHTMLElement(HTMLString) {
 }
 
 function getPlayAreaContainer() {
-    const mobileLayout = document.getElementsByClassName("mobile-layout")[0];
-    if (mobileLayout) {
-        return mobileLayout;
-    }
-    const playAreaContainer = document.getElementsByClassName("play-area-container")[0];
-    if (playAreaContainer) {
-        return playAreaContainer;
-    }
-    return undefined;
+    return document.getElementsByClassName("play-area-wrapper")[0];
 }
 
 function getHSLColor(quantile, colorBlindMode = false) {
@@ -296,6 +291,10 @@ function getHSLColor(quantile, colorBlindMode = false) {
 
 function getIdlescapeWindowObject() {
     return window.wrappedJSObject?.Idlescape.data ?? window.Idlescape.data;
+}
+
+function getItemData(apiId) {
+    return getIdlescapeWindowObject().items[apiId];
 }
 
 function getEnchantmentBySrc(src) {
@@ -316,4 +315,24 @@ function setReactNativeValue(element, value) {
         tracker.setValue(lastValue);
     }
     element.dispatchEvent(event);
+}
+
+// vanilla function
+function getItemTier(itemData) {
+    let highestRequiredLevel;
+    if (itemData.requiredLevel) {
+        // Highest level of the required skills
+        highestRequiredLevel = Math.max(...Object.values(itemData.requiredLevel));
+        highestRequiredLevel = Number(highestRequiredLevel / 10);
+    }
+    return itemData.overrideItemTier ?? highestRequiredLevel ?? itemData.enchantmentTier ?? 1;
+}
+
+function combineWithSelfPrices(ingredientPrices, ingredientSelfPrices) {
+    return ingredientPrices.map((price, index) => {
+        if ((price || Infinity) > ingredientSelfPrices[index].price) {
+            return ingredientSelfPrices[index];
+        }
+        return { price, type: null };
+    });
 }
