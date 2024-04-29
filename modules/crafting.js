@@ -23,6 +23,10 @@ class CraftingTracker {
     place-items: center;
 }
 
+.mobile-layout .crafting-info-table {
+    grid-column: span 1;
+}
+
 .crafting-info-table-content:first-child {
     grid-column: 2;
 }
