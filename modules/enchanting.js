@@ -472,7 +472,7 @@ body .scrollcrafting-container {
     }
 
     augmentingTableSection(augmentingData, type) {
-        const bestTen = augmentingData
+        const bestTen = structuredClone(augmentingData)
             .sort((a, b) => a[type + "Price"] - b[type + "Price"])
             .splice(0, this.settings.augmenting_rows);
         const tableEntries = bestTen
