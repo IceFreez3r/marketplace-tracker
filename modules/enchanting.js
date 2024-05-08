@@ -138,7 +138,12 @@ body .scrollcrafting-container {
     object-fit: contain;
 }
 
-.augmenting-table-font {
+.augmenting-table-price-xp {
+    flex-direction: column;
+}
+
+.augmenting-table-price-xp > .gray {
+    color: gray;
 }
 
 .augmenting-info-table {
@@ -505,8 +510,16 @@ body .scrollcrafting-container {
                     <div class="augmenting-table-font">
                         ${formatNumber(augItem.experience, { fraction: true })}
                     </div>
-                    <div class="augmenting-table-font">
-                        ${formatNumber(augItem[type + "Price"], { fraction: true })}
+                    <div class="augmenting-table-price-xp">
+                        <div class="${type !== "min" ? "gray" : ""}">
+                            ${formatNumber(augItem["minPrice"], { fraction: true })}
+                        </div>
+                        <div class="${type !== "median" ? "gray" : ""}">
+                            ${formatNumber(augItem["medianPrice"], { fraction: true })}
+                        </div>
+                        <div class="${type !== "max" ? "gray" : ""}">
+                            ${formatNumber(augItem["maxPrice"], { fraction: true })}
+                        </div>
                     </div>
                     ${Templates.infoTableTemplate(
                         "augmenting",
