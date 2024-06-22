@@ -70,6 +70,9 @@ class CraftingTracker {
         if (this.settings.goldPerXP === undefined) {
             this.settings.goldPerXP = 1;
         }
+        if (this.settings.includeProfitInGoldPerXp === undefined) {
+            this.settings.includeProfitInGoldPerXp = 1;
+        }
         if (
             this.settings.min_row === undefined ||
             this.settings.median_row === undefined ||
@@ -133,6 +136,16 @@ class CraftingTracker {
                 </div>
                 ${Templates.checkboxTemplate(CraftingTracker.id + "-goldPerXP", this.settings.goldPerXP)}
             </div>`;
+        const includeProfitInGoldPerXp = `
+            <div class="tracker-module-setting">
+                <div class="tracker-module-setting-name">
+                    Include Sell Price of Product in Gold per Experience
+                </div>
+                ${Templates.checkboxTemplate(
+                    CraftingTracker.id + "-includeProfitInGoldPerXp",
+                    this.settings.includeProfitInGoldPerXp
+                )}
+            </div>`;
         const rows = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
@@ -152,7 +165,7 @@ class CraftingTracker {
                 </div>
                 ${Templates.checkboxTemplate(CraftingTracker.id + "-max_row", this.settings.max_row)}
             </div>`;
-        return [profitType, goldPerXP, rows];
+        return [profitType, goldPerXP, includeProfitInGoldPerXp, rows];
     }
 
     settingChanged(settingId, value) {
@@ -169,6 +182,8 @@ class CraftingTracker {
                 return;
             }
             this.craftingTracker(forceUpdate);
+        } else {
+            this.lastCraftedApiId = null;
         }
     }
 
@@ -219,15 +234,15 @@ class CraftingTracker {
             icons: resourceItemIcons,
             counts: resourceItemCounts,
         });
-        const product = Object.assign(recipePrices.products, { icons: [craftedItemIcon], counts: [productCount] });
+        const products = Object.assign(recipePrices.products, { icons: [craftedItemIcon], counts: [productCount] });
         saveInsertAdjacentHTML(
-            recipeContainer,
+            recipeContainer.parentElement,
             "afterend",
             Templates.infoTableTemplate(
                 "crafting",
                 [this.settings.min_row, this.settings.median_row, this.settings.max_row],
                 ingredients,
-                product,
+                products,
                 this.settings.profit,
                 undefined,
                 "idlescape-container"
@@ -235,7 +250,7 @@ class CraftingTracker {
         );
 
         if (this.settings.goldPerXP) {
-            this.goldPerXP(recipeNode, ingredients, product, resourceItemCounts, productCount);
+            this.goldPerXP(recipeNode, ingredients, products, resourceItemCounts, productCount);
         }
     }
 
@@ -246,23 +261,32 @@ class CraftingTracker {
         if (experience === 0) {
             return;
         }
-        const betterVendorThanMin = profit("flat", product.vendorPrice, product.minPrice) < 0;
-        const betterMinSellPrice = (betterVendorThanMin ? product.vendorPrice : product.minPrice) * productCount;
-        const betterVendorThanMax = profit("flat", product.vendorPrice, product.maxPrice) < 0;
-        const betterMaxSellPrice = (betterVendorThanMax ? product.vendorPrice : product.maxPrice) * productCount;
+
+        const bestIngredientMinPrices = ingredients.minPrices.map((price, index) =>
+            (price || Infinity) < (ingredients.minSelfPrices[index].price || Infinity) ? price : ingredients.minSelfPrices[index].price
+        );
+        const bestIngredientMaxPrices = ingredients.maxPrices.map((price, index) =>
+            (price || Infinity) < (ingredients.maxSelfPrices[index].price || Infinity) ? price : ingredients.maxSelfPrices[index].price
+        );
+
+        const betterVendorMin = profit("flat", product.vendorPrices[0], product.minPrices[0]) < 0;
+        const betterVendorMax = profit("flat", product.vendorPrices[0], product.maxPrices[0]) < 0;
+        const betterMinSellPrice = (betterVendorMin ? product.vendorPrices[0] : product.minPrices[0]) * productCount;
+        const betterMaxSellPrice = (betterVendorMax ? product.vendorPrices[0] : product.maxPrices[0]) * productCount;
+
         let minCost = -profit(
             "flat",
-            totalRecipePrice(ingredients.minPrices, resourceItemCounts),
-            betterMinSellPrice,
+            totalRecipePrice(bestIngredientMinPrices, resourceItemCounts),
+            this.settings.includeProfitInGoldPerXp ? betterMinSellPrice : 0,
             undefined,
-            betterVendorThanMin
+            betterVendorMin
         );
         let maxCost = -profit(
             "flat",
-            totalRecipePrice(ingredients.maxPrices, resourceItemCounts),
-            betterMaxSellPrice,
+            totalRecipePrice(bestIngredientMaxPrices, resourceItemCounts),
+            this.settings.includeProfitInGoldPerXp ? betterMaxSellPrice : 0,
             undefined,
-            betterVendorThanMax
+            betterVendorMax
         );
         // swap min and max if min is higher than max
         if (minCost > maxCost) {
