@@ -271,10 +271,9 @@ class MarketHighlights {
         }
     }
 
-    // Determines current subpage of the marketplace
     highlight() {
-        const page = this.getPage();
-        this.handleButtons(page);
+        this.handleButtons();
+        const page = getMarketPage();
         switch (page) {
             case "offers":
             case "listings": {
@@ -297,21 +296,8 @@ class MarketHighlights {
         }
     }
 
-    getPage() {
-        if (document.querySelector(".marketplace-show-both, .marketplace-show-buy, .marketplace-show-sell"))
-            return "buy";
-        if (document.querySelector(".anchor-sell-all-items")) return "listings";
-        if (document.querySelector(".anchor-sell-listings")) return "listings";
-        if (document.querySelector(".anchor-buy-offers")) return "offers";
-        if (document.querySelector(".anchor-buy-all-items")) return "overview";
-        if (document.querySelector(".marketplace-history-container")) return "history";
-        return "unknown";
-    }
-
-    handleButtons(page) {
+    handleButtons() {
         const trackerButtons = insertTrackerButtons();
-        trackerButtons.classList.remove(trackerButtons.classList[trackerButtons.classList.length - 1]);
-        trackerButtons.classList.add(page);
 
         this.filterFavoritesButton(trackerButtons);
         if (this.settings.quantileDisplay !== "off") {
