@@ -266,8 +266,8 @@ function insertTrackerButtons() {
     if (trackerButtons) {
         return trackerButtons;
     }
-    const marketplaceFilter = document.getElementsByClassName("marketplace-buy-info")[0];
-    marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
+    const marketplaceFilter = document.querySelector(".marketplace-search > .anchor-idlescape-input");
+    marketplaceFilter.insertAdjacentHTML("beforebegin", '<div id="tracker-buttons" />');
     return document.getElementById("tracker-buttons");
 }
 
