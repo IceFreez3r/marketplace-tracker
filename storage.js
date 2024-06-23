@@ -73,6 +73,11 @@ class Storage {
                     heat: vanillaItemsList[apiId].heat,
                     itemId,
                 };
+            } else if (apiId === "709") {
+                this.heatItems[apiId] = {
+                    heat: 30000,
+                    itemId
+                }
             }
         }
         // this.fetchAPILoop();
