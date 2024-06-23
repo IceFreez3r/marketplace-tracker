@@ -262,13 +262,16 @@ function getSkillLevel(skill, total, effective = false) {
 }
 
 function insertTrackerButtons() {
-    const trackerButtons = document.getElementById("tracker-buttons");
-    if (trackerButtons) {
-        return trackerButtons;
+    let trackerButtons = document.getElementById("tracker-buttons");
+    if (!trackerButtons) {
+        const marketplaceFilter = document.querySelector(".marketplace-search > .anchor-idlescape-input");
+        marketplaceFilter.insertAdjacentHTML("beforebegin", '<div id="tracker-buttons" />');
+        trackerButtons = document.getElementById("tracker-buttons");
     }
-    const marketplaceFilter = document.getElementsByClassName("marketplace-buy-info")[0];
-    marketplaceFilter.insertAdjacentHTML("afterend", '<div id="tracker-buttons" />');
-    return document.getElementById("tracker-buttons");
+    const page = getMarketPage();
+    trackerButtons.classList.remove(trackerButtons.classList[trackerButtons.classList.length - 1]);
+    trackerButtons.classList.add(page);
+    return trackerButtons;
 }
 
 function stringToHTMLElement(HTMLString) {
@@ -335,4 +338,14 @@ function combineWithSelfPrices(ingredientPrices, ingredientSelfPrices) {
         }
         return { price, type: null };
     });
+}
+
+function getMarketPage() {
+    if (document.querySelector(".marketplace-show-both, .marketplace-show-buy, .marketplace-show-sell")) return "buy";
+    if (document.querySelector(".anchor-sell-all-items")) return "listings";
+    if (document.querySelector(".anchor-sell-listings")) return "listings";
+    if (document.querySelector(".anchor-buy-offers")) return "offers";
+    if (document.querySelector(".anchor-buy-all-items")) return "overview";
+    if (document.querySelector(".marketplace-history-container")) return "history";
+    return "unknown";
 }

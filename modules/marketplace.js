@@ -175,7 +175,7 @@ class MarketplaceTracker {
         if (!apiId) return;
         const analysis = this.storage.analyzeItem(apiId);
         document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
-        const marketplaceTop = document.getElementsByClassName("marketplace-buy-item-top")[0];
+        const marketplaceTop = document.getElementsByClassName("anchor-market-tables-header")[0];
         saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(apiId, analysis));
         if (this.settings.editMode) {
             document.getElementById("tracker-edit-low").addEventListener("click", () => this.editData(apiId, "low"));

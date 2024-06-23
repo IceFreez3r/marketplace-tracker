@@ -5,15 +5,20 @@ class AlertTracker {
     static category = "economy";
     css = `
 .marketplace-alert-button {
-    order: 2;
-    color: #fff;
-    height: 45px;
-    width: 45px;
-    background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
+    width: 33px;
+    height: 33px;
+    margin-left: 1px;
+    margin-right: 1px;
+    padding: 1px;
+    cursor: pointer;
 }
 
-.marketplace-buy-item-top .chakra-input__group {
-    order: 3;
+#marketplace-alert-button {
+    display: none;
+}
+
+#tracker-buttons.buy > #marketplace-alert-button {
+    display: block;
 }
 
 .alert-sound {
@@ -146,12 +151,8 @@ class AlertTracker {
                 if (detectInfiniteLoop(mutations)) {
                     return;
                 }
-                // Buy page
-                let buyHeader = document.getElementsByClassName("marketplace-buy-item-top")[0];
-                if (buyHeader) {
-                    this.createAlertButton();
-                    return;
-                }
+                if (getMarketPage() !== "buy") return;
+                this.createAlertButton();
             }
         });
     }
@@ -331,16 +332,16 @@ class AlertTracker {
         }
         const apiId = convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
         if (!apiId) return;
-        const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
+        const trackerButtons = insertTrackerButtons();
         saveInsertAdjacentHTML(
-            refreshButton,
-            "afterend",
+            trackerButtons,
+            "beforeend",
             `
-            <button id="marketplace-alert-button" class="marketplace-alert-button ${
+            <div id="marketplace-alert-button" class="${
                 this.hasActiveAlert(apiId) ? "" : "svg-inactive"
             }" style="stroke: #ccffff; fill: #ccffff;" >
-                ${Templates.alertTemplate()}
-            </button>`
+                ${Templates.alertTemplate("marketplace-alert-button")}
+            </div>`
         );
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.addEventListener("click", () => {

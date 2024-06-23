@@ -43,46 +43,30 @@ class MarketHighlights {
     box-shadow: 0 0 0 3px white, 0 0 0 6px red;
 }
 
-.marketplace-top {
-    display: grid;
-    grid-template-areas: "info info"
-                         "input tracker";
-    grid-template-columns: 1fr max-content;
-}
-
-.marketplace-buy-info {
-    grid-area: info;
+.marketplace-search {
+    grid-template-columns: 35px auto 1fr;
 }
 
 #tracker-buttons {
-    grid-area: tracker;
     display: flex;
 }
 
-.marketplace-top > .chakra-input__group,
-.anchor-marketplace-filter {
-    grid-area: input;
+#tracker-favorite-filter,
+#tracker-quantile-colors,
+#tracker-favorite-toggle {
+    display: none;
+}
+
+#tracker-buttons.overview > #tracker-favorite-filter,
+#tracker-buttons.listings > #tracker-favorite-filter,
+#tracker-buttons.offers > #tracker-favorite-filter,
+#tracker-buttons.overview > #tracker-quantile-colors,
+#tracker-buttons.buy > #tracker-favorite-toggle {
+    display: block;
 }
 
 /* vanilla .hidden class gets overwritten by chakra class */
 .hidden {
-    display: none;
-}
-
-/* identical to vanilla .marketplace-refresh-button */
-.marketplace-favorite-button {
-    color: #fff;
-    height: 45px;
-    width: 45px;
-    background: linear-gradient(180deg,rgba(72,85,99,.8431372549019608),rgba(41,50,60,.6039215686274509));
-    order: 1;
-}
-
-.marketplace-buy-item-top .anchor-idlescape-input {
-    order: 3;
-}
-
-.marketplace-favorite-button:not(.svg-inactive) > span {
     display: none;
 }
 
@@ -287,43 +271,45 @@ class MarketHighlights {
         }
     }
 
-    // Determines current subpage of the marketplace
     highlight() {
-        // Buy page
-        const buyHeader = document.getElementsByClassName("marketplace-buy-item-top")[0];
-        if (buyHeader) {
-            this.toggleFavoriteButton();
-            return;
-        }
-        // Sell Page
-        const sellItems = document.getElementsByClassName("anchor-sell-all-items")[0];
-        if (sellItems) {
-            this.highlightFavorites(sellItems);
-            this.filterFavoritesButton();
-            this.filterFavorites();
-            return;
-        }
-        // Overview Page
-        const buyItems = document.getElementsByClassName("anchor-buy-all-items")[0];
-        if (buyItems) {
-            this.highlightFavorites(buyItems);
-            this.filterFavoritesButton();
-            this.filterFavorites();
-            if (this.settings.quantileDisplay !== "off") {
-                this.quantileColorsButton();
-                this.quantileColors();
+        this.handleButtons();
+        const page = getMarketPage();
+        switch (page) {
+            case "offers":
+            case "listings": {
+                this.highlightFavorites();
+                this.filterFavorites();
+                break;
             }
-            this.highlightBestHeatItem(buyItems);
-            this.highlightAlertItems(buyItems);
-            return;
+            case "overview": {
+                this.highlightFavorites();
+                this.filterFavorites();
+                if (this.settings.quantileDisplay !== "off") {
+                    this.quantileColors();
+                }
+                this.highlightBestHeatItem();
+                this.highlightAlertItems();
+                break;
+            }
+            default:
+                break;
         }
     }
 
-    filterFavoritesButton() {
+    handleButtons() {
+        const trackerButtons = insertTrackerButtons();
+
+        this.filterFavoritesButton(trackerButtons);
+        if (this.settings.quantileDisplay !== "off") {
+            this.quantileColorsButton(trackerButtons);
+        }
+        this.toggleFavoriteButton(trackerButtons);
+    }
+
+    filterFavoritesButton(trackerButtons) {
         if (document.getElementById("tracker-favorite-filter")) {
             return;
         }
-        const trackerButtons = insertTrackerButtons();
         saveInsertAdjacentHTML(
             trackerButtons,
             "beforeend",
@@ -357,15 +343,18 @@ class MarketHighlights {
         }
     }
 
-    highlightFavorites(items) {
-        const children = items.getElementsByClassName("item");
-        for (const itemNode of children) {
-            const apiId = convertApiId(itemNode);
-            if (this.isFavorite(apiId)) {
-                itemNode.classList.add("favorite-highlight");
+    highlightFavorites() {
+        const items = document.querySelector(".marketplace-content .all-items");
+        if (items) {
+            const children = items.getElementsByClassName("item");
+            for (const itemNode of children) {
+                const apiId = convertApiId(itemNode);
+                if (this.isFavorite(apiId)) {
+                    itemNode.classList.add("favorite-highlight");
+                }
             }
-        };
-        const ownAuctions = items.parentNode.getElementsByClassName("marketplace-table-row");
+        }
+        const ownAuctions = document.getElementsByClassName("marketplace-table-row");
         for (const auction of ownAuctions) {
             let itemId = convertItemId(auction.childNodes[1].firstChild.src);
             if (this.storage.itemRequiresFallback(itemId)) {
@@ -376,11 +365,10 @@ class MarketHighlights {
         }
     }
 
-    quantileColorsButton() {
+    quantileColorsButton(trackerButtons) {
         if (document.getElementById("tracker-quantile-colors")) {
             return;
         }
-        const trackerButtons = insertTrackerButtons();
         saveInsertAdjacentHTML(
             trackerButtons,
             "beforeend",
@@ -463,41 +451,38 @@ class MarketHighlights {
             item.getElementsByClassName("item-icon")[0].style.filter = `drop-shadow(3px 3px 2px ${color})`;
         }
         setTimeout(() => {
+            "tracker-highlight-button";
             this.partyMode(items, priceQuantiles, (offset + 0.05) % 3);
         }, 100);
     }
 
-    toggleFavoriteButton() {
-        if (document.getElementById("marketplace-favorite-button")) {
-            return;
-        }
-        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
-        if (!marketplaceTableHeader) {
-            return;
-        }
-        const apiId = convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
-        if (!apiId) return;
+    toggleFavoriteButton(trackerButtons) {
+        const button = document.getElementById("tracker-favorite-toggle");
+        const apiId = this.getApiId();
         const isFavorite = this.isFavorite(apiId);
-        const refreshButton = document.getElementsByClassName("marketplace-refresh-button")[0];
+        if (button) {
+            button.classList.toggle("svg-inactive", !isFavorite);
+            return;
+        }
         saveInsertAdjacentHTML(
-            refreshButton,
-            "afterend",
+            trackerButtons,
+            "beforeend",
             `
-            <button id="marketplace-favorite-button" class="marketplace-favorite-button ${
-                isFavorite ? "" : "svg-inactive"
-            }">
-                ${Templates.favoriteTemplate()}
-            </button>`
+            <div id="tracker-favorite-toggle" class="${isFavorite ? "" : "svg-inactive"}">
+            ${Templates.favoriteTemplate("tracker-highlight-button")}
+            </div>`
         );
-        let toggleFavoriteButton = document.getElementById("marketplace-favorite-button");
+        const toggleFavoriteButton = document.getElementById("tracker-favorite-toggle");
         toggleFavoriteButton.addEventListener("click", () => {
-            this.toggleFavorite(apiId);
+            this.toggleFavorite();
             toggleFavoriteButton.classList.toggle("svg-inactive");
-            this.saveData();
         });
     }
 
-    highlightBestHeatItem(items) {
+    highlightBestHeatItem() {
+        const items = document.querySelector(".marketplace-content .all-items");
+        if (!items) return;
+
         const bestHeatApiId = this.storage.bestHeatItem();
         const children = items.getElementsByClassName("item");
         for (const itemNode of children) {
@@ -513,10 +498,13 @@ class MarketHighlights {
                 itemNode.classList.remove("heat-highlight");
                 itemNode.removeChild(itemNode.lastChild);
             }
-        };
+        }
     }
 
-    highlightAlertItems(items) {
+    highlightAlertItems() {
+        const items = document.querySelector(".marketplace-content .all-items");
+        if (!items) return;
+
         const alertIcons = document.getElementsByClassName("alert-icon");
         for (let i = alertIcons.length - 1; i >= 0; i--) {
             alertIcons[i].remove();
@@ -524,10 +512,7 @@ class MarketHighlights {
         const children = items.getElementsByClassName("item");
         for (const itemNode of children) {
             const apiId = convertApiId(itemNode);
-            if (
-                this.notificationInformation[apiId] === "below" &&
-                !itemNode.classList.contains("alert-below")
-            ) {
+            if (this.notificationInformation[apiId] === "below" && !itemNode.classList.contains("alert-below")) {
                 itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode,
@@ -539,10 +524,7 @@ class MarketHighlights {
                         ${Templates.arrowDownTemplate()}
                     </div>`
                 );
-            } else if (
-                this.notificationInformation[apiId] === "above" &&
-                !itemNode.classList.contains("alert-above")
-            ) {
+            } else if (this.notificationInformation[apiId] === "above" && !itemNode.classList.contains("alert-above")) {
                 itemNode.style.order = -1;
                 saveInsertAdjacentHTML(
                     itemNode,
@@ -557,24 +539,28 @@ class MarketHighlights {
             } else {
                 itemNode.style.order = "";
             }
-        };
+        }
+    }
+
+    // Only works on buy page
+    getApiId() {
+        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
+        if (marketplaceTableHeader) return convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
+        return -1;
     }
 
     isFavorite(apiId) {
         return this.favorites.indexOf(apiId) > -1;
     }
 
-    toggleFavorite(apiId) {
+    toggleFavorite() {
+        const apiId = this.getApiId();
         const isFavorite = this.isFavorite(apiId);
         if (isFavorite) {
             this.favorites.splice(this.favorites.indexOf(apiId), 1);
         } else {
             this.favorites.push(apiId);
         }
-        return !isFavorite;
-    }
-
-    saveData() {
         this.tracker.storeSettings();
     }
 }
