@@ -323,33 +323,36 @@ class AlertTracker {
     }
 
     createAlertButton() {
-        if (document.getElementById("marketplace-alert-button")) {
+        const button = document.getElementById("marketplace-alert-button");
+        const apiId = getApiId();
+        const hasActiveAlert = this.hasActiveAlert(apiId);
+        if (button) {
+            button.classList.toggle("svg-inactive", !hasActiveAlert);
             return;
         }
         const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
         if (!marketplaceTableHeader) {
             return;
         }
-        const apiId = convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
-        if (!apiId) return;
         const trackerButtons = insertTrackerButtons();
         saveInsertAdjacentHTML(
             trackerButtons,
             "beforeend",
             `
             <div id="marketplace-alert-button" class="${
-                this.hasActiveAlert(apiId) ? "" : "svg-inactive"
+                hasActiveAlert ? "" : "svg-inactive"
             }" style="stroke: #ccffff; fill: #ccffff;" >
                 ${Templates.alertTemplate("marketplace-alert-button")}
             </div>`
         );
         const alertButton = document.getElementById("marketplace-alert-button");
         alertButton.addEventListener("click", () => {
-            this.openPopUp(apiId);
+            this.openPopUp();
         });
     }
 
-    openPopUp(apiId) {
+    openPopUp() {
+        const apiId = getApiId();
         saveInsertAdjacentHTML(
             document.body,
             "beforeend",
