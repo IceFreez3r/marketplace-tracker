@@ -458,7 +458,7 @@ class MarketHighlights {
 
     toggleFavoriteButton(trackerButtons) {
         const button = document.getElementById("tracker-favorite-toggle");
-        const apiId = this.getApiId();
+        const apiId = getApiId();
         const isFavorite = this.isFavorite(apiId);
         if (button) {
             button.classList.toggle("svg-inactive", !isFavorite);
@@ -542,19 +542,12 @@ class MarketHighlights {
         }
     }
 
-    // Only works on buy page
-    getApiId() {
-        const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
-        if (marketplaceTableHeader) return convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
-        return -1;
-    }
-
     isFavorite(apiId) {
         return this.favorites.indexOf(apiId) > -1;
     }
 
     toggleFavorite() {
-        const apiId = this.getApiId();
+        const apiId = getApiId();
         const isFavorite = this.isFavorite(apiId);
         if (isFavorite) {
             this.favorites.splice(this.favorites.indexOf(apiId), 1);

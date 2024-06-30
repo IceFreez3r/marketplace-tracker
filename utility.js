@@ -349,3 +349,10 @@ function getMarketPage() {
     if (document.querySelector(".marketplace-history-container")) return "history";
     return "unknown";
 }
+
+/** Only works on buy page */
+function getApiId() {
+    const marketplaceTableHeader = document.getElementsByClassName("anchor-market-tables-header")[0];
+    if (marketplaceTableHeader) return convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
+    return -1;
+}
