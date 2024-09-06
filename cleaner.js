@@ -21,11 +21,13 @@ class Cleaner {
     `;
 
     constructor() {
+        this.leagueList = undefined;
         this.observer = new MutationObserver((mutations) => {
             const endedCharacters = document.getElementsByClassName("character-inactive");
             for (let character of endedCharacters) {
                 this.insertCleanButton(character.parentNode);
             }
+            this.leagueList ??= getIdlescapeWindowObject()?.leagues;
         });
 
         injectCSS(this.css);
@@ -46,8 +48,8 @@ class Cleaner {
         }
         const characterName = characterNode.querySelector(".character-username").textContent;
         const leagueIcon = characterNode.querySelector(".character-image-league");
-        const leagueId = getLeagueId(leagueIcon);
-        if (!this.hasData(characterName, leagueId)) {
+        const leagueId = getLeagueId(leagueIcon, this.leagueList);
+        if (!leagueId || !this.hasData(characterName, leagueId)) {
             return;
         }
         saveInsertAdjacentHTML(
@@ -59,10 +61,10 @@ class Cleaner {
                 <span>
                     Clear market data for this season and settings for this character from local storage?
                 </span>
-                <div id="tracker-cleaner-button" class="tracker-settings-button idlescape-button-green">Clear</div>
+                <div id="tracker-cleaner-button-${characterName}" class="tracker-settings-button idlescape-button-green">Clear</div>
             </div>`
         );
-        document.getElementById("tracker-cleaner-button").addEventListener("click", () => {
+        document.getElementById(`tracker-cleaner-button-${characterName}`).addEventListener("click", () => {
             this.cleanLocalStorage(characterName, leagueId);
             characterNode.querySelector(".tracker-cleaner").remove();
         });
@@ -70,9 +72,9 @@ class Cleaner {
 
     hasData(characterName, leagueId) {
         return (
-            localStorage.getItem(`TrackerLastAPIFetch${leagueId}`) ||
-            localStorage.getItem(`TrackerMarketHistoryEncoded${leagueId}`) ||
-            localStorage.getItem(`TrackerSettings${characterName}`)
+            localStorage.getItem(`TrackerLastAPIFetch${leagueId}`) !== null ||
+            localStorage.getItem(`TrackerMarketHistoryEncoded${leagueId}`) !== null ||
+            localStorage.getItem(`TrackerSettings${characterName}`) !== null
         );
     }
 

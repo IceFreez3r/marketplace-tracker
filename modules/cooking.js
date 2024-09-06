@@ -48,6 +48,10 @@ class CookingTracker {
   align-items: end;
 }
 
+.cooking-prep-table-price.grey {
+    color: grey;
+}
+
 .cooking-prep-table-relative-price {
     font-size: 0.8em;
 }
@@ -373,39 +377,36 @@ class CookingTracker {
                     ${
                         fields["min"]
                             ? `<div class="cooking-prep-table-content">
-                        <div class="cooking-prep-table-price">
+                        <div class="cooking-prep-table-price ${columns[column].includes("min") ? "": "grey"}">
                             <div>${formatNumber(columnData.prices.minPrice)}</div>
                             <div class="cooking-prep-table-relative-price">(${formatNumber(
                                 columnData.prices.minPrice / columnData.size
                             )})</div>
                         </div>
-                        ${columns[column].includes("min") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
                     }
                     ${
                         fields["median"]
                             ? `<div class="cooking-prep-table-content">
-                        <div class="cooking-prep-table-price">
+                        <div class="cooking-prep-table-price ${columns[column].includes("median") ? "": "grey"}">
                             <div>${formatNumber(columnData.prices.medianPrice)}</div>
                             <div class="cooking-prep-table-relative-price">(${formatNumber(
                                 columnData.prices.medianPrice / columnData.size
                             )})</div>
                         </div>
-                        ${columns[column].includes("median") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
                     }
                     ${
                         fields["max"]
                             ? `<div class="cooking-prep-table-content">
-                        <div class="cooking-prep-table-price">
+                        <div class="cooking-prep-table-price ${columns[column].includes("max") ? "": "grey"}">
                             <div>${formatNumber(columnData.prices.maxPrice)}</div>
                             <div class="cooking-prep-table-relative-price">(${formatNumber(
                                 columnData.prices.maxPrice / columnData.size
                             )})</div>
                         </div>
-                        ${columns[column].includes("max") ? Templates.dotTemplate("1em", "", "rgb(0, 255, 0)") : ""}
                     </div>`
                             : ""
                     }`;

@@ -39,13 +39,8 @@ class Storage {
     }
 
     onGameReady() {
-        if (isIronmanCharacter()) {
-            // Ironman Leagues use MainScape prices
-            this.leagueId = 1;
-        } else {
-            const leagueIcon = document.getElementsByClassName("header-league-icon")[0];
-            this.leagueId = getLeagueId(leagueIcon);
-        }
+        const leagueIcon = document.getElementsByClassName("header-league-icon")[0];
+        this.leagueId = getLeagueId(leagueIcon);
         this.lastAPIFetch = this.loadLocalStorage(this.storageKeys.lastAPIFetch + this.leagueId, 0);
         const storageHistory = this.loadLocalStorage(this.storageKeys.marketHistory + this.leagueId, () =>
             this.loadLeagueUnspecificStorage()
@@ -76,8 +71,8 @@ class Storage {
             } else if (apiId === "709") {
                 this.heatItems[apiId] = {
                     heat: 30000,
-                    itemId
-                }
+                    itemId,
+                };
             }
         }
         // this.fetchAPILoop();
@@ -545,9 +540,8 @@ class Storage {
     }
 
     generalShopPrices(apiId) {
-        const price = Object.values(getIdlescapeWindowObject().gameShopItems).find(
-            (item) => item.itemID === apiId
-        )?.price ?? NaN;
+        const price =
+            Object.values(getIdlescapeWindowObject().gameShopItems).find((item) => item.itemID === apiId)?.price ?? NaN;
         return {
             minPrice: price,
             medianPrice: price,

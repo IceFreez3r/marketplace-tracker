@@ -141,26 +141,22 @@ function isIronmanCharacter() {
     return document.getElementsByClassName("header-league-icon")[0].src.includes("ironman");
 }
 
-function getLeagueId(leagueIcon) {
-    if (leagueIcon.src.endsWith("default_league_icon.png")) {
-        return 1;
-    } else if (leagueIcon.src.endsWith("ironman_league_icon_v5.png")) {
-        return 2;
-    } else if (leagueIcon.src.endsWith("nogather_ironman_league.png")) {
-        return 3;
-    } else if (leagueIcon.src.endsWith("group_ironman.png")) {
-        return 4;
-    } else if (leagueIcon.src.endsWith("pre_league_test.png")) {
-        return 5;
-    } else if (leagueIcon.src.endsWith("season1.png")) {
-        return 6;
-    } else if (leagueIcon.src.endsWith("season1ironman.png")) {
-        return 7;
-    } else if (leagueIcon.src.endsWith("season2.png")) {
-        return 8;
+function getLeagueId(leagueIcon, leagueList) {
+    if (!leagueList) leagueList = getIdlescapeWindowObject()?.leagues;
+    if (!leagueList) return undefined;
+    const league = Object.values(leagueList).find((league) => leagueIcon.src.endsWith(league.icon));
+    if (league) {
+        let id = league.id;
+        // Get the next lower market league
+        // Assumes that market leagues are always before ironman leagues
+        while (id > 0) {
+            if (leagueList[id]?.rules.marketplace) break;
+            id--;
+        }
+        if (id === 0) return undefined;
+        return league.id;
     }
-    console.log("Unknown league icon: " + leagueIcon.src + ". Defaulting to normal league.");
-    return 1;
+    return undefined;
 }
 
 function getSelectedSkill() {
@@ -293,7 +289,7 @@ function getHSLColor(quantile, colorBlindMode = false) {
 }
 
 function getIdlescapeWindowObject() {
-    return window.wrappedJSObject?.Idlescape.data ?? window.Idlescape.data;
+    return window.wrappedJSObject?.Idlescape?.data ?? window.Idlescape?.data;
 }
 
 function getItemData(apiId) {
