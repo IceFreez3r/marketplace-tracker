@@ -1,3 +1,13 @@
+const AFFIX_DUST_PER_ITEM_TIER = [550, 550, 550, 551, 552, 553, 554, 554, 554];
+const AFFIX_GEAR_SCRAP_PER_RARITY = {
+    junk: 555,
+    common: 555,
+    uncommon: 556,
+    rare: 557,
+    epic: 558,
+    legendary: 559,
+};
+
 class EnchantingTracker {
     static id = "enchanting_tracker";
     static displayName = "Enchanting Tracker";
@@ -158,26 +168,19 @@ body .scrollcrafting-container {
 
 .augmenting-info-table-content {
     display: flex;
+    align-items: center;
 }
 
 .augmenting-info-table-icon {
-    margin: 4px 10px;
+    margin: 0 0 4px 10px;
     width: 32px;
     height: 32px;
     object-fit: contain;
 }
 
-.augmenting-info-table-icon.left {
-    margin-right: 0;
-}
-
-.augmenting-info-table-icon.right {
-    margin-left: 0;
-}
-
 .augmenting-info-table-font {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
 }
     `;
 
@@ -187,6 +190,9 @@ body .scrollcrafting-container {
         this.storage = storage;
         if (this.settings.profit === undefined) {
             this.settings.profit = "percent";
+        }
+        if (this.settings.researching_profit === undefined) {
+            this.settings.researching_profit = "per_hour";
         }
         if (
             this.settings.min_row === undefined ||
@@ -203,11 +209,16 @@ body .scrollcrafting-container {
         this.cssNode = injectCSS(this.css);
 
         // Cache variables
-        this.effLevel = null;
-        this.accChances = [];
-        this.accXP = {}; // array of xp values for each tier
-        this.avgXP = {}; // avg total xp for each tier
+        this.critChance = null;
+        this.researchingChance = null;
+        this.costByLevel = [
+            {
+                baseCopies: 1,
+                taps: 0,
+            },
+        ];
         this.augmentingTable = null;
+        this.researchingTable = null;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
             this.playAreaObserver.disconnect();
@@ -269,7 +280,7 @@ body .scrollcrafting-container {
         const augmentingRows = `
             <div class="tracker-module-setting">
                 <div class="tracker-module-setting-name">
-                    Augmenting Rows
+                    Number of rows in augmenting and researching tables
                 </div>
                 ${Templates.inputTemplate(
                     EnchantingTracker.id + "-augmenting_rows",
@@ -277,14 +288,44 @@ body .scrollcrafting-container {
                     "number"
                 )}
             </div>`;
-        return [profitType, rows, augmentingRows];
+        const researchingProfitType = document.createElement("div");
+        researchingProfitType.classList.add("tracker-module-setting");
+        researchingProfitType.insertAdjacentHTML(
+            "beforeend",
+            `
+            <div class="tracker-module-setting-name">
+                Researching Profit
+            </div>`
+        );
+        researchingProfitType.append(
+            Templates.selectMenu(
+                EnchantingTracker.id + "-researching_profit",
+                {
+                    off: "Off",
+                    percent: "Percent",
+                    flat: "Flat",
+                    per_hour: "Per Hour",
+                },
+                this.settings.researching_profit
+            )
+        );
+        return [profitType, rows, augmentingRows, researchingProfitType];
     }
 
     settingChanged(settingId, value) {
+        switch (settingId) {
+            case "augmentingRows":
+                this.augmentingTable = null;
+            // Intentional fallthrough
+            case "researchingProfit":
+                this.researchingTable = null;
+        }
         return;
     }
 
     onAPIUpdate() {
+        this.critChance = null;
+        this.researchingChance = null;
         this.checkForEnchanting(null, true);
     }
 
@@ -296,15 +337,18 @@ body .scrollcrafting-container {
         });
     }
 
-    checkForEnchanting(mutations, force = false) {
+    checkForEnchanting(mutations) {
         if (getSelectedSkill() === "Enchanting") {
             if (mutations && detectInfiniteLoop(mutations)) {
                 return;
             }
-            if (this.selectedTab() === "Scrollcrafting") {
+            const selectedTab = this.selectedTab();
+            if (selectedTab === "Scrollcrafting") {
                 this.enchantingTracker();
-            } else if (this.selectedTab() === "Augmenting") {
-                this.addAugmentingButton(force);
+            } else if (selectedTab === "Augmenting") {
+                this.addAugmentingButton("augmenting");
+            } else if (selectedTab === "Item Research") {
+                this.addAugmentingButton("researching");
             }
         }
     }
@@ -378,7 +422,7 @@ body .scrollcrafting-container {
         };
     }
 
-    addAugmentingButton() {
+    addAugmentingButton(type) {
         document.getElementsByClassName("augmenting-button")[0]?.remove();
         const enchantingContainer = document.getElementsByClassName("enchanting-container")[0];
         if (!enchantingContainer) {
@@ -392,74 +436,119 @@ body .scrollcrafting-container {
         saveInsertAdjacentHTML(availableSectionHeader, "beforeend", Templates.trackerLogoTemplate("augmenting-button"));
         availableSectionHeader
             .getElementsByClassName("augmenting-button")[0]
-            .addEventListener("click", () => this.augmentingTracker());
+            .addEventListener("click", () => this.augmentingTracker(type));
     }
 
-    augmentingTracker(force = false) {
-        if (force) {
+    augmentingTracker(type) {
+        const critChance = this.getCritChance();
+        const researchingChance = this.getResearchChance();
+        if (critChance !== this.critChance) {
+            this.critChance = critChance;
             this.augmentingTable = null;
         }
-        if (this.augmentingTable !== null) {
-            saveInsertAdjacentHTML(document.body, "beforeend", this.augmentingTable);
-        } else {
+        if (researchingChance !== this.researchingChance) {
+            this.researchingChance = researchingChance;
+            this.researchingTable = null;
+        }
+        let table = type === "augmenting" ? this.augmentingTable : this.researchingTable;
+        if (table === null) {
             const effEnchantingLevel = getSkillLevel("enchanting", null, true);
-            const averageAugsPerItem = this.averageAugsPerItem(effEnchantingLevel);
-
             const craftingAugmenting = Object.entries(getIdlescapeWindowObject().craftingAugmenting)
                 .filter(([apiId, data]) => {
                     const itemData = getItemData(apiId);
                     return (
-                        data.augmenting &&
-                        itemData &&
-                        // ignore items with special augmenting rules
-                        !(itemData.maxAugLevel || itemData.augCostScaling || itemData.forcedAugmentChance)
+                        data.scrapping &&
+                        !(type === "augmenting" && itemData.blockAugmenting) &&
+                        !(type === "researching" && itemData.blockResearching)
                     );
                 })
                 .map(([apiId, data]) => {
-                    const priceData = this.storage.handleRecipe(Object.keys(data.augmenting), apiId);
-                    return {
-                        product: { apiId, prices: priceData.products },
-                        experience: this.averageXPPerItem(effEnchantingLevel, apiId),
-                        ingredients: {
-                            apiIds: Object.keys(data.augmenting),
-                            counts: Object.values(data.augmenting),
-                            prices: priceData.ingredients,
-                        },
-                    };
-                })
-                .map((augItem) => ({
-                    apiId: augItem.product.apiId,
-                    experience: augItem.experience,
-                    minPrice: this.convertAugItemToPrice(averageAugsPerItem, augItem, "minPrices", "minSelfPrices"),
-                    medianPrice: this.convertAugItemToPrice(
-                        averageAugsPerItem,
-                        augItem,
-                        "medianPrices",
-                        "medianSelfPrices"
-                    ),
-                    maxPrice: this.convertAugItemToPrice(averageAugsPerItem, augItem, "maxPrices", "maxSelfPrices"),
-                    ...augItem,
-                }));
+                    const itemData = getItemData(apiId);
+                    // Fields aren't used at the moment for any items
+                    if (itemData.augmentingFailItem)
+                        console.log("TRACKER: Item with augmentingFailItem was added", itemData);
+                    if (itemData.augmentingFailItemChance)
+                        console.log("TRACKER: Item with augmentingFailItemChance was added", itemData);
 
-            this.augmentingTable = Templates.popupTemplate(`
+                    const { ingredientApiIds, ingredientCounts, productApiIds, productCounts, experience } =
+                        type === "augmenting"
+                            ? this.getAugmentingStats(apiId, data.scrapping, itemData, critChance)
+                            : this.getResearchingStats(apiId, data.scrapping, itemData, researchingChance);
+
+                    const ingredientPriceData = this.storage.analyzeItems(ingredientApiIds);
+                    const productPriceData = this.storage.analyzeItems(productApiIds);
+
+                    return {
+                        apiId,
+                        experience,
+                        ingredients: {
+                            apiIds: ingredientApiIds,
+                            counts: ingredientCounts,
+                            prices: ingredientPriceData,
+                        },
+                        products: {
+                            apiIds: productApiIds,
+                            counts: productCounts,
+                            prices: productPriceData,
+                        },
+                        // Time is ignored for augmenting
+                        time: this.scrappingTime(itemData, effEnchantingLevel),
+                        minPrice: this.augmentingProfit(
+                            ingredientCounts,
+                            ingredientPriceData,
+                            productCounts,
+                            productPriceData,
+                            experience,
+                            "min"
+                        ),
+                        medianPrice: this.augmentingProfit(
+                            ingredientCounts,
+                            ingredientPriceData,
+                            productCounts,
+                            productPriceData,
+                            experience,
+                            "median"
+                        ),
+                        maxPrice: this.augmentingProfit(
+                            ingredientCounts,
+                            ingredientPriceData,
+                            productCounts,
+                            productPriceData,
+                            experience,
+                            "max"
+                        ),
+                    };
+                });
+
+            table = Templates.popupTemplate(`
                 <div class="augmenting-popup">
                     <div class="augmenting-popup-title">Best augmenting XP</div>
+                    ${
+                        type === "augmenting"
+                            ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items to +10.</div>'
+                            : ""
+                    }
                     <div class="augmenting-content-container">
                         <h3>Minimum prices</h3>
-                        ${this.augmentingTableSection(craftingAugmenting, "min")}
+                        ${this.augmentingTableSection(type, craftingAugmenting, "min")}
                         <hr/>
                         <h3>Median prices</h3>
-                        ${this.augmentingTableSection(craftingAugmenting, "median")}
+                        ${this.augmentingTableSection(type, craftingAugmenting, "median")}
                         <hr/>
                         <h3>Maximum prices</h3>
-                        ${this.augmentingTableSection(craftingAugmenting, "max")}
+                        ${this.augmentingTableSection(type, craftingAugmenting, "max")}
                     </div>
                     <div class="augmenting-popup-button-container">
                         <div class="augmenting-popup-button close idlescape-button-red">Close</div>
                     </div>
                 </div>`);
-            saveInsertAdjacentHTML(document.body, "beforeend", this.augmentingTable);
+            if (type === "augmenting") {
+                this.augmentingTable = table;
+            } else {
+                this.researchingTable = table;
+            }
         }
+        saveInsertAdjacentHTML(document.body, "beforeend", table);
 
         document.getElementsByClassName("close")[0].addEventListener("click", () => {
             this.tracker.closePopup();
@@ -476,9 +565,29 @@ body .scrollcrafting-container {
         });
     }
 
-    augmentingTableSection(augmentingData, type) {
+    augmentingProfit(ingredientCounts, ingredientPriceData, productCounts, productPriceData, experience, priceType) {
+        return (
+            (ingredientCounts
+                .map(
+                    (count, index) =>
+                        count *
+                        Math.min(
+                            ingredientPriceData[priceType + "Prices"][index] || Infinity,
+                            ingredientPriceData[priceType + "SelfPrices"][index].price || Infinity
+                        )
+                )
+                .reduce((acc, val) => acc + val, 0) -
+                productCounts
+                    .map((count, index) => count * productPriceData[priceType + "Prices"][index] || 0)
+                    .reduce((acc, val) => acc + val, 0) *
+                    0.95) /
+            experience
+        );
+    }
+
+    augmentingTableSection(type, augmentingData, priceType) {
         const bestTen = structuredClone(augmentingData)
-            .sort((a, b) => a[type + "Price"] - b[type + "Price"])
+            .sort((a, b) => a[priceType + "Price"] - b[priceType + "Price"])
             .splice(0, this.settings.augmenting_rows);
         const tableEntries = bestTen
             .map((augItem, index) => {
@@ -490,16 +599,15 @@ body .scrollcrafting-container {
                         return itemData.itemIcon ?? itemData.itemImage;
                     }),
                 };
-                const itemData = getItemData(augItem.apiId);
-                const product = {
-                    ...augItem.product.prices,
-                    counts: [1],
-                    icons: [itemData.itemIcon ?? itemData.itemImage],
+                const products = {
+                    ...augItem.products.prices,
+                    counts: augItem.products.counts,
+                    icons: augItem.products.apiIds.map((apiId) => {
+                        const itemData = getItemData(apiId);
+                        return itemData.itemIcon ?? itemData.itemImage;
+                    }),
                 };
-                // Add product to the end of ingredients, since it's not the normal product here
-                for (const [key, value] of Object.entries(product)) {
-                    ingredients[key].push(value.pop());
-                }
+                const itemData = getItemData(augItem.apiId);
                 return `
                     <div class='augmenting-table-font'>
                         ${index + 1}
@@ -511,25 +619,25 @@ body .scrollcrafting-container {
                         ${formatNumber(augItem.experience, { fraction: true })}
                     </div>
                     <div class="augmenting-table-price-xp">
-                        <div class="${type !== "min" ? "gray" : ""}">
-                            ${formatNumber(augItem["minPrice"], { fraction: true })}
+                        <div class="${priceType !== "min" ? "gray" : ""}">
+                            ${formatNumber(augItem.minPrice, { fraction: true })}
                         </div>
-                        <div class="${type !== "median" ? "gray" : ""}">
-                            ${formatNumber(augItem["medianPrice"], { fraction: true })}
+                        <div class="${priceType !== "median" ? "gray" : ""}">
+                            ${formatNumber(augItem.medianPrice, { fraction: true })}
                         </div>
-                        <div class="${type !== "max" ? "gray" : ""}">
-                            ${formatNumber(augItem["maxPrice"], { fraction: true })}
+                        <div class="${priceType !== "max" ? "gray" : ""}">
+                            ${formatNumber(augItem.maxPrice, { fraction: true })}
                         </div>
                     </div>
                     ${Templates.infoTableTemplate(
                         "augmenting",
                         [this.settings.min_row, this.settings.median_row, this.settings.max_row],
                         ingredients,
-                        product,
-                        "off",
-                        0,
+                        products,
+                        type === "augmenting" ? "off" : this.settings.researching_profit,
+                        augItem.time,
                         undefined,
-                        { showCounts: true, hideSum: true }
+                        { showCounts: true, hideSum: type === "augmenting" }
                     )}
                 `;
             })
@@ -538,138 +646,133 @@ body .scrollcrafting-container {
             <div class='augmenting-table'>
                 <div class='augmenting-table-font'>Rank</div>
                 <div class='augmenting-table-font'>Item</div>
-                <div class='augmenting-table-font'>Avg XP</div>
+                <div class='augmenting-table-font'>${type === "augmenting" ? "Total XP to +10" : "XP per Tab"}</div>
                 <div class='augmenting-table-font'>Price/XP</div>
                 <div class='augmenting-table-font'>Price Table</div>
                 ${tableEntries}
             </div>`;
     }
 
-    convertAugItemToPrice(averageAugsPerItem, augItem, priceType, selfPriceType) {
-        const basePrice = Math.min(
-            augItem.product.prices[priceType][0] || Infinity,
-            augItem.product.prices[selfPriceType][0].price || Infinity
+    getAugmentingStats(apiId, scrapping, itemData, critChance) {
+        const baseCost = this.getCostByLevel(
+            10, // 10 is basically always the best
+            itemData.augmentOverride?.fixedSuccessCount,
+            itemData.augmentOverride?.fixedBaseCount
         );
-        const augPrice = augItem.ingredients.counts.reduce((acc, count, index) => {
-            return (
-                acc +
-                count *
-                    Math.min(
-                        augItem.ingredients.prices[priceType][index] || Infinity,
-                        augItem.ingredients.prices[selfPriceType][index].price || Infinity
-                    )
-            );
-        }, 0);
-        return (basePrice + averageAugsPerItem * augPrice) / augItem.experience;
+        if (!itemData.blockCritAugment) baseCost.taps *= 1 / (1 + critChance);
+        return {
+            ingredientApiIds: [...Object.keys(scrapping), apiId],
+            ingredientCounts: [...Object.values(scrapping).map((count) => count * baseCost.taps), baseCost.baseCopies],
+            productApiIds: [],
+            productCounts: [],
+            experience: this.augmentingExperience(itemData) * baseCost.taps,
+        };
     }
 
-    averageAugsPerItem(effLevel) {
-        const eps = 0.01;
-        let augCounter = 0;
-        let accChance = 1;
-        let avgAugs = 0;
-        while (accChance > eps && augCounter < 50) {
-            accChance = this.accumulatedAugmentingChance(effLevel, augCounter);
-            augCounter++;
-            avgAugs += accChance;
+    getResearchingStats(apiId, scrapping, itemData, researchingChance) {
+        const rarity = itemData.rarity ?? "common";
+        const dust = this.getDustIDFromItemTier(this.getItemTier(itemData));
+        const scrap = itemData.researchesIntoDust ? dust : AFFIX_GEAR_SCRAP_PER_RARITY[rarity];
+        const productApiIds = [dust, scrap];
+        const productCounts = [researchingChance, 1 - researchingChance];
+        if (itemData.scrappingSuccessItem) {
+            productApiIds.push(itemData.scrappingSuccessItem.itemID);
+            const count =
+                ((itemData.scrappingSuccessItem.chance ?? 1) *
+                    ((itemData.scrappingSuccessItem.minimum ?? 1) + (itemData.scrappingSuccessItem.maximum ?? 1))) /
+                2;
+            productCounts.push(count * researchingChance);
         }
-        return avgAugs;
-    }
-
-    /** Calculates the accumulated augmenting chance recursively and caches results */
-    accumulatedAugmentingChance(effLevel, itemAug) {
-        this.checkEffLevel(effLevel);
-        if (itemAug < 0) {
-            return 1;
+        if (itemData.scrappingFailItem) {
+            productApiIds.push(itemData.scrappingFailItem.itemID);
+            const count =
+                ((itemData.scrappingFailItem.chance ?? 1) *
+                    ((itemData.scrappingFailItem.minimum ?? 1) + (itemData.scrappingFailItem.maximum ?? 1))) /
+                2;
+            productCounts.push(count * (1 - researchingChance));
         }
-        if (this.accChances.length > itemAug) {
-            return this.accChances[itemAug];
-        }
-        const prevAccChance = this.accumulatedAugmentingChance(effLevel, itemAug - 1);
-        const augChance = this.augmentingChance(effLevel, itemAug);
-        // Cache result
-        this.accChances.push(prevAccChance * augChance);
-        return this.accChances[itemAug];
-    }
-
-    /** Resets the cache if the effective level changed. accXP is independent of the effective level so it can stay */
-    checkEffLevel(effLevel) {
-        if (this.effLevel !== effLevel) {
-            this.effLevel = effLevel;
-            this.accChances = [];
-            this.avgXP = {};
-        }
-    }
-
-    // Vanilla function
-    augmentingChance(effLevel, itemAug) {
-        const base_probability = 0.9;
-        const level_scaling = 1.5;
-        const level_norm = 203;
-        const level_weight = 1.25;
-        const chance_increase = 0.05;
-
-        const chance =
-            (base_probability + Math.sqrt(effLevel * level_scaling) / level_norm) **
-                Math.pow(itemAug + 1, level_weight) +
-            chance_increase;
-        return Math.min(1, chance);
-    }
-
-    averageXPPerItem(effLevel, apiId) {
-        const itemData = getItemData(apiId);
-        const itemTier = getItemTier(itemData);
-        this.checkEffLevel(effLevel);
-        if (this.avgXP[itemTier] !== undefined) {
-            return this.avgXP[itemTier];
-        }
-
-        const eps = 0.1;
-        let avgTotalXP = 0;
-        let augCounter = 0;
-        while (augCounter < 50) {
-            const augXPPreviousLevels = this.accumulatedAugmentingExperience(itemData, augCounter - 1);
-            const augXPHere = this.augmentingExperience(itemData, augCounter);
-            const chanceToBreakHere =
-                this.accumulatedAugmentingChance(effLevel, augCounter - 1) -
-                this.accumulatedAugmentingChance(effLevel, augCounter);
-            // Half XP on break
-            const avgXP = chanceToBreakHere * (augXPPreviousLevels + augXPHere / 2);
-            avgTotalXP += avgXP;
-            // avgXP stays at 0 for the first augments, when the chance to break is 0
-            if (augCounter > 5 && avgXP < eps) {
-                break;
-            }
-            augCounter++;
-        }
-        // Cache result
-        this.avgXP[itemTier] = avgTotalXP;
-        return avgTotalXP;
-    }
-
-    accumulatedAugmentingExperience(itemData, itemAug) {
-        if (itemAug < 0) {
-            return 0;
-        }
-        const itemTier = getItemTier(itemData);
-        this.accXP[itemTier] ??= [];
-        const relevantAccXP = this.accXP[itemTier];
-        if (relevantAccXP.length > itemAug) {
-            return relevantAccXP[itemAug];
-        }
-        const prevAccXP = this.accumulatedAugmentingExperience(itemData, itemAug - 1);
-        const augXP = this.augmentingExperience(itemData, itemAug);
-        relevantAccXP[itemAug] = prevAccXP + augXP;
-        return relevantAccXP[itemAug];
-    }
-
-    // modified version of vanilla version
-    augmentingExperience(itemData, currentItemLevel = 0) {
-        const itemTier = getItemTier(itemData);
-        return Math.round(Math.pow(currentItemLevel + 1, 1.25) * Math.pow(itemTier, 2.5) * 20);
+        return {
+            ingredientApiIds: [...Object.keys(scrapping), apiId],
+            ingredientCounts: [...Object.values(scrapping), 1 - researchingChance],
+            productApiIds,
+            productCounts,
+            experience: this.augmentingExperience(itemData),
+        };
     }
 
     selectedTab() {
         return document.getElementsByClassName("enchanting-tab-selected")[0].lastElementChild.innerText;
     }
+
+    getCritChance() {
+        const critText = document.querySelector(".anchor-augmenting-chance")?.innerText;
+        return critText ? parseFloat(critText) / 100 : this.critChance ?? 0.1;
+    }
+
+    getResearchChance() {
+        const chanceText = document.querySelector(".anchor-researching-chance")?.innerText;
+        return chanceText ? parseFloat(chanceText) / 100 : this.researchingChance ?? 0.9;
+    }
+
+    getCostByLevel(targetLevel, fixedSuccessCount = undefined, fixedBaseCount = undefined) {
+        if (this.costByLevel.length <= targetLevel) {
+            const previousCost = this.getCostByLevel(targetLevel - 1);
+            const augmentingTrialCount = this.getAugmentingTrialCount(targetLevel - 1);
+            const augmentItemCopyCost = this.getAugmentItemCopyCost(targetLevel - 1);
+            this.costByLevel.push({
+                baseCopies: previousCost.baseCopies + augmentItemCopyCost,
+                taps: previousCost.taps + augmentingTrialCount,
+            });
+        }
+        const cachedCost = this.costByLevel[targetLevel];
+        return {
+            baseCopies: fixedBaseCount ? targetLevel * fixedBaseCount : cachedCost.baseCopies,
+            taps: fixedSuccessCount ? targetLevel * fixedSuccessCount : cachedCost.taps,
+        };
+    }
+
+    // #region stolen vanilla functions (maybe slightly modified)
+    augmentingExperience(itemData) {
+        const itemTier = this.getItemTier(itemData);
+        return Math.round(20 * Math.pow(itemTier, 2));
+    }
+
+    getItemTier(itemData) {
+        let highestRequiredLevel;
+        if (itemData.requiredLevel) {
+            // Highest level of the required skills
+            highestRequiredLevel = Math.max(...Object.values(itemData.requiredLevel));
+            highestRequiredLevel = Number((highestRequiredLevel / 10).toFixed(1));
+        }
+        return itemData.overrideItemTier ?? highestRequiredLevel ?? itemData.enchantmentTier ?? 1;
+    }
+
+    getAugmentingTrialCount(augmentations) {
+        // return itemData.augmentOverride.fixedSuccessCount ?? 10 * (5 + Math.pow(augmentations ?? 0, 2));
+        return 10 * (5 + Math.pow(augmentations ?? 0, 2));
+    }
+
+    getAugmentItemCopyCost(augmentations) {
+        // return itemData.augmentOverride?.fixedBaseCount ?? Math.pow(Math.floor((augmentations ?? 0) / 5), 2);
+        return Math.pow(Math.floor((augmentations ?? 0) / 5), 2);
+    }
+
+    getDustIDFromItemTier(itemTier) {
+        let tier = Math.floor(itemTier ?? 0);
+        if (tier < 0) {
+            tier = 0;
+        }
+        if (tier >= AFFIX_DUST_PER_ITEM_TIER.length) {
+            tier = AFFIX_DUST_PER_ITEM_TIER.length - 1;
+        }
+        return AFFIX_DUST_PER_ITEM_TIER[tier];
+    }
+
+    scrappingTime(itemData, effectiveEnchantingLevel) {
+        const tier = getItemTier(itemData);
+        let time = Math.pow(2 + tier, 1.5);
+        time /= (effectiveEnchantingLevel + 100) / 100;
+        return Math.max(333 / 1000, time);
+    }
+    // #endregion
 }

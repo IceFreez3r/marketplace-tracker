@@ -174,13 +174,12 @@ class Templates {
                   compactDisplay ? "Max" : "Maximum"
               )
             : "";
-        const totalProductCount = product.counts.reduce((acc, val) => acc + val, 0);
         return `
             <div class="${classId}-info-table ${classes}" style="grid-template-columns: max-content repeat(${
             ingredientMinPrices.length +
             !hideSum +
             product.minPrices.length +
-            (!hideSum && totalProductCount > 1) +
+            (!hideSum && (product.counts.length > 1 || product.counts[0] !== 1)) +
             (profitType !== "off")
         }, auto)">
                 ${header}
@@ -195,7 +194,7 @@ class Templates {
         ingredientIcons,
         ingredientCounts,
         productIcons,
-        productCount,
+        productCounts,
         profitType,
         showCounts = false,
         hideSum = false
@@ -210,7 +209,9 @@ class Templates {
                         <img class="${classId}-info-table-icon" src="${icon}">
                         ${
                             showCounts
-                                ? `<span class="${classId}-info-table-font">${ingredientCounts[index]}</span>`
+                                ? `<span class="${classId}-info-table-font">${formatNumber(ingredientCounts[index], {
+                                      fraction: true,
+                                  })}</span>`
                                 : ""
                         }`
                 )
@@ -230,7 +231,7 @@ class Templates {
         }
         // Product
         header.push(
-            ...productIcons.map((icon) =>
+            ...productIcons.map((icon, index) =>
                 Templates.infoTableCell(
                     classId,
                     `
@@ -239,11 +240,17 @@ class Templates {
                                 ? `<img class="${classId}-info-table-icon" src="${icon}">`
                                 : icon
                         }
-                        ${showCounts ? `<span class="${classId}-info-table-font">${productCount}</span>` : ""}`
+                        ${
+                            showCounts
+                                ? `<span class="${classId}-info-table-font">${formatNumber(productCounts[index], {
+                                      fraction: true,
+                                  })}</span>`
+                                : ""
+                        }`
                 )
             )
         );
-        if (productCount > 1) {
+        if (!hideSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
             header.push(
                 Templates.infoTableCell(
                     classId,
@@ -306,7 +313,6 @@ class Templates {
             productPrices.length === 1 ? profit("flat", productVendorPrices[0], productPrices[0]) < 0 : false;
         const betterPrices = betterToVendor ? productVendorPrices : productPrices;
         const totalProductPrice = totalRecipePrice(betterPrices, productCounts);
-        const totalProductCount = productCounts.reduce((acc, val) => acc + val, 0);
         // Product
         row.push(
             ...betterPrices.map((price) =>
@@ -317,7 +323,7 @@ class Templates {
                 )
             )
         );
-        if (totalProductCount > 1) {
+        if (!hideSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
             row.push(
                 Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }))
             );
