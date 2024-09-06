@@ -57,7 +57,7 @@ body .scrollcrafting-container {
     width: 35px;
     height: 35px;
     padding: 3px;
-    margin-bottom: -10px;
+    margin: -5px 0 -10px 5px;
     cursor: pointer;
     border-radius: 5px;
     border: 3px solid rgb(13, 4, 11);
