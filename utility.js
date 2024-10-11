@@ -207,12 +207,12 @@ function detectInfiniteLoop(mutations) {
 }
 
 function formatNumber(number, options = {}) {
-    const { compactDisplay, profitType, showSign, fraction } = options;
+    const { compactDisplay, profitType, showSign, fraction, longFraction } = options;
     if (isNaN(number)) {
         return "?";
     }
     let formatterOptions = {
-        maximumFractionDigits: fraction ? 2 : 0,
+        maximumFractionDigits: longFraction ? 4 : fraction ? 2 : 0,
     };
     if (profitType === "percent") {
         Object.assign(formatterOptions, { maximumFractionDigits: 2, style: "percent" });

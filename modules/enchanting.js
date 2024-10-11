@@ -206,8 +206,8 @@ body .scrollcrafting-container {
 }
 
 .augmenting-info-table-font {
-    font-size: 1.5rem;
-    line-height: 2rem;
+    font-size: 1.0rem;
+    line-height: 1.5rem;
 }
     `;
 
@@ -492,11 +492,6 @@ body .scrollcrafting-container {
                 })
                 .map(([apiId, data]) => {
                     const itemData = getItemData(apiId);
-                    // Fields aren't used at the moment for any items
-                    if (itemData.augmentingFailItem)
-                        console.log("TRACKER: Item with augmentingFailItem was added", itemData);
-                    if (itemData.augmentingFailItemChance)
-                        console.log("TRACKER: Item with augmentingFailItemChance was added", itemData);
 
                     const { ingredientApiIds, ingredientCounts, productApiIds, productCounts, experience } =
                         type === "augmenting"
@@ -557,7 +552,7 @@ body .scrollcrafting-container {
                     <div class="augmenting-popup-title">Best ${type} XP</div>
                     ${
                         type === "augmenting"
-                            ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items to +10.</div>'
+                            ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items (transforms excluded).</div>'
                             : this.renderFilters()
                     }
                     <div class="augmenting-content-container">
@@ -700,7 +695,7 @@ body .scrollcrafting-container {
                         type === "augmenting" ? "off" : this.settings.researching_profit,
                         augItem.time,
                         undefined,
-                        { showCounts: true, hideSum: type === "augmenting" }
+                        { showCounts: true, hideProductSum: type === "augmenting" && products.counts.length === 0 }
                     )}
                 `;
             })
@@ -709,7 +704,9 @@ body .scrollcrafting-container {
             <div class='augmenting-table'>
                 <div class='augmenting-table-font'>Rank</div>
                 <div class='augmenting-table-font'>Item</div>
-                <div class='augmenting-table-font'>${type === "augmenting" ? "Total XP to +10" : "XP per Tab"}</div>
+                <div class='augmenting-table-font'>${
+                    type === "augmenting" ? "Total XP until +10/transform" : "XP per Tab"
+                }</div>
                 <div class='augmenting-table-font'>Price/XP</div>
                 <div class='augmenting-table-font'>Price Table</div>
                 ${tableEntries}
@@ -717,8 +714,20 @@ body .scrollcrafting-container {
     }
 
     getAugmentingStats(apiId, scrapping, itemData, critChance) {
+        let bestLevel = 10; // 10 is basically always the best
+        const productApiIds = [];
+        const productCounts = [];
+        const augmentingLoot = getIdlescapeWindowObject().augmentingLoot?.[apiId];
+        if (augmentingLoot?.transforms) {
+            for (const transform of augmentingLoot.transforms) {
+                if (!transform.augmentingTransform) continue;
+                bestLevel = transform.augmentationLevel;
+                productApiIds.push(transform.newItemID);
+                productCounts.push(transform.chance);
+            }
+        }
         const baseCost = this.getCostByLevel(
-            10, // 10 is basically always the best
+            bestLevel,
             itemData.augmentOverride?.fixedSuccessCount,
             itemData.augmentOverride?.fixedBaseCount
         );
@@ -726,8 +735,8 @@ body .scrollcrafting-container {
         return {
             ingredientApiIds: [...Object.keys(scrapping), apiId],
             ingredientCounts: [...Object.values(scrapping).map((count) => count * baseCost.taps), baseCost.baseCopies],
-            productApiIds: [],
-            productCounts: [],
+            productApiIds,
+            productCounts,
             experience: this.augmentingExperience(itemData) * baseCost.taps,
         };
     }
@@ -738,21 +747,29 @@ body .scrollcrafting-container {
         const scrap = itemData.researchesIntoDust ? dust : AFFIX_GEAR_SCRAP_PER_RARITY[rarity];
         const productApiIds = [dust, scrap];
         const productCounts = [researchingChance, 1 - researchingChance];
-        if (itemData.scrappingSuccessItem) {
-            productApiIds.push(itemData.scrappingSuccessItem.itemID);
+        const augmentingLoot = getIdlescapeWindowObject().augmentingLoot?.[apiId];
+        if (augmentingLoot?.scrappingSuccess) {
+            productApiIds.push(augmentingLoot.scrappingSuccess.itemID);
             const count =
-                ((itemData.scrappingSuccessItem.chance ?? 1) *
-                    ((itemData.scrappingSuccessItem.minimum ?? 1) + (itemData.scrappingSuccessItem.maximum ?? 1))) /
+                ((augmentingLoot.scrappingSuccess.chance ?? 1) *
+                    ((augmentingLoot.scrappingSuccess.minimum ?? 1) + (augmentingLoot.scrappingSuccess.maximum ?? 1))) /
                 2;
             productCounts.push(count * researchingChance);
         }
-        if (itemData.scrappingFailItem) {
-            productApiIds.push(itemData.scrappingFailItem.itemID);
+        if (augmentingLoot?.scrappingFail) {
+            productApiIds.push(augmentingLoot.scrappingFail.itemID);
             const count =
-                ((itemData.scrappingFailItem.chance ?? 1) *
-                    ((itemData.scrappingFailItem.minimum ?? 1) + (itemData.scrappingFailItem.maximum ?? 1))) /
+                ((augmentingLoot.scrappingFail.chance ?? 1) *
+                    ((augmentingLoot.scrappingFail.minimum ?? 1) + (augmentingLoot.scrappingFail.maximum ?? 1))) /
                 2;
             productCounts.push(count * (1 - researchingChance));
+        }
+        if (augmentingLoot?.transforms) {
+            for (const transform of augmentingLoot.transforms) {
+                if (transform.augmentingTransform) continue;
+                productApiIds.push(transform.newItemID);
+                productCounts.push(transform.chance * researchingChance);
+            }
         }
         return {
             ingredientApiIds: [...Object.keys(scrapping), apiId],
