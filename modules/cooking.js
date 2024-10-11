@@ -507,7 +507,8 @@ class CookingTracker {
                 product,
                 "off",
                 timePerAction,
-                "idlescape-container"
+                "idlescape-container",
+                { hideProductSum: true }
             )
         );
 

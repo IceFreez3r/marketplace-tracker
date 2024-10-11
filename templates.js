@@ -89,10 +89,9 @@ class Templates {
      * @param {Object} ingredients icons, counts, minPrices and maxPrices as arrays of the ingredients
      * @param {Object} product icon, count, minPrice and maxPrice of the product
      * @param {string} profitType options are `off`, `percent`, `flat` and `per_hour`
-     * @param {Boolean=} compactDisplay when working with limited space, the table can be displayed in a compact way
-     * @param {Boolean=} showCounts display the count of the ingredients and product beside their respective icons
      * @param {Number=} secondsPerAction only required if profitType is `per_hour`
      * @param {string=} classes additional css classes
+     * @param {Object=} options additional options for the table, options: compactDisplay, showCounts, hideSum, hideProductSum
      * @returns {string} html string
      */
     static infoTableTemplate(
@@ -117,7 +116,7 @@ class Templates {
         const bestIngredientMedianPrices = combineWithSelfPrices(ingredientMedianPrices, ingredientMedianSelfPrices);
         const bestIngredientMaxPrices = combineWithSelfPrices(ingredientMaxPrices, ingredientMaxSelfPrices);
 
-        const { compactDisplay, showCounts, hideSum } = options;
+        const { compactDisplay, showCounts, hideSum, hideProductSum } = options;
 
         const header = Templates.infoTableHeader(
             classId,
@@ -127,7 +126,8 @@ class Templates {
             product.counts,
             profitType,
             showCounts,
-            hideSum
+            hideSum,
+            hideProductSum
         );
         const minPrice = rows[0]
             ? Templates.infoTableRow(
@@ -140,6 +140,7 @@ class Templates {
                   profitType,
                   compactDisplay,
                   hideSum,
+                  hideProductSum,
                   secondsPerAction,
                   compactDisplay ? "Min" : "Minimum"
               )
@@ -155,6 +156,7 @@ class Templates {
                   profitType,
                   compactDisplay,
                   hideSum,
+                  hideProductSum,
                   secondsPerAction,
                   compactDisplay ? "Mid" : "Median"
               )
@@ -170,6 +172,7 @@ class Templates {
                   profitType,
                   compactDisplay,
                   hideSum,
+                  hideProductSum,
                   secondsPerAction,
                   compactDisplay ? "Max" : "Maximum"
               )
@@ -179,7 +182,7 @@ class Templates {
             ingredientMinPrices.length +
             !hideSum +
             product.minPrices.length +
-            (!hideSum && (product.counts.length > 1 || product.counts[0] !== 1)) +
+            (!hideSum && !hideProductSum && (product.counts.length > 1 || product.counts[0] !== 1)) +
             (profitType !== "off")
         }, auto)">
                 ${header}
@@ -197,7 +200,8 @@ class Templates {
         productCounts,
         profitType,
         showCounts = false,
-        hideSum = false
+        hideSum = false,
+        hideProductSum = false
     ) {
         let header = [];
         // Ingredients
@@ -243,14 +247,14 @@ class Templates {
                         ${
                             showCounts
                                 ? `<span class="${classId}-info-table-font">${formatNumber(productCounts[index], {
-                                      fraction: true,
+                                      longFraction: true,
                                   })}</span>`
                                 : ""
                         }`
                 )
             )
         );
-        if (!hideSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
+        if (!hideSum && !hideProductSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
             header.push(
                 Templates.infoTableCell(
                     classId,
@@ -285,6 +289,7 @@ class Templates {
         profitType,
         compactDisplay,
         hideSum,
+        hideProductSum,
         secondsPerAction,
         label
     ) {
@@ -323,7 +328,7 @@ class Templates {
                 )
             )
         );
-        if (!hideSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
+        if (!hideSum && !hideProductSum && (productCounts.length > 1 || productCounts[0] !== 1)) {
             row.push(
                 Templates.infoTableCell(classId, formatNumber(totalProductPrice, { compactDisplay: compactDisplay }))
             );
