@@ -103,6 +103,33 @@ body .scrollcrafting-container {
     line-height: 1.2;
 }
 
+.augmenting-popup-filter-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 30px);
+  justify-content: center;
+}
+
+.augmenting-popup-filter-item {
+    margin: 5px;
+    height: 30px;
+    width: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.augmenting-popup-filter-item.selected {
+    border: 2px solid lightgray;
+    border-radius: 5px;
+}
+
+.augmenting-popup-filter-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .augmenting-popup-button-container {
     display: flex;
     justify-content: center;
@@ -219,6 +246,7 @@ body .scrollcrafting-container {
         ];
         this.augmentingTable = null;
         this.researchingTable = null;
+        this.filter = null;
 
         this.playAreaObserver = new MutationObserver((mutations) => {
             this.playAreaObserver.disconnect();
@@ -451,7 +479,7 @@ body .scrollcrafting-container {
             this.researchingTable = null;
         }
         let table = type === "augmenting" ? this.augmentingTable : this.researchingTable;
-        if (table === null) {
+        if (true || table === null) {
             const effEnchantingLevel = getSkillLevel("enchanting", null, true);
             const craftingAugmenting = Object.entries(getIdlescapeWindowObject().craftingAugmenting)
                 .filter(([apiId, data]) => {
@@ -518,15 +546,19 @@ body .scrollcrafting-container {
                             "max"
                         ),
                     };
-                });
+                })
+                .filter(
+                    (augItem) =>
+                        type === "augmenting" || this.filter === null || augItem.products.apiIds.includes(this.filter)
+                );
 
             table = Templates.popupTemplate(`
                 <div class="augmenting-popup">
-                    <div class="augmenting-popup-title">Best augmenting XP</div>
+                    <div class="augmenting-popup-title">Best ${type} XP</div>
                     ${
                         type === "augmenting"
                             ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items to +10.</div>'
-                            : ""
+                            : this.renderFilters()
                     }
                     <div class="augmenting-content-container">
                         <h3>Minimum prices</h3>
@@ -563,6 +595,13 @@ body .scrollcrafting-container {
                 this.tracker.closePopup();
             }
         });
+        Array.from(document.getElementsByClassName("augmenting-popup-filter-item")).forEach((filterItem) => {
+            filterItem.addEventListener("click", () => {
+                this.filter = filterItem.dataset.filter !== "null" ? parseInt(filterItem.dataset.filter) : null;
+                this.tracker.closePopup();
+                this.augmentingTracker(type);
+            });
+        });
     }
 
     augmentingProfit(ingredientCounts, ingredientPriceData, productCounts, productPriceData, experience, priceType) {
@@ -583,6 +622,30 @@ body .scrollcrafting-container {
                     0.95) /
             experience
         );
+    }
+
+    renderFilters() {
+        const dustAndScrap = Object.values(getIdlescapeWindowObject().items).filter(
+            (i) => i.name.includes("Runic Dust") || i.name.includes("Gear Scrap")
+        );
+        return `
+            <div class='augmenting-popup-filter-container'>
+                <div class='augmenting-popup-filter-item ${this.filter === null ? "selected" : ""}' data-filter=null>
+                    All
+                </div>
+                ${dustAndScrap
+                    .map(
+                        (item) => `
+                    <div class='augmenting-popup-filter-item ${
+                        this.filter === item.id ? "selected" : ""
+                    }' data-filter='${item.id}'>
+                        <img src='${item.itemIcon ?? item.itemImage}' class='augmenting-popup-filter-image' />
+                    </div>
+                `
+                    )
+                    .join("")}
+            </div>
+        `;
     }
 
     augmentingTableSection(type, augmentingData, priceType) {
