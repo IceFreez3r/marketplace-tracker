@@ -430,7 +430,7 @@ body .scrollcrafting-container {
     getStandardResources(node) {
         return {
             scrolls: this.getResource(node.childNodes[2].firstChild).amount,
-            timePerAction: parseFloat(this.getResource(node.childNodes[1].firstChild).amount),
+            timePerAction: parseFloat(node.childNodes[1].firstChild.childNodes[1].innerText),
         };
     }
 
