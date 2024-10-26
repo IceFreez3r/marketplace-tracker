@@ -158,7 +158,7 @@ body .runecrafting-essence-counter {
         if (document.getElementsByClassName("runecrafting-container").length === 0) {
             return;
         }
-        const activeTab = document.getElementsByClassName("runecrafting-tab-selected")[0].lastChild.innerText;
+        const activeTab = getSelectedSubSkill();
         const recipes = document.getElementsByClassName("resource-as-row-container");
         const essenceDisplays = document.getElementsByClassName("runecrafting-essence-display");
         const activeTalismans = [];

@@ -370,7 +370,7 @@ body .scrollcrafting-container {
             if (mutations && detectInfiniteLoop(mutations)) {
                 return;
             }
-            const selectedTab = this.selectedTab();
+            const selectedTab = getSelectedSubSkill();
             if (selectedTab === "Scrollcrafting") {
                 this.enchantingTracker();
             } else if (selectedTab === "Augmenting") {
@@ -778,10 +778,6 @@ body .scrollcrafting-container {
             productCounts,
             experience: this.augmentingExperience(itemData),
         };
-    }
-
-    selectedTab() {
-        return document.getElementsByClassName("enchanting-tab-selected")[0].lastElementChild.innerText;
     }
 
     getCritChance() {

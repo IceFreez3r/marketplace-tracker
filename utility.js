@@ -167,6 +167,11 @@ function getSelectedSkill() {
     return "";
 }
 
+function getSelectedSubSkill() {
+    const selectedSubSkillNavTab = document.querySelector(".anchor-selected-skill-tab > span");
+    return selectedSubSkillNavTab?.innerText;
+}
+
 function detectInfiniteLoop(mutations) {
     const whitelistedChildren = ["chest-tooltip", "resource-container-tooltip"];
     const ignoredTargets = ["price", "heat-highlight"];
