@@ -370,7 +370,7 @@ body .scrollcrafting-container {
             if (mutations && detectInfiniteLoop(mutations)) {
                 return;
             }
-            const selectedTab = this.selectedTab();
+            const selectedTab = getSelectedSubSkill();
             if (selectedTab === "Scrollcrafting") {
                 this.enchantingTracker();
             } else if (selectedTab === "Augmenting") {
@@ -479,7 +479,8 @@ body .scrollcrafting-container {
             this.researchingTable = null;
         }
         let table = type === "augmenting" ? this.augmentingTable : this.researchingTable;
-        if (true || table === null) {
+        if (table === null) {
+            const gameShopItems = new Set(Object.values(getIdlescapeWindowObject().gameShopItems).map((i) => i.itemID));
             const effEnchantingLevel = getSkillLevel("enchanting", null, true);
             const craftingAugmenting = Object.entries(getIdlescapeWindowObject().craftingAugmenting)
                 .filter(([apiId, data]) => {
@@ -487,7 +488,7 @@ body .scrollcrafting-container {
                     return (
                         data.scrapping &&
                         !(type === "augmenting" && itemData.blockAugmenting) &&
-                        !(type === "researching" && itemData.blockResearching)
+                        !(type === "researching" && (itemData.blockResearching || gameShopItems.has(Number(apiId))))
                     );
                 })
                 .map(([apiId, data]) => {
@@ -552,7 +553,7 @@ body .scrollcrafting-container {
                     <div class="augmenting-popup-title">Best ${type} XP</div>
                     ${
                         type === "augmenting"
-                            ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items (transforms excluded).</div>'
+                            ? '<div class="augmenting-popup-info">It is almost always cheapest to augment items to +10 (transforms excluded).</div>'
                             : this.renderFilters()
                     }
                     <div class="augmenting-content-container">
@@ -778,10 +779,6 @@ body .scrollcrafting-container {
             productCounts,
             experience: this.augmentingExperience(itemData),
         };
-    }
-
-    selectedTab() {
-        return document.getElementsByClassName("enchanting-tab-selected")[0].lastElementChild.innerText;
     }
 
     getCritChance() {

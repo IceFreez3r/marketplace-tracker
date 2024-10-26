@@ -211,8 +211,7 @@ class CookingTracker {
     }
 
     cookingTracker(forceUpdate = false) {
-        const selectedTabNode = document.querySelector(".cooking-tab-selected");
-        const selectedTab = selectedTabNode.lastChild.textContent;
+        const selectedTab = getSelectedSubSkill();
         if (selectedTab === "Preparing") {
             this.preparationTracker(forceUpdate);
         } else {
