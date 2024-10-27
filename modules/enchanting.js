@@ -594,6 +594,7 @@ body .scrollcrafting-container {
         Array.from(document.getElementsByClassName("augmenting-popup-filter-item")).forEach((filterItem) => {
             filterItem.addEventListener("click", () => {
                 this.filter = filterItem.dataset.filter !== "null" ? parseInt(filterItem.dataset.filter) : null;
+                this.researchingTable = null;
                 this.tracker.closePopup();
                 this.augmentingTracker(type);
             });
