@@ -24,18 +24,20 @@ class MarketplaceTracker {
     background-image: linear-gradient(70deg, rgba(0, 128, 0, .938), rgba(0, 128, 0, 0) 70%), linear-gradient(270deg, rgba(128, 0, 0, .938), rgba(128, 0, 0, 0) 70%);
 }
 
+.marketplace-analysis-top {
+    border: 2px solid hsla(0, 0%, 100%, .452);
+    padding: 6px;
+    border-radius: 10px;
+    width: 90%;
+    margin: 10px auto 10px auto;
+    box-shadow: inset 0 8px 8px -10px #ccc, inset 0 -8px 8px -10px #ccc;
+}
+
 .marketplace-analysis-table {
     display: grid;
     grid-template-rows: repeat(2, 1fr);
     grid-auto-flow: column;
     grid-gap: 5px;
-    border: 2px solid hsla(0, 0%, 100%, .452);
-    padding: 6px;
-    margin: 6px;
-    border-radius: 10px;
-    width: 90%;
-    margin: 10px auto 10px auto;
-    box-shadow: inset 0 8px 8px -10px #ccc, inset 0 -8px 8px -10px #ccc;
 }
 
 .marketplace-analysis-table-content {
@@ -43,6 +45,25 @@ class MarketplaceTracker {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+#marketplace-chart-toggle {
+    grid-row: 1 / 3;
+    justify-self: center;
+    align-self: center;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 2px;
+}
+#marketplace-chart-toggle.active {
+    color: green;
+    border: 1px solid green;
+}
+#marketplace-chart-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 #tracker-edit-low,
@@ -63,6 +84,12 @@ class MarketplaceTracker {
 .text-red {
     color: rgb(128, 0, 0);
 }
+
+.marketplace-chart-container {
+    position: relative;
+    max-height: 150px;
+    width: 100%;
+}
     `;
 
     constructor(tracker, settings, storage) {
@@ -77,6 +104,9 @@ class MarketplaceTracker {
         }
         if (this.settings.colorBlindMode === undefined) {
             this.settings.colorBlindMode = 0;
+        }
+        if (this.settings.showTable === undefined) {
+            this.settings.showTable = 0;
         }
         this.cssNode = injectCSS(this.css);
 
@@ -174,7 +204,7 @@ class MarketplaceTracker {
         const apiId = convertApiId(marketplaceTableHeader.getElementsByClassName("item")[0]);
         if (!apiId) return;
         const analysis = this.storage.analyzeItem(apiId);
-        document.getElementsByClassName("marketplace-analysis-table")[0]?.remove();
+        document.getElementsByClassName("marketplace-analysis-top")[0]?.remove();
         const marketplaceTop = document.getElementsByClassName("anchor-market-tables-header")[0];
         saveInsertAdjacentHTML(marketplaceTop, "afterend", this.priceAnalysisTableTemplate(apiId, analysis));
         if (this.settings.editMode) {
@@ -182,34 +212,35 @@ class MarketplaceTracker {
             document.getElementById("tracker-edit-mid").addEventListener("click", () => this.editData(apiId, "mid"));
             document.getElementById("tracker-edit-high").addEventListener("click", () => this.editData(apiId, "high"));
         }
+        this.historyChart(apiId);
         this.markOffers(apiId);
-        // this.priceHoverListener(offers, analysis.maxPrice); // TODO
     }
 
     priceAnalysisTableTemplate(apiId, analysis) {
         let table = `
-            <div class="marketplace-analysis-table">
-                <div class="marketplace-analysis-table-content">
-                    Minimum
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    ${formatNumber(analysis.minPrice)}
-                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-low") : ""}
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    Median
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    ${formatNumber(analysis.medianPrice)}
-                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-mid") : ""}
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    Maximum
-                </div>
-                <div class="marketplace-analysis-table-content">
-                    ${formatNumber(analysis.maxPrice)}
-                    ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-high") : ""}
-                </div>`;
+            <div class="marketplace-analysis-top">
+                <div class="marketplace-analysis-table">
+                    <div class="marketplace-analysis-table-content">
+                        Minimum
+                    </div>
+                    <div class="marketplace-analysis-table-content">
+                        ${formatNumber(analysis.minPrice)}
+                        ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-low") : ""}
+                    </div>
+                    <div class="marketplace-analysis-table-content">
+                        Median
+                    </div>
+                    <div class="marketplace-analysis-table-content">
+                        ${formatNumber(analysis.medianPrice)}
+                        ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-mid") : ""}
+                    </div>
+                    <div class="marketplace-analysis-table-content">
+                        Maximum
+                    </div>
+                    <div class="marketplace-analysis-table-content">
+                        ${formatNumber(analysis.maxPrice)}
+                        ${this.settings.editMode ? Templates.scissorTemplate("tracker-edit-high") : ""}
+                    </div>`;
         const heatValue = this.storage.itemHeatValue(apiId);
         if (heatValue !== Infinity) {
             table += `
@@ -220,13 +251,81 @@ class MarketplaceTracker {
                     ${formatNumber(heatValue, { fraction: true })}
                 </div>`;
         }
-        table += "</div>";
+        table += `
+                    ${Templates.chartLineTemplate("marketplace-chart-toggle", this.settings.showTable ? "active" : "")}
+                </div>
+                <div class="marketplace-chart-container">
+                    <canvas id="marketplace-chart-${apiId}"></canvas>
+                </div>
+            </div>`;
         return table;
     }
 
     editData(apiId, type) {
         this.storage.editData(apiId, type);
         this.scanOfferList();
+    }
+
+    historyChart(apiId) {
+        const toggle = document.getElementById("marketplace-chart-toggle");
+        toggle.addEventListener("click", () => {
+            this.settings.showTable = this.settings.showTable ? 0 : 1;
+            this.tracker.storeSettings();
+            toggle.classList.toggle("active", this.settings.showTable);
+            this.scanOfferList();
+        });
+        const canvas = document.getElementById(`marketplace-chart-${apiId}`);
+        if (!this.settings.showTable) {
+            canvas.parentNode.style.display = "none";
+            return;
+        }
+        const ctx = canvas.getContext("2d");
+        const history = this.storage
+            .getHistory(apiId)
+            .map(([timestamp, price]) => ({ x: timestamp * 10 * 60 * 1000, y: price }))
+            .sort((a, b) => a.x - b.x);
+        if (history.length < 2) {
+            return;
+        }
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: history.map((h) => h.x),
+                datasets: [
+                    {
+                        label: getItemData(apiId).name,
+                        data: history,
+                    },
+                ],
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: "time",
+                        time: {
+                            unit: "day",
+                        },
+                        ticks: {
+                            color: "white",
+                        },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: "white",
+                        },
+                    },
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: "white",
+                        },
+                    },
+                },
+            },
+        });
     }
 
     markOffers(apiId) {
@@ -244,19 +343,6 @@ class MarketplaceTracker {
             } else {
                 offer.style.boxShadow = `inset -7px 0 0 ${getHSLColor(quantile, this.settings.colorBlindMode)}`;
             }
-        }
-    }
-
-    priceHoverListener(offers, maxPrice) {
-        for (let offer of offers) {
-            let priceCell = offer.childNodes[3];
-            if (priceCell.getElementsByClassName("marketplace-offer-price-tooltip").length > 0) {
-                continue;
-            }
-            const amount = parseNumberString(offer.childNodes[2].innerText);
-            priceCell.classList.add("marketplace-offer-price");
-            const price = parseNumberString(priceCell.innerText);
-            saveInsertAdjacentHTML(priceCell, "beforeend", this.priceTooltipTemplate(maxPrice, price, amount));
         }
     }
 

@@ -13,6 +13,8 @@
                 "storage.js",
                 "templates.js",
                 "utility.js",
+                "external/chart.min.js",
+                "external/chartjs-adapter-date-fns.min.js",
                 "external/DOMpurify.min.js",
                 "external/huffman.js",
                 "modules/alert.js",

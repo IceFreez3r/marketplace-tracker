@@ -12,6 +12,8 @@
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/storage.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/templates.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/utility.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/chart.min.js
+// @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/chartjs-adapter-date-fns.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/DOMpurify.min.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/external/huffman.js
 // @require      https://raw.githubusercontent.com/IceFreez3r/marketplace-tracker/main/modules/alert.js

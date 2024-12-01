@@ -569,6 +569,10 @@ class Storage {
         });
     }
 
+    getHistory(apiId) {
+        return this.marketHistory[apiId];
+    }
+
     editData(apiId, type) {
         const data = this.marketHistory[apiId];
         const onePercent = Math.max(1, Math.floor(data.length * 0.01));
