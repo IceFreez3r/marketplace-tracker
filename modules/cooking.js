@@ -212,7 +212,7 @@ class CookingTracker {
 
     cookingTracker(forceUpdate = false) {
         const selectedTab = getSelectedSubSkill();
-        if (selectedTab === "Preparing") {
+        if (selectedTab === "Preparation") {
             this.preparationTracker(forceUpdate);
         } else {
             this.recipeTable(forceUpdate);
