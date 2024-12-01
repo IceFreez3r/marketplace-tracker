@@ -154,7 +154,7 @@ function getLeagueId(leagueIcon, leagueList) {
             id--;
         }
         if (id === 0) return undefined;
-        return league.id;
+        return id;
     }
     return undefined;
 }
