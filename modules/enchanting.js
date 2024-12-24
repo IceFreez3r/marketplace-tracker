@@ -391,7 +391,7 @@ body .scrollcrafting-container {
     processEnchantment(recipe) {
         recipe.getElementsByClassName("enchanting-info-table")[0]?.remove();
         let scrollApiId = convertApiId(recipe);
-        const scrollIcon = recipe.firstChild.src;
+        const scrollIcon = recipe.querySelector(".scrollcrafting-image > img").src
 
         let standardResources = this.getStandardResources(
             recipe.getElementsByClassName("scrollcrafting-standard-resources")[0]
