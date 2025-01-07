@@ -429,8 +429,11 @@ body .scrollcrafting-container {
 
     getStandardResources(node) {
         return {
-            scrolls: this.getResource(node.childNodes[2].firstChild).amount,
-            timePerAction: parseFloat(node.childNodes[1].firstChild.childNodes[1].innerText),
+            scrolls: this.getResource(
+                // 1600 is the apiId for scrolls
+                node.querySelector('div[data-itemid="1600"]')
+            ).amount,
+            timePerAction: parseFloat(node.childNodes[3].firstChild.childNodes[1].innerText),
         };
     }
 
