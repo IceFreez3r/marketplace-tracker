@@ -134,7 +134,7 @@ function injectCSS(css) {
 }
 
 function getCharacterName() {
-    return document.getElementsByClassName("navbar1-box left drawer-button")?.[0]?.childNodes?.[1]?.textContent;
+    return document.querySelector(".header-username")?.textContent;
 }
 
 function isIronmanCharacter() {
