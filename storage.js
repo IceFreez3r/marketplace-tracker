@@ -166,7 +166,7 @@ class Storage {
     handleRecipe(ingredientApiIds, productApiId) {
         return {
             ingredients: this.analyzeItems(ingredientApiIds),
-            products: this.analyzeItems([productApiId]),
+            products: this.analyzeItems(Array.isArray(productApiId) ? productApiId : [productApiId]),
         };
     }
 

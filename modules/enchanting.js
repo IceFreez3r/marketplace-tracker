@@ -710,7 +710,7 @@ body .scrollcrafting-container {
                 <div class='augmenting-table-font'>Rank</div>
                 <div class='augmenting-table-font'>Item</div>
                 <div class='augmenting-table-font'>${
-                    type === "augmenting" ? "Total XP until +10/transform" : "XP per Tab"
+                    type === "augmenting" ? "Total XP until +10/transform" : "XP per Tap"
                 }</div>
                 <div class='augmenting-table-font'>Price/XP</div>
                 <div class='augmenting-table-font'>Price Table</div>
